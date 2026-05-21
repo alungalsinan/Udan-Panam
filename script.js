@@ -14,9 +14,6 @@ const optionAText = document.getElementById('option-a-text');
 const optionBText = document.getElementById('option-b-text');
 const optionCText = document.getElementById('option-c-text');
 const optionDText = document.getElementById('option-d-text');
-const prevBtn = document.getElementById('prev-btn');
-const nextBtn = document.getElementById('next-btn');
-const revealBtn = document.getElementById('reveal-btn');
 const optionCards = document.querySelectorAll('.option-card');
 const quizContainer = document.querySelector('.quiz-container');
 
@@ -112,13 +109,6 @@ function applyPresenterState(state) {
         if (state.audio_status !== currentAudioStatus) {
             currentAudioStatus = state.audio_status;
             syncRemoteAudio(currentAudioStatus);
-        }
-
-        // 7. Update local nav buttons disabled state
-        if (quizData && quizData.length > 0) {
-            const currentIdx = quizData.findIndex(item => item.id === currentQuestionId);
-            prevBtn.disabled = currentIdx <= 0;
-            nextBtn.disabled = currentIdx >= quizData.length - 1 || currentIdx === -1;
         }
     }
 }
@@ -223,50 +213,6 @@ startBtn.addEventListener('click', async () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ active_screen: 'quiz' })
-        });
-    } catch (e) {}
-});
-
-async function handleLocalNavigation(direction) {
-    if (!quizData || quizData.length === 0) return;
-    const currentIdx = quizData.findIndex(q => q.id === currentQuestionId);
-    let targetIdx = currentIdx;
-
-    if (direction === 'next' && currentIdx < quizData.length - 1) {
-        targetIdx = currentIdx + 1;
-    } else if (direction === 'prev' && currentIdx > 0) {
-        targetIdx = currentIdx - 1;
-    }
-
-    if (targetIdx !== currentIdx && targetIdx !== -1) {
-        const targetQ = quizData[targetIdx];
-        try {
-            await fetch('/api/presentation/state', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    current_question_id: targetQ.id,
-                    show_question: true,
-                    show_options: false,
-                    reveal_answer: false,
-                    audio_status: 'stopped'
-                })
-            });
-        } catch (e) {
-            console.error("Local navigation sync error", e);
-        }
-    }
-}
-
-prevBtn.addEventListener('click', () => handleLocalNavigation('prev'));
-nextBtn.addEventListener('click', () => handleLocalNavigation('next'));
-
-revealBtn.addEventListener('click', async () => {
-    try {
-        await fetch('/api/presentation/state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reveal_answer: true })
         });
     } catch (e) {}
 });

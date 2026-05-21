@@ -375,56 +375,6 @@ button {
     100% { box-shadow: 0 0 20px var(--correct-glow); transform: scale(1); }
 }
 
-/* Bottom Nav */
-.bottom-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    background: var(--bg-card);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-}
-
-.nav-btn {
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    border-radius: 8px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.secondary-btn {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-main);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.secondary-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.secondary-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.action-btn {
-    background: transparent;
-    color: var(--primary-glow);
-    border: 2px solid var(--primary-glow);
-    font-size: 1.4rem;
-    padding: 1rem 3rem;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) inset;
-}
-
-.action-btn:hover {
-    background: rgba(0, 229, 255, 0.1);
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4) inset, 0 0 20px rgba(0, 229, 255, 0.2);
-}
-
 /* Responsive adjustments */
 @media (max-width: 1200px) {
     .glow-text { font-size: 4rem; }
