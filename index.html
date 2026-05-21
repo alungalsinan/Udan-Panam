@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Union Quiz 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="welcome-content">
+                <h1 class="glow-text">College Union Quiz 2026</h1>
+                <p class="subtitle">The Ultimate Battle of Minds</p>
+                <button id="start-btn" class="primary-btn">Start Game</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div class="question-header">
+                    <h2 id="question-text" class="question-text"></h2>
+                </div>
+
+                <!-- Custom Audio Player (Hidden by default) -->
+                <div id="audio-container" class="audio-player-container" style="display: none;">
+                    <audio id="question-audio"></audio>
+                    
+                    <div class="visualizer" id="visualizer">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    
+                    <div class="audio-controls">
+                        <button id="play-pause-btn" class="audio-btn">
+                            <span id="play-icon">▶</span>
+                        </button>
+                        <div class="progress-container" id="progress-container">
+                            <div class="progress-bar" id="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="options-grid">
+                    <div class="option-card" data-option="A">
+                        <span class="option-label">A</span>
+                        <span class="option-text" id="option-a-text"></span>
+                    </div>
+                    <div class="option-card" data-option="B">
+                        <span class="option-label">B</span>
+                        <span class="option-text" id="option-b-text"></span>
+                    </div>
+                    <div class="option-card" data-option="C">
+                        <span class="option-label">C</span>
+                        <span class="option-text" id="option-c-text"></span>
+                    </div>
+                    <div class="option-card" data-option="D">
+                        <span class="option-label">D</span>
+                        <span class="option-text" id="option-d-text"></span>
+                    </div>
+                </div>
+
+                <div class="bottom-nav">
+                    <button id="prev-btn" class="nav-btn secondary-btn" disabled>Previous</button>
+                    <button id="reveal-btn" class="nav-btn action-btn">Reveal Answer</button>
+                    <button id="next-btn" class="nav-btn secondary-btn">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
