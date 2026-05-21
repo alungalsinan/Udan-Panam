@@ -79,6 +79,17 @@ app.delete('/api/questions/:id', async (req, res) => {
   }
 });
 
+// 4.b Delete all questions
+app.delete('/api/questions', async (req, res) => {
+  try {
+    await sql.query('DELETE FROM questions');
+    res.json({ message: 'All questions deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error deleting all questions' });
+  }
+});
+
 // 5. Bulk import questions
 app.post('/api/questions/import', async (req, res) => {
   const questions = req.body; // Expects array of question objects

@@ -155,6 +155,18 @@ async function handleDelete(e) {
     }
 }
 
+// Handle Delete All Questions
+document.getElementById('delete-all-btn').addEventListener('click', async () => {
+    if (!confirm('WARNING: Are you absolutely sure you want to delete ALL questions? This action cannot be undone!')) return;
+    try {
+        await fetch('/api/questions', { method: 'DELETE' });
+        loadQuestions();
+        alert('All question data has been successfully cleared.');
+    } catch (err) {
+        console.error('Failed to delete all questions', err);
+    }
+});
+
 // Handle JSON Export
 document.getElementById('export-json-btn').addEventListener('click', async () => {
     try {
@@ -330,7 +342,7 @@ function syncLiveControlsUI() {
     // 4. Reveal Answer button
     if (currentLiveState.reveal_answer) {
         liveRevealBtn.classList.add('active');
-        liveRevealBtn.textContent = 'Answer Revealed';
+        liveRevealBtn.textContent = 'Hide Answer';
     } else {
         liveRevealBtn.classList.remove('active');
         liveRevealBtn.textContent = 'Reveal Answer';
@@ -497,7 +509,7 @@ toggleOptionsView.addEventListener('change', () => {
 });
 
 liveRevealBtn.addEventListener('click', () => {
-    updateLiveState({ reveal_answer: true });
+    updateLiveState({ reveal_answer: !currentLiveState.reveal_answer });
 });
 
 liveAudioPlay.addEventListener('click', () => {
