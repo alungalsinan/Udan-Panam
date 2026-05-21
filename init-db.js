@@ -39,15 +39,15 @@ async function initDB() {
 
   try {
     console.log("Connecting to the database and setting up schema...");
-    await sql(createTableQuery);
-    await sql(alterTableQuery);
+    await sql.query(createTableQuery);
+    await sql.query(alterTableQuery);
     console.log("✅ Table 'questions' schema is up to date (level & audio_url added).");
     
     // Check if table is empty
-    const res = await sql('SELECT count(*) FROM questions');
+    const res = await sql.query('SELECT count(*) FROM questions');
     if (parseInt(res[0].count) === 0) {
       console.log("Seeding initial data...");
-      await sql(seedData);
+      await sql.query(seedData);
       console.log("✅ Initial data seeded.");
     }
   } catch (err) {
