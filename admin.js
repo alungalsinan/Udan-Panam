@@ -27,7 +27,10 @@ async function loadQuestions() {
         const res = await fetch('/api/questions');
         allQuestions = await res.json();
         renderTable();
-        // Sync live controls dropdown
+        // Force sync the live controls dropdown to remove deleted questions
+        if (Object.keys(currentLiveState).length > 0) {
+            updateLiveQuestionDropdown();
+        }
         await pollLiveState();
     } catch (err) {
         console.error('Failed to load questions', err);
