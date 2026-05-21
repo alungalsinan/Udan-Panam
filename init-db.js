@@ -18,6 +18,25 @@ const createTableQuery = `
   );
 `;
 
+const createPresentationStateTableQuery = `
+  CREATE TABLE IF NOT EXISTS presentation_state (
+    id INTEGER PRIMARY KEY,
+    current_question_id INTEGER REFERENCES questions(id) ON DELETE SET NULL,
+    active_screen VARCHAR(20) DEFAULT 'welcome',
+    show_question BOOLEAN DEFAULT TRUE,
+    show_options BOOLEAN DEFAULT FALSE,
+    reveal_answer BOOLEAN DEFAULT FALSE,
+    audio_status VARCHAR(20) DEFAULT 'stopped',
+    active_level INTEGER DEFAULT 1
+  );
+`;
+
+const seedPresentationStateQuery = `
+  INSERT INTO presentation_state (id, active_screen, active_level, show_question, show_options, reveal_answer, audio_status)
+  VALUES (1, 'welcome', 1, TRUE, FALSE, FALSE, 'stopped')
+  ON CONFLICT (id) DO NOTHING;
+`;
+
 const alterTableQuery = `
   ALTER TABLE questions 
   ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1,
@@ -43,7 +62,9 @@ async function initDB() {
     console.log("Connecting to the database and setting up schema...");
     await sql.query(createTableQuery);
     await sql.query(alterTableQuery);
-    console.log("✅ Table 'questions' schema is up to date (level & audio_url added).");
+    await sql.query(createPresentationStateTableQuery);
+    await sql.query(seedPresentationStateQuery);
+    console.log("✅ Table schemas are up to date.");
     
     // Check if table is empty
     const res = await sql.query('SELECT count(*) FROM questions');

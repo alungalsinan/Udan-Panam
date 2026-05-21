@@ -22,6 +22,117 @@
             </div>
         </header>
 
+        <!-- Live Presentation Control Center -->
+        <section class="live-control-card">
+            <div class="card-header">
+                <h2>Live Presentation Control Center</h2>
+                <div class="live-indicator">
+                    <span class="pulse-dot"></span>
+                    <span>LIVE DASHBOARD ACTIVE</span>
+                </div>
+            </div>
+            
+            <div class="control-grid">
+                <!-- Screen Controls -->
+                <div class="control-box">
+                    <h3>Screen Selection</h3>
+                    <div class="btn-group">
+                        <button id="live-screen-welcome-btn" class="control-btn" data-screen="welcome">Welcome Screen</button>
+                        <button id="live-screen-quiz-btn" class="control-btn" data-screen="quiz">Quiz Screen</button>
+                    </div>
+                </div>
+
+                <!-- Level Selection -->
+                <div class="control-box">
+                    <h3>Presenter Level Filter</h3>
+                    <div class="btn-group">
+                        <button id="live-level-1-btn" class="control-btn" data-level="1">L1 - Text</button>
+                        <button id="live-level-2-btn" class="control-btn" data-level="2">L2 - Image</button>
+                        <button id="live-level-3-btn" class="control-btn" data-level="3">L3 - Audio</button>
+                    </div>
+                </div>
+
+                <!-- Question Puncher -->
+                <div class="control-box full-width">
+                    <h3>Question Selection</h3>
+                    <div class="puncher-row">
+                        <select id="live-question-select" class="control-select">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <button id="punch-btn" class="btn primary glow-btn">Punch To Screen</button>
+                        <button id="punch-prev-btn" class="btn secondary">◀ Prev</button>
+                        <button id="punch-next-btn" class="btn secondary">Next ▶</button>
+                    </div>
+                </div>
+
+                <!-- Presentation Triggers -->
+                <div class="control-box">
+                    <h3>Display Controls</h3>
+                    <div class="toggle-grid">
+                        <label class="switch-container">
+                            <input type="checkbox" id="toggle-question-view" checked>
+                            <span class="slider"></span>
+                            <span class="label-text">Show Question & Media</span>
+                        </label>
+                        <label class="switch-container">
+                            <input type="checkbox" id="toggle-options-view">
+                            <span class="slider"></span>
+                            <span class="label-text">Show Option Cards</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Remote Audio & Reveal Answer -->
+                <div class="control-box">
+                    <h3>Presentation Actions</h3>
+                    <div class="action-row">
+                        <button id="live-reveal-btn" class="btn danger reveal-glow-btn">Reveal Answer</button>
+                        <div id="live-audio-controls" class="live-audio-group" style="display: none;">
+                            <button id="live-audio-play" class="audio-ctrl-btn">▶ Play</button>
+                            <button id="live-audio-pause" class="audio-ctrl-btn">⏸ Pause</button>
+                            <button id="live-audio-stop" class="audio-ctrl-btn">⏹ Stop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Screen Simulator -->
+            <div class="simulator-panel">
+                <h3>Live Presenter Screen Simulator</h3>
+                <div class="simulator-preview">
+                    <div id="sim-screen" class="sim-screen welcome">
+                        <!-- Welcome Preview -->
+                        <div id="sim-welcome-view" class="sim-view active">
+                            <div class="sim-logo">College Union Quiz 2026</div>
+                            <div class="sim-tagline">Welcome Screen Active</div>
+                        </div>
+                        <!-- Quiz Preview -->
+                        <div id="sim-quiz-view" class="sim-view">
+                            <div class="sim-question-box">
+                                <div class="sim-badge-row">
+                                    <span id="sim-q-level-badge" class="badge">Level 1</span>
+                                    <span id="sim-visibility-badge" class="badge secondary">Visible</span>
+                                </div>
+                                <p id="sim-q-text">No question loaded</p>
+                                <div id="sim-image-container" style="display: none;">
+                                    <span class="sim-placeholder-label">🖼 Image Content Loaded</span>
+                                </div>
+                                <div id="sim-q-audio" class="sim-audio-indicator" style="display: none;">
+                                    🎵 Audio Track Loaded (Audio: <span id="sim-q-audio-state" style="font-weight: bold; color: var(--primary-glow);">stopped</span>)
+                                </div>
+                            </div>
+                            <div id="sim-options-box" class="sim-options-grid">
+                                <div class="sim-option" data-option="A">A: Option A</div>
+                                <div class="sim-option" data-option="B">B: Option B</div>
+                                <div class="sim-option" data-option="C">C: Option C</div>
+                                <div class="sim-option" data-option="D">D: Option D</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <div class="filter-bar">
             <input type="text" id="search-input" placeholder="Search questions..." class="search-input">
             <select id="level-filter" class="filter-select">

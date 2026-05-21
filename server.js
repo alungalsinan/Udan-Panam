@@ -100,6 +100,87 @@ app.post('/api/questions/import', async (req, res) => {
   }
 });
 
+// 6. Get presentation state (with active question details joined)
+app.get('/api/presentation/state', async (req, res) => {
+  try {
+    const stateResult = await sql.query('SELECT * FROM presentation_state WHERE id = 1');
+    if (stateResult.length === 0) {
+      return res.status(404).json({ error: 'Presentation state not found' });
+    }
+    const state = stateResult[0];
+    if (state.current_question_id) {
+      const questionResult = await sql.query('SELECT * FROM questions WHERE id = $1', [state.current_question_id]);
+      state.question = questionResult[0] || null;
+    } else {
+      state.question = null;
+    }
+    res.json(state);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching presentation state' });
+  }
+});
+
+// 7. Update presentation state
+app.post('/api/presentation/state', async (req, res) => {
+  const { current_question_id, active_screen, show_question, show_options, reveal_answer, audio_status, active_level } = req.body;
+  try {
+    const fields = [];
+    const values = [];
+    let idx = 1;
+    
+    // We want to handle explicit nulls (e.g. current_question_id = null)
+    if (current_question_id !== undefined) {
+      fields.push(`current_question_id = $${idx++}`);
+      values.push(current_question_id);
+    }
+    if (active_screen !== undefined) {
+      fields.push(`active_screen = $${idx++}`);
+      values.push(active_screen);
+    }
+    if (show_question !== undefined) {
+      fields.push(`show_question = $${idx++}`);
+      values.push(show_question);
+    }
+    if (show_options !== undefined) {
+      fields.push(`show_options = $${idx++}`);
+      values.push(show_options);
+    }
+    if (reveal_answer !== undefined) {
+      fields.push(`reveal_answer = $${idx++}`);
+      values.push(reveal_answer);
+    }
+    if (audio_status !== undefined) {
+      fields.push(`audio_status = $${idx++}`);
+      values.push(audio_status);
+    }
+    if (active_level !== undefined) {
+      fields.push(`active_level = $${idx++}`);
+      values.push(active_level);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(1); // WHERE id = 1
+    const queryStr = `UPDATE presentation_state SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const result = await sql.query(queryStr, values);
+    
+    const state = result[0];
+    if (state.current_question_id) {
+      const questionResult = await sql.query('SELECT * FROM questions WHERE id = $1', [state.current_question_id]);
+      state.question = questionResult[0] || null;
+    } else {
+      state.question = null;
+    }
+    res.json(state);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error updating presentation state' });
+  }
+});
+
 // Start Server
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, () => {
