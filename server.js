@@ -36,11 +36,11 @@ app.get('/api/questions', async (req, res) => {
 
 // 2. Add a new question
 app.post('/api/questions', async (req, res) => {
-  const { level, question_text, audio_url, option_a, option_b, option_c, option_d, correct_answer } = req.body;
+  const { level, question_text, audio_url, image_url, option_a, option_b, option_c, option_d, correct_answer } = req.body;
   try {
     const result = await sql.query(
-      'INSERT INTO questions (level, question_text, audio_url, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [level || 1, question_text, audio_url, option_a, option_b, option_c, option_d, correct_answer]
+      'INSERT INTO questions (level, question_text, audio_url, image_url, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      [level || 1, question_text, audio_url, image_url, option_a, option_b, option_c, option_d, correct_answer]
     );
     res.status(201).json(result[0]);
   } catch (err) {
@@ -52,11 +52,11 @@ app.post('/api/questions', async (req, res) => {
 // 3. Update a question
 app.put('/api/questions/:id', async (req, res) => {
   const { id } = req.params;
-  const { level, question_text, audio_url, option_a, option_b, option_c, option_d, correct_answer } = req.body;
+  const { level, question_text, audio_url, image_url, option_a, option_b, option_c, option_d, correct_answer } = req.body;
   try {
     const result = await sql.query(
-      'UPDATE questions SET level = $1, question_text = $2, audio_url = $3, option_a = $4, option_b = $5, option_c = $6, option_d = $7, correct_answer = $8 WHERE id = $9 RETURNING *',
-      [level || 1, question_text, audio_url, option_a, option_b, option_c, option_d, correct_answer, id]
+      'UPDATE questions SET level = $1, question_text = $2, audio_url = $3, image_url = $4, option_a = $5, option_b = $6, option_c = $7, option_d = $8, correct_answer = $9 WHERE id = $10 RETURNING *',
+      [level || 1, question_text, audio_url, image_url, option_a, option_b, option_c, option_d, correct_answer, id]
     );
     if (result.length === 0) return res.status(404).json({ error: 'Question not found' });
     res.json(result[0]);
@@ -89,8 +89,8 @@ app.post('/api/questions/import', async (req, res) => {
     // so we can insert in a loop or bulk insert. We will do a loop for simplicity.
     for (let q of questions) {
       await sql.query(
-        'INSERT INTO questions (level, question_text, audio_url, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-        [q.level || 1, q.question_text, q.audio_url, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer]
+        'INSERT INTO questions (level, question_text, audio_url, image_url, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [q.level || 1, q.question_text, q.audio_url, q.image_url, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer]
       );
     }
     res.status(201).json({ message: `${questions.length} questions imported successfully` });

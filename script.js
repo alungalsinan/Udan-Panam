@@ -7,6 +7,7 @@ const welcomeScreen = document.getElementById('welcome-screen');
 const quizScreen = document.getElementById('quiz-screen');
 const startBtn = document.getElementById('start-btn');
 const questionText = document.getElementById('question-text');
+const questionImage = document.getElementById('question-image');
 const optionAText = document.getElementById('option-a-text');
 const optionBText = document.getElementById('option-b-text');
 const optionCText = document.getElementById('option-c-text');
@@ -61,6 +62,7 @@ function loadQuestion(index) {
     
     // Add a slight fade effect when changing text
     questionText.style.opacity = 0;
+    questionImage.style.opacity = 0;
     optionCards.forEach(card => card.style.opacity = 0);
     
     setTimeout(() => {
@@ -82,6 +84,14 @@ function loadQuestion(index) {
         optionCText.textContent = data.option_c;
         optionDText.textContent = data.option_d;
         
+        // Image Logic
+        if (data.image_url) {
+            questionImage.src = data.image_url;
+            questionImage.style.display = 'block';
+        } else {
+            questionImage.style.display = 'none';
+        }
+
         // Audio Logic
         if (data.level == 3 || data.audio_url) {
             audioContainer.style.display = 'flex';
@@ -107,6 +117,7 @@ function loadQuestion(index) {
 
         // Fade back in
         questionText.style.opacity = 1;
+        questionImage.style.opacity = 1;
         optionCards.forEach(card => card.style.opacity = 1);
     }, 300);
 }

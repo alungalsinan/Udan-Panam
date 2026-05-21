@@ -9,6 +9,7 @@ const createTableQuery = `
     level INTEGER DEFAULT 1,
     question_text TEXT,
     audio_url TEXT,
+    image_url TEXT,
     option_a TEXT NOT NULL,
     option_b TEXT NOT NULL,
     option_c TEXT NOT NULL,
@@ -20,7 +21,8 @@ const createTableQuery = `
 const alterTableQuery = `
   ALTER TABLE questions 
   ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1,
-  ADD COLUMN IF NOT EXISTS audio_url TEXT;
+  ADD COLUMN IF NOT EXISTS audio_url TEXT,
+  ADD COLUMN IF NOT EXISTS image_url TEXT;
 `;
 
 const seedData = `

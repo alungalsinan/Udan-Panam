@@ -126,3 +126,8 @@ th {
     gap: 1rem;
     margin-top: 1.5rem;
 }
+
+.filter-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+.search-input { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; }
+.filter-select { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #2a2a2a; color: #fff; }
+.modal-content { max-width: 600px; }

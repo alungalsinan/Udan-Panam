@@ -9,20 +9,42 @@ const qId = document.getElementById('q-id');
 const qLevel = document.getElementById('q-level');
 const qText = document.getElementById('q-text');
 const qAudioUrl = document.getElementById('q-audio-url');
+const qImageUrl = document.getElementById('q-image-url');
 const qOptA = document.getElementById('q-opt-a');
 const qOptB = document.getElementById('q-opt-b');
 const qOptC = document.getElementById('q-opt-c');
 const qOptD = document.getElementById('q-opt-d');
 const qAns = document.getElementById('q-ans');
 
+const searchInput = document.getElementById('search-input');
+const levelFilter = document.getElementById('level-filter');
+
+let allQuestions = [];
+
 // Fetch and display questions
 async function loadQuestions() {
     try {
         const res = await fetch('/api/questions');
-        const questions = await res.json();
-        
-        tbody.innerHTML = '';
-        questions.forEach(q => {
+        allQuestions = await res.json();
+        renderTable();
+    } catch (err) {
+        console.error('Failed to load questions', err);
+    }
+}
+
+function renderTable() {
+    tbody.innerHTML = '';
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const filterLevel = levelFilter.value;
+
+    const filtered = allQuestions.filter(q => {
+        const matchesSearch = (q.question_text || '').toLowerCase().includes(searchTerm);
+        const matchesLevel = filterLevel === 'all' || q.level == filterLevel;
+        return matchesSearch && matchesLevel;
+    });
+
+    filtered.forEach(q => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${q.id}</td>
@@ -44,10 +66,10 @@ async function loadQuestions() {
         // Attach listeners to dynamically created buttons
         document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEdit));
         document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', handleDelete));
-    } catch (err) {
-        console.error('Failed to load questions', err);
-    }
 }
+
+searchInput.addEventListener('input', renderTable);
+levelFilter.addEventListener('change', renderTable);
 
 // Open Modal for Add
 addBtn.addEventListener('click', () => {
@@ -73,6 +95,7 @@ form.addEventListener('submit', async (e) => {
         level: parseInt(qLevel.value),
         question_text: qText.value,
         audio_url: qAudioUrl.value,
+        image_url: qImageUrl.value,
         option_a: qOptA.value,
         option_b: qOptB.value,
         option_c: qOptC.value,
@@ -106,6 +129,7 @@ async function handleEdit(e) {
         qLevel.value = q.level || 1;
         qText.value = q.question_text || '';
         qAudioUrl.value = q.audio_url || '';
+        qImageUrl.value = q.image_url || '';
         qOptA.value = q.option_a;
         qOptB.value = q.option_b;
         qOptC.value = q.option_c;
@@ -145,6 +169,40 @@ document.getElementById('export-json-btn').addEventListener('click', async () =>
     } catch (err) {
         console.error('Failed to export data', err);
     }
+});
+
+// Handle JSON Template Download
+document.getElementById('download-template-btn').addEventListener('click', () => {
+    const template = [
+        {
+            "level": 1,
+            "question_text": "Sample Text Question?",
+            "audio_url": "",
+            "image_url": "",
+            "option_a": "Option 1",
+            "option_b": "Option 2",
+            "option_c": "Option 3",
+            "option_d": "Option 4",
+            "correct_answer": "A"
+        },
+        {
+            "level": 3,
+            "question_text": "Identify this sound (Text is optional)",
+            "audio_url": "https://example.com/audio.mp3",
+            "image_url": "https://example.com/image.jpg",
+            "option_a": "Sound A",
+            "option_b": "Sound B",
+            "option_c": "Sound C",
+            "option_d": "Sound D",
+            "correct_answer": "B"
+        }
+    ];
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(template, null, 4));
+    const anchor = document.createElement('a');
+    anchor.setAttribute("href", dataStr);
+    anchor.setAttribute("download", "quiz_template.json");
+    anchor.click();
 });
 
 // Handle JSON Import

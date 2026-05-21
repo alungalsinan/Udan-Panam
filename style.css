@@ -129,6 +129,7 @@ button {
 .question-header {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 2rem;
@@ -138,6 +139,16 @@ button {
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     backdrop-filter: blur(10px);
     margin-bottom: 2rem;
+    gap: 1.5rem;
+}
+
+.question-image {
+    max-width: 100%;
+    max-height: 40vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    object-fit: contain;
 }
 
 .question-text {
