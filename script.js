@@ -26,6 +26,11 @@ const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress-bar');
 const visualizer = document.getElementById('visualizer');
 
+// Studio Elements
+const welcomeTitle = document.getElementById('welcome-title');
+const welcomeSubtitle = document.getElementById('welcome-subtitle');
+let lastStudioConfig = null;
+
 // Fetch Questions from Backend (for local nav fallback indexing)
 async function fetchQuestions() {
     try {
@@ -39,11 +44,41 @@ async function fetchQuestions() {
 // State Synchronization Polling
 async function pollPresenterState() {
     try {
-        const res = await fetch('/api/presentation/state');
-        const state = await res.json();
+        const [stateRes, studioRes] = await Promise.all([
+            fetch('/api/presentation/state'),
+            fetch('/api/studio')
+        ]);
+        
+        const state = await stateRes.json();
+        const studio = await studioRes.json();
+        
+        applyStudioSettings(studio);
         applyPresenterState(state);
     } catch (err) {
-        console.error("Error polling presenter state:", err);
+        console.error("Error polling state:", err);
+    }
+}
+
+function applyStudioSettings(s) {
+    if (!s) return;
+    // Prevent redundant DOM updates if settings haven't changed
+    if (JSON.stringify(s) === JSON.stringify(lastStudioConfig)) return;
+    lastStudioConfig = s;
+    
+    const root = document.documentElement;
+    root.style.setProperty('--primary-glow', s.theme_primary || '#00e5ff');
+    root.style.setProperty('--secondary-glow', s.theme_secondary || '#ffd700');
+    root.style.setProperty('--bg-dark', s.bg_dark || '#070B19');
+    root.style.setProperty('--bg-card', s.bg_card || 'rgba(16, 24, 45, 0.8)');
+    root.style.setProperty('--font-main', s.font_family || "'Anek Malayalam', sans-serif");
+    
+    welcomeTitle.textContent = s.welcome_title || 'Welcome';
+    welcomeSubtitle.textContent = s.welcome_subtitle || '';
+    
+    if (s.animation_enabled === false) {
+        document.body.classList.add('no-animations');
+    } else {
+        document.body.classList.remove('no-animations');
     }
 }
 

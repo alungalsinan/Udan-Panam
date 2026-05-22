@@ -1,8 +1,12 @@
 :root {
+    /* These variables will be dynamically overridden by JS */
     --bg-dark: #070B19;
     --bg-card: rgba(16, 24, 45, 0.8);
     --primary-glow: #00e5ff;
     --secondary-glow: #ffd700;
+    --font-main: 'Anek Malayalam', sans-serif;
+    
+    /* Static Variables */
     --text-main: #ffffff;
     --text-muted: #a0aec0;
     --correct-color: #00e676;
@@ -17,17 +21,23 @@
 }
 
 body {
-    font-family: 'Anek Malayalam', sans-serif;
+    font-family: var(--font-main);
     background-color: var(--bg-dark);
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(0, 229, 255, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 85% 30%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+        radial-gradient(circle at 15% 50%, color-mix(in srgb, var(--primary-glow) 8%, transparent) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--secondary-glow) 5%, transparent) 0%, transparent 50%);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    transition: background-color 1s ease;
+}
+
+body.no-animations * {
+    animation: none !important;
+    transition: none !important;
 }
 
 .app-container {
@@ -47,7 +57,7 @@ body {
     align-items: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
 }
 
 .screen.active {
@@ -58,14 +68,14 @@ body {
 /* Welcome Screen */
 .welcome-content {
     text-align: center;
-    padding: 4rem;
-    background: rgba(10, 15, 30, 0.6);
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    border-radius: 24px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 0 40px rgba(0, 229, 255, 0.1);
-    transform: translateY(20px);
-    animation: floatIn 1s ease-out forwards;
+    padding: 5rem;
+    background: var(--bg-card);
+    border: 1px solid color-mix(in srgb, var(--primary-glow) 15%, transparent);
+    border-radius: 30px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px color-mix(in srgb, var(--bg-dark) 80%, transparent);
+    transform: translateY(30px);
+    animation: floatIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes floatIn {
@@ -73,21 +83,23 @@ body {
 }
 
 .glow-text {
-    font-size: 5rem;
+    font-size: 5.5rem;
     font-weight: 800;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     background: linear-gradient(135deg, #fff 0%, var(--primary-glow) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+    text-shadow: 0 0 40px color-mix(in srgb, var(--primary-glow) 40%, transparent);
+    line-height: 1.1;
 }
 
 .subtitle {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     color: var(--text-muted);
-    margin-bottom: 3rem;
-    letter-spacing: 2px;
+    margin-bottom: 3.5rem;
+    letter-spacing: 3px;
     text-transform: uppercase;
+    font-weight: 500;
 }
 
 /* Buttons */
@@ -96,34 +108,35 @@ button {
     cursor: pointer;
     border: none;
     outline: none;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .primary-btn {
-    padding: 1.2rem 3.5rem;
-    font-size: 1.5rem;
+    padding: 1.2rem 4rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: var(--bg-dark);
-    background: linear-gradient(45deg, var(--primary-glow), #00b8d4);
+    background: linear-gradient(45deg, var(--primary-glow), color-mix(in srgb, var(--primary-glow) 80%, #fff));
     border-radius: 50px;
-    box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--primary-glow) 40%, transparent);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .primary-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(0, 229, 255, 0.6);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px color-mix(in srgb, var(--primary-glow) 60%, transparent);
 }
 
 /* Quiz Screen */
 .quiz-container {
     width: 90%;
-    max-width: 1400px;
-    height: 90vh;
+    max-width: 1500px;
+    height: 92vh;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 2rem;
 }
 
 .question-header {
@@ -132,28 +145,27 @@ button {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 3rem;
     background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    margin-bottom: 2rem;
-    gap: 1.5rem;
-    transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid color-mix(in srgb, var(--text-main) 5%, transparent);
+    border-radius: 24px;
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--bg-dark) 60%, transparent);
+    backdrop-filter: blur(15px);
+    gap: 2rem;
+    transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .question-header.blurred {
-    filter: blur(30px);
+    filter: blur(40px);
     opacity: 0;
 }
 
 .question-image {
     max-width: 100%;
-    max-height: 40vh;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    max-height: 45vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border: 1px solid color-mix(in srgb, var(--text-main) 10%, transparent);
     object-fit: contain;
 }
 
@@ -162,35 +174,36 @@ button {
     font-weight: 600;
     text-align: center;
     line-height: 1.4;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    text-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
 
+/* Options */
 .options-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
-    margin-bottom: 2rem;
 }
 
 .option-card {
     background: var(--bg-card);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
+    border: 1px solid color-mix(in srgb, var(--text-main) 5%, transparent);
+    border-radius: 20px;
+    padding: 1.5rem 2.5rem;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    cursor: default;
+    gap: 2rem;
     position: relative;
     overflow: hidden;
     opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s ease,
-                box-shadow 0.3s ease,
-                filter 0.3s ease;
+    transform: translateY(50px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.4s ease,
+                box-shadow 0.4s ease,
+                filter 0.4s ease,
+                background 0.4s ease;
     pointer-events: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .option-card.visible-card {
@@ -211,9 +224,9 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text-main) 2%, transparent), transparent);
     transform: translateX(-100%);
-    transition: transform 0.5s ease;
+    transition: transform 0.6s ease;
 }
 
 .option-card:hover::before {
@@ -221,22 +234,23 @@ button {
 }
 
 .option-card:hover {
-    border-color: rgba(0, 229, 255, 0.5);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--primary-glow) 50%, transparent);
+    box-shadow: 0 15px 30px color-mix(in srgb, var(--bg-dark) 50%, transparent);
+    transform: translateY(-4px);
+    background: color-mix(in srgb, var(--bg-card) 95%, var(--primary-glow));
 }
 
 .option-label {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     color: var(--secondary-glow);
-    background: rgba(255, 215, 0, 0.1);
-    width: 60px;
-    height: 60px;
+    background: color-mix(in srgb, var(--secondary-glow) 10%, transparent);
+    width: 65px;
+    height: 65px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 12px;
+    border-radius: 16px;
     flex-shrink: 0;
 }
 
@@ -245,33 +259,33 @@ button {
     font-weight: 400;
 }
 
-/* Audio Player */
+/* Audio Player Minimalist */
 .audio-player-container {
     background: var(--bg-card);
-    border: 1px solid rgba(0, 229, 255, 0.3);
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    margin-bottom: 2rem;
+    border: 1px solid color-mix(in srgb, var(--primary-glow) 20%, transparent);
+    border-radius: 20px;
+    padding: 1.5rem 3rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    backdrop-filter: blur(15px);
+    width: 80%;
 }
 
 .visualizer {
     display: flex;
-    gap: 6px;
-    height: 50px;
+    gap: 8px;
+    height: 40px;
     align-items: center;
 }
 
 .visualizer .bar {
-    width: 8px;
+    width: 6px;
     height: 10px;
     background-color: var(--primary-glow);
-    border-radius: 4px;
+    border-radius: 3px;
     transition: height 0.1s ease;
 }
 
@@ -289,39 +303,39 @@ button {
 
 @keyframes soundwave {
     0% { height: 10px; }
-    100% { height: 50px; }
+    100% { height: 40px; }
 }
 
 .audio-controls {
     display: flex;
     align-items: center;
     width: 100%;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .audio-btn {
     background: var(--primary-glow);
     color: var(--bg-dark);
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1.5rem;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--primary-glow) 40%, transparent);
 }
 
 .audio-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
+    transform: scale(1.08);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--primary-glow) 60%, transparent);
 }
 
 .progress-container {
     flex: 1;
-    height: 8px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
+    height: 6px;
+    background: color-mix(in srgb, var(--text-main) 10%, transparent);
+    border-radius: 3px;
     cursor: pointer;
     position: relative;
 }
@@ -330,56 +344,62 @@ button {
     height: 100%;
     width: 0%;
     background: var(--primary-glow);
-    border-radius: 4px;
+    border-radius: 3px;
     position: relative;
     box-shadow: 0 0 10px var(--primary-glow);
+    transition: width 0.1s linear;
 }
 
 /* Revealed State */
 .quiz-container.revealed .option-card.correct {
-    background: rgba(0, 230, 118, 0.1);
+    background: color-mix(in srgb, var(--correct-color) 10%, transparent);
     border-color: var(--correct-color);
-    box-shadow: 0 0 30px var(--correct-glow);
-    animation: correctPulse 2s infinite;
+    box-shadow: 0 0 40px var(--correct-glow);
+    animation: correctPulse 2.5s infinite;
 }
 
 .quiz-container.revealed .option-card.wrong {
     opacity: var(--wrong-opacity);
     filter: grayscale(100%);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .option-card.clicked-correct {
-    background: rgba(0, 230, 118, 0.1);
+    background: color-mix(in srgb, var(--correct-color) 15%, transparent);
     border-color: var(--correct-color);
     box-shadow: 0 0 30px var(--correct-glow);
     animation: correctPulse 2s infinite;
 }
 
 .option-card.clicked-wrong {
-    background: rgba(255, 51, 51, 0.1);
-    border-color: #ff3333;
-    animation: wrongShake 0.4s;
+    background: color-mix(in srgb, var(--danger-color) 10%, transparent);
+    border-color: var(--danger-color);
+    animation: wrongShake 0.5s;
 }
 
 @keyframes wrongShake {
     0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-8px); }
+    80% { transform: translateX(8px); }
     100% { transform: translateX(0); }
 }
 
 @keyframes correctPulse {
     0% { box-shadow: 0 0 20px var(--correct-glow); transform: scale(1); }
-    50% { box-shadow: 0 0 40px var(--correct-glow); transform: scale(1.02); }
+    50% { box-shadow: 0 0 50px var(--correct-glow); transform: scale(1.02); }
     100% { box-shadow: 0 0 20px var(--correct-glow); transform: scale(1); }
 }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-    .glow-text { font-size: 4rem; }
-    .question-text { font-size: 2.8rem; }
+    .glow-text { font-size: 4.5rem; }
+    .question-text { font-size: 3rem; }
     .option-text { font-size: 1.8rem; }
+    .option-card { padding: 1.2rem 2rem; }
 }
 
 @media (max-width: 768px) {
@@ -387,5 +407,5 @@ button {
     .glow-text { font-size: 3rem; }
     .question-text { font-size: 2rem; }
     .option-text { font-size: 1.5rem; }
-    .option-card { padding: 1rem; }
+    .option-card { padding: 1rem 1.5rem; }
 }

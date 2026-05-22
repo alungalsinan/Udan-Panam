@@ -23,110 +23,108 @@
             </div>
         </header>
 
-        <!-- Live Presentation Control Center -->
-        <section class="live-control-card">
-            <div class="card-header">
-                <h2>Live Presentation Control Center</h2>
-                <div class="live-indicator">
-                    <span class="pulse-dot"></span>
-                    <span>LIVE DASHBOARD ACTIVE</span>
-                </div>
-            </div>
-            
-            <div class="control-grid">
-                <!-- Screen Controls -->
-                <div class="control-box">
-                    <h3>Screen Selection</h3>
-                    <div class="btn-group">
-                        <button id="live-screen-welcome-btn" class="control-btn" data-screen="welcome">Welcome Screen</button>
-                        <button id="live-screen-quiz-btn" class="control-btn" data-screen="quiz">Quiz Screen</button>
+        <!-- Tab Navigation -->
+        <div class="tabs-container">
+            <button class="tab-btn active" data-target="tab-control-center">Control Center</button>
+            <button class="tab-btn" data-target="tab-question-manager">Question Manager</button>
+            <button class="tab-btn" data-target="tab-studio">Studio Panel</button>
+        </div>
+
+        <!-- TAB: Live Control Center -->
+        <section id="tab-control-center" class="tab-content active">
+            <div class="live-control-card">
+                <div class="card-header">
+                    <h2>Live Control Center</h2>
+                    <div class="live-indicator">
+                        <span class="pulse-dot"></span>
+                        <span>LIVE</span>
                     </div>
                 </div>
-
-                <!-- Level Selection -->
-                <div class="control-box">
-                    <h3>Presenter Level Filter</h3>
-                    <div class="btn-group">
-                        <button id="live-level-1-btn" class="control-btn" data-level="1">L1 - Text</button>
-                        <button id="live-level-2-btn" class="control-btn" data-level="2">L2 - Image</button>
-                        <button id="live-level-3-btn" class="control-btn" data-level="3">L3 - Audio</button>
-                    </div>
-                </div>
-
-                <!-- Question Puncher -->
-                <div class="control-box full-width">
-                    <h3>Question Selection</h3>
-                    <div class="puncher-row">
-                        <select id="live-question-select" class="control-select">
-                            <!-- Populated dynamically -->
-                        </select>
-                        <button id="punch-btn" class="btn primary glow-btn">Punch To Screen</button>
-                        <button id="punch-prev-btn" class="btn secondary">◀ Prev</button>
-                        <button id="punch-next-btn" class="btn secondary">Next ▶</button>
-                    </div>
-                </div>
-
-                <!-- Presentation Triggers -->
-                <div class="control-box">
-                    <h3>Display Controls</h3>
-                    <div class="toggle-grid">
-                        <label class="switch-container">
-                            <input type="checkbox" id="toggle-question-view" checked>
-                            <span class="slider"></span>
-                            <span class="label-text">Show Question & Media</span>
-                        </label>
-                        <label class="switch-container">
-                            <input type="checkbox" id="toggle-options-view">
-                            <span class="slider"></span>
-                            <span class="label-text">Show Option Cards</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Remote Audio & Reveal Answer -->
-                <div class="control-box">
-                    <h3>Presentation Actions</h3>
-                    <div class="action-row">
-                        <button id="live-reveal-btn" class="btn danger reveal-glow-btn">Reveal Answer</button>
-                        <div id="live-audio-controls" class="live-audio-group" style="display: none;">
-                            <button id="live-audio-play" class="audio-ctrl-btn">▶ Play</button>
-                            <button id="live-audio-pause" class="audio-ctrl-btn">⏸ Pause</button>
-                            <button id="live-audio-stop" class="audio-ctrl-btn">⏹ Stop</button>
+                
+                <div class="control-grid-minimal">
+                    <!-- Streamlined Screen & Level Controls -->
+                    <div class="control-box-minimal">
+                        <div class="minimal-label">Screen & Filter</div>
+                        <div class="minimal-row">
+                            <select id="live-screen-select" class="minimal-select">
+                                <option value="welcome">Welcome Screen</option>
+                                <option value="quiz">Quiz Screen</option>
+                            </select>
+                            <select id="live-level-select" class="minimal-select">
+                                <option value="1">L1 - Text</option>
+                                <option value="2">L2 - Image</option>
+                                <option value="3">L3 - Audio</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Live Screen Simulator -->
-            <div class="simulator-panel">
-                <h3>Live Presenter Screen Simulator</h3>
-                <div class="simulator-preview">
-                    <div id="sim-screen" class="sim-screen welcome">
-                        <!-- Welcome Preview -->
-                        <div id="sim-welcome-view" class="sim-view active">
-                            <div class="sim-logo">College Union Quiz 2026</div>
-                            <div class="sim-tagline">Welcome Screen Active</div>
+                    <!-- Streamlined Question Puncher -->
+                    <div class="control-box-minimal full-width">
+                        <div class="minimal-label">Question Selection</div>
+                        <div class="puncher-row-minimal">
+                            <button id="punch-prev-btn" class="minimal-icon-btn">◀</button>
+                            <select id="live-question-select" class="minimal-select punch-select">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <button id="punch-next-btn" class="minimal-icon-btn">▶</button>
+                            <button id="punch-btn" class="btn primary glow-btn-minimal">Punch</button>
                         </div>
-                        <!-- Quiz Preview -->
-                        <div id="sim-quiz-view" class="sim-view">
-                            <div class="sim-question-box">
-                                <div class="sim-badge-row">
-                                    <span id="sim-q-level-badge" class="badge">Level 1</span>
-                                    <span id="sim-visibility-badge" class="badge secondary">Visible</span>
-                                </div>
-                                <p id="sim-q-text">No question loaded</p>
-                                <div id="sim-image-container" style="display: none;">
-                                    <span class="sim-placeholder-label">🖼 Image Content Loaded</span>
-                                </div>
-                                <div id="sim-q-audio" class="sim-audio-indicator" style="display: none;">
-                                    🎵 Audio Track Loaded (Audio: <span id="sim-q-audio-state" style="font-weight: bold; color: var(--primary-glow);">stopped</span>)
-                                </div>
+                    </div>
+
+                    <!-- Streamlined Display & Action Controls -->
+                    <div class="control-box-minimal">
+                        <div class="minimal-label">Display & Actions</div>
+                        <div class="toggle-row-minimal">
+                            <label class="switch-minimal">
+                                <input type="checkbox" id="toggle-question-view" checked>
+                                <span class="slider-minimal"></span>
+                                <span class="lbl">Q</span>
+                            </label>
+                            <label class="switch-minimal">
+                                <input type="checkbox" id="toggle-options-view">
+                                <span class="slider-minimal"></span>
+                                <span class="lbl">Opt</span>
+                            </label>
+                            <button id="live-reveal-btn" class="btn danger minimal-action-btn">Reveal</button>
+                            
+                            <!-- Audio Controls -->
+                            <div id="live-audio-controls" class="minimal-audio-group" style="display: none;">
+                                <button id="live-audio-play" class="minimal-icon-btn play">▶</button>
+                                <button id="live-audio-pause" class="minimal-icon-btn">⏸</button>
+                                <button id="live-audio-stop" class="minimal-icon-btn">⏹</button>
                             </div>
-                            <div id="sim-options-box" class="sim-options-grid">
-                                <div class="sim-option" data-option="A">A: Option A</div>
-                                <div class="sim-option" data-option="B">B: Option B</div>
-                                <div class="sim-option" data-option="C">C: Option C</div>
-                                <div class="sim-option" data-option="D">D: Option D</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Screen Simulator -->
+                <div class="simulator-panel-minimal">
+                    <div class="minimal-label">Preview</div>
+                    <div class="simulator-preview">
+                        <div id="sim-screen" class="sim-screen welcome">
+                            <!-- Welcome Preview -->
+                            <div id="sim-welcome-view" class="sim-view active">
+                                <div class="sim-logo" id="sim-welcome-title">College Union Quiz 2026</div>
+                                <div class="sim-tagline" id="sim-welcome-subtitle">Welcome Screen Active</div>
+                            </div>
+                            <!-- Quiz Preview -->
+                            <div id="sim-quiz-view" class="sim-view">
+                                <div class="sim-question-box">
+                                    <div class="sim-badge-row">
+                                        <span id="sim-q-level-badge" class="badge">L1</span>
+                                        <span id="sim-visibility-badge" class="badge secondary">Visible</span>
+                                    </div>
+                                    <p id="sim-q-text">No question loaded</p>
+                                    <div id="sim-image-container" style="display: none;">
+                                        <span class="sim-placeholder-label">🖼 Image</span>
+                                    </div>
+                                    <div id="sim-q-audio" class="sim-audio-indicator" style="display: none;">
+                                        🎵 Audio (<span id="sim-q-audio-state">stopped</span>)
+                                    </div>
+                                </div>
+                                <div id="sim-options-box" class="sim-options-grid">
+                                    <!-- Options injected via JS -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -134,34 +132,110 @@
             </div>
         </section>
 
-        <div class="filter-bar">
-            <input type="text" id="search-input" placeholder="Search questions..." class="search-input">
-            <select id="level-filter" class="filter-select">
-                <option value="all">All Levels</option>
-                <option value="1">1 - Text</option>
-                <option value="2">2 - Image</option>
-                <option value="3">3 - Audio</option>
-            </select>
-        </div>
+        <!-- TAB: Question Manager -->
+        <section id="tab-question-manager" class="tab-content">
+            <div class="filter-bar">
+                <input type="text" id="search-input" placeholder="Search questions..." class="search-input">
+                <select id="level-filter" class="filter-select">
+                    <option value="all">All Levels</option>
+                    <option value="1">1 - Text</option>
+                    <option value="2">2 - Image</option>
+                    <option value="3">3 - Audio</option>
+                </select>
+            </div>
 
-        <table id="questions-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Level</th>
-                    <th>Question</th>
-                    <th>A</th>
-                    <th>B</th>
-                    <th>C</th>
-                    <th>D</th>
-                    <th>Answer</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Populated by JS -->
-            </tbody>
-        </table>
+            <div class="table-container">
+                <table id="questions-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Level</th>
+                            <th>Question</th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                            <th>Ans</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB: Studio Panel -->
+        <section id="tab-studio" class="tab-content">
+            <div class="studio-card">
+                <h2>Studio Panel</h2>
+                <p class="studio-desc">Customize the look and feel of the presentation screens.</p>
+                
+                <form id="studio-form" class="studio-form">
+                    <div class="studio-grid">
+                        <div class="form-group">
+                            <label>Welcome Title</label>
+                            <input type="text" id="studio-welcome-title" class="studio-input" />
+                        </div>
+                        <div class="form-group">
+                            <label>Welcome Subtitle</label>
+                            <input type="text" id="studio-welcome-subtitle" class="studio-input" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Primary Theme Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="studio-theme-primary" class="studio-color" />
+                                <input type="text" id="studio-theme-primary-txt" class="studio-input-small" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Secondary Theme Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="studio-theme-secondary" class="studio-color" />
+                                <input type="text" id="studio-theme-secondary-txt" class="studio-input-small" />
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Background Dark Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" id="studio-bg-dark" class="studio-color" />
+                                <input type="text" id="studio-bg-dark-txt" class="studio-input-small" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Card Background (Hex/RGBA)</label>
+                            <input type="text" id="studio-bg-card" class="studio-input" placeholder="rgba(16, 24, 45, 0.8)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Font Family</label>
+                            <select id="studio-font-family" class="studio-select">
+                                <option value="'Anek Malayalam', sans-serif">Anek Malayalam</option>
+                                <option value="'Inter', sans-serif">Inter</option>
+                                <option value="'Outfit', sans-serif">Outfit</option>
+                                <option value="'Roboto', sans-serif">Roboto</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group toggle-group">
+                            <label class="switch-minimal">
+                                <input type="checkbox" id="studio-animation-enabled">
+                                <span class="slider-minimal"></span>
+                            </label>
+                            <span class="lbl-text">Enable Dynamic Animations</span>
+                        </div>
+                    </div>
+                    
+                    <div class="studio-actions">
+                        <button type="submit" class="btn primary glow-btn-minimal" id="save-studio-btn">Save Changes</button>
+                        <span id="studio-save-status" class="save-status"></span>
+                    </div>
+                </form>
+            </div>
+        </section>
     </div>
 
     <!-- Modal for Add/Edit -->

@@ -15,6 +15,34 @@ app.use(express.static(path.join(__dirname))); // Serve static files
 // DB Connection
 const sql = neon(process.env.DATABASE_URL);
 
+// In-Memory Cache to reduce latency
+let cachedPresentationState = null;
+let cachedStudioSettings = null;
+
+// Initialize Cache
+async function initCache() {
+  try {
+    const pStateRes = await sql.query('SELECT * FROM presentation_state WHERE id = 1');
+    if (pStateRes.length > 0) {
+      cachedPresentationState = pStateRes[0];
+      if (cachedPresentationState.current_question_id) {
+        const qRes = await sql.query('SELECT * FROM questions WHERE id = $1', [cachedPresentationState.current_question_id]);
+        cachedPresentationState.question = qRes[0] || null;
+      } else {
+        cachedPresentationState.question = null;
+      }
+    }
+    
+    const studioRes = await sql.query('SELECT * FROM studio_settings WHERE id = 1');
+    if (studioRes.length > 0) {
+      cachedStudioSettings = studioRes[0];
+    }
+  } catch (err) {
+    console.error('Failed to initialize cache:', err);
+  }
+}
+initCache();
+
 // API Routes
 
 // 1. Get all questions (Filter by level if provided)
@@ -113,6 +141,10 @@ app.post('/api/questions/import', async (req, res) => {
 
 // 6. Get presentation state (with active question details joined)
 app.get('/api/presentation/state', async (req, res) => {
+  if (cachedPresentationState) {
+    return res.json(cachedPresentationState);
+  }
+  // Fallback if cache not ready
   try {
     const stateResult = await sql.query('SELECT * FROM presentation_state WHERE id = 1');
     if (stateResult.length === 0) {
@@ -125,6 +157,7 @@ app.get('/api/presentation/state', async (req, res) => {
     } else {
       state.question = null;
     }
+    cachedPresentationState = state;
     res.json(state);
   } catch (err) {
     console.error(err);
@@ -185,6 +218,10 @@ app.post('/api/presentation/state', async (req, res) => {
     } else {
       state.question = null;
     }
+    
+    // Update cache
+    cachedPresentationState = state;
+    
     res.json(state);
   } catch (err) {
     console.error(err);
@@ -192,11 +229,59 @@ app.post('/api/presentation/state', async (req, res) => {
   }
 });
 
+// 8. Get Studio Settings
+app.get('/api/studio', async (req, res) => {
+  if (cachedStudioSettings) {
+    return res.json(cachedStudioSettings);
+  }
+  try {
+    const result = await sql.query('SELECT * FROM studio_settings WHERE id = 1');
+    cachedStudioSettings = result[0] || null;
+    res.json(cachedStudioSettings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error fetching studio settings' });
+  }
+});
+
+// 9. Update Studio Settings
+app.post('/api/studio', async (req, res) => {
+  const { welcome_title, welcome_subtitle, theme_primary, theme_secondary, bg_dark, bg_card, font_family, animation_enabled } = req.body;
+  try {
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (welcome_title !== undefined) { fields.push(`welcome_title = $${idx++}`); values.push(welcome_title); }
+    if (welcome_subtitle !== undefined) { fields.push(`welcome_subtitle = $${idx++}`); values.push(welcome_subtitle); }
+    if (theme_primary !== undefined) { fields.push(`theme_primary = $${idx++}`); values.push(theme_primary); }
+    if (theme_secondary !== undefined) { fields.push(`theme_secondary = $${idx++}`); values.push(theme_secondary); }
+    if (bg_dark !== undefined) { fields.push(`bg_dark = $${idx++}`); values.push(bg_dark); }
+    if (bg_card !== undefined) { fields.push(`bg_card = $${idx++}`); values.push(bg_card); }
+    if (font_family !== undefined) { fields.push(`font_family = $${idx++}`); values.push(font_family); }
+    if (animation_enabled !== undefined) { fields.push(`animation_enabled = $${idx++}`); values.push(animation_enabled); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    values.push(1); // WHERE id = 1
+    const queryStr = `UPDATE studio_settings SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+    const result = await sql.query(queryStr, values);
+    
+    // Update cache
+    cachedStudioSettings = result[0];
+    
+    res.json(cachedStudioSettings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error updating studio settings' });
+  }
+});
+
 // Start Server
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-  });
-}
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
 
 module.exports = app;

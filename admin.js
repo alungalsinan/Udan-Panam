@@ -249,12 +249,20 @@ document.getElementById('import-json').addEventListener('change', (e) => {
     reader.readAsText(file);
 });
 
-// Live controls DOM elements
-const welcomeScreenBtn = document.getElementById('live-screen-welcome-btn');
-const quizScreenBtn = document.getElementById('live-screen-quiz-btn');
-const level1Btn = document.getElementById('live-level-1-btn');
-const level2Btn = document.getElementById('live-level-2-btn');
-const level3Btn = document.getElementById('live-level-3-btn');
+// Tab Navigation Logic
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.target).classList.add('active');
+    });
+});
+
+// Live controls DOM elements (Minimalist UI)
+const liveScreenSelect = document.getElementById('live-screen-select');
+const liveLevelSelect = document.getElementById('live-level-select');
 const liveQuestionSelect = document.getElementById('live-question-select');
 const punchBtn = document.getElementById('punch-btn');
 const punchPrevBtn = document.getElementById('punch-prev-btn');
@@ -270,6 +278,8 @@ const liveAudioStop = document.getElementById('live-audio-stop');
 // Simulator DOM elements
 const simScreen = document.getElementById('sim-screen');
 const simWelcomeView = document.getElementById('sim-welcome-view');
+const simWelcomeTitle = document.getElementById('sim-welcome-title');
+const simWelcomeSubtitle = document.getElementById('sim-welcome-subtitle');
 const simQuizView = document.getElementById('sim-quiz-view');
 const simQLevelBadge = document.getElementById('sim-q-level-badge');
 const simVisibilityBadge = document.getElementById('sim-visibility-badge');
@@ -279,8 +289,112 @@ const simQAudio = document.getElementById('sim-q-audio');
 const simQAudioState = document.getElementById('sim-q-audio-state');
 const simOptionsBox = document.getElementById('sim-options-box');
 
-let currentLiveState = {};
+// Studio Form Elements
+const studioForm = document.getElementById('studio-form');
+const sTitle = document.getElementById('studio-welcome-title');
+const sSubtitle = document.getElementById('studio-welcome-subtitle');
+const sPrimary = document.getElementById('studio-theme-primary');
+const sPrimaryTxt = document.getElementById('studio-theme-primary-txt');
+const sSecondary = document.getElementById('studio-theme-secondary');
+const sSecondaryTxt = document.getElementById('studio-theme-secondary-txt');
+const sBgDark = document.getElementById('studio-bg-dark');
+const sBgDarkTxt = document.getElementById('studio-bg-dark-txt');
+const sBgCard = document.getElementById('studio-bg-card');
+const sFont = document.getElementById('studio-font-family');
+const sAnim = document.getElementById('studio-animation-enabled');
+const studioSaveStatus = document.getElementById('studio-save-status');
 
+let currentLiveState = {};
+let currentStudioSettings = {};
+
+// Load Studio Settings
+async function loadStudioSettings() {
+    try {
+        const res = await fetch('/api/studio');
+        currentStudioSettings = await res.json();
+        populateStudioForm();
+        applyStudioSettingsToSimulator();
+    } catch (err) {
+        console.error('Error loading studio settings', err);
+    }
+}
+
+function populateStudioForm() {
+    const s = currentStudioSettings;
+    if(!s) return;
+    sTitle.value = s.welcome_title || '';
+    sSubtitle.value = s.welcome_subtitle || '';
+    
+    // Convert hex logic if needed, but assuming HTML5 color picker handles standard 6-char hex
+    sPrimary.value = s.theme_primary?.substring(0,7) || '#00e5ff';
+    sPrimaryTxt.value = s.theme_primary || '#00e5ff';
+    
+    sSecondary.value = s.theme_secondary?.substring(0,7) || '#ffd700';
+    sSecondaryTxt.value = s.theme_secondary || '#ffd700';
+    
+    sBgDark.value = s.bg_dark?.substring(0,7) || '#070b19';
+    sBgDarkTxt.value = s.bg_dark || '#070b19';
+    
+    sBgCard.value = s.bg_card || 'rgba(16, 24, 45, 0.8)';
+    sFont.value = s.font_family || "'Anek Malayalam', sans-serif";
+    sAnim.checked = s.animation_enabled !== false;
+}
+
+// Sync Color inputs
+function syncColors(colorEl, txtEl) {
+    colorEl.addEventListener('input', () => txtEl.value = colorEl.value);
+    txtEl.addEventListener('input', () => colorEl.value = txtEl.value.substring(0,7));
+}
+syncColors(sPrimary, sPrimaryTxt);
+syncColors(sSecondary, sSecondaryTxt);
+syncColors(sBgDark, sBgDarkTxt);
+
+// Save Studio Settings
+studioForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+        welcome_title: sTitle.value,
+        welcome_subtitle: sSubtitle.value,
+        theme_primary: sPrimaryTxt.value,
+        theme_secondary: sSecondaryTxt.value,
+        bg_dark: sBgDarkTxt.value,
+        bg_card: sBgCard.value,
+        font_family: sFont.value,
+        animation_enabled: sAnim.checked
+    };
+    
+    try {
+        const res = await fetch('/api/studio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        currentStudioSettings = await res.json();
+        applyStudioSettingsToSimulator();
+        
+        studioSaveStatus.textContent = 'Saved!';
+        setTimeout(() => studioSaveStatus.textContent = '', 2000);
+    } catch (err) {
+        console.error('Failed to save studio settings', err);
+        studioSaveStatus.textContent = 'Error saving';
+        studioSaveStatus.style.color = 'red';
+    }
+});
+
+function applyStudioSettingsToSimulator() {
+    const s = currentStudioSettings;
+    if(!s) return;
+    
+    const root = document.documentElement;
+    root.style.setProperty('--primary-glow', s.theme_primary);
+    root.style.setProperty('--secondary-glow', s.theme_secondary);
+    root.style.setProperty('--bg-dark', s.bg_dark);
+    root.style.setProperty('--bg-card', s.bg_card);
+    root.style.setProperty('--font-main', s.font_family);
+    
+    simWelcomeTitle.textContent = s.welcome_title || 'Welcome';
+    simWelcomeSubtitle.textContent = s.welcome_subtitle || 'Subtitle';
+}
 // Update live presentation state on server
 async function updateLiveState(payload) {
     try {
@@ -319,24 +433,11 @@ async function pollLiveState() {
 function syncLiveControlsUI() {
     if (!currentLiveState) return;
 
-    // 1. Screen Selection buttons
-    if (currentLiveState.active_screen === 'welcome') {
-        welcomeScreenBtn.classList.add('active');
-        quizScreenBtn.classList.remove('active');
-    } else {
-        welcomeScreenBtn.classList.remove('active');
-        quizScreenBtn.classList.add('active');
-    }
+    // 1. Screen Selection
+    liveScreenSelect.value = currentLiveState.active_screen || 'welcome';
 
-    // 2. Active Level Filter buttons
-    const activeLvl = currentLiveState.active_level || 1;
-    [level1Btn, level2Btn, level3Btn].forEach((btn, index) => {
-        if (index + 1 === activeLvl) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
+    // 2. Active Level
+    liveLevelSelect.value = currentLiveState.active_level || 1;
 
     // 3. Display Toggles
     toggleQuestionView.checked = currentLiveState.show_question;
@@ -345,10 +446,10 @@ function syncLiveControlsUI() {
     // 4. Reveal Answer button
     if (currentLiveState.reveal_answer) {
         liveRevealBtn.classList.add('active');
-        liveRevealBtn.textContent = 'Hide Answer';
+        liveRevealBtn.textContent = 'Hide';
     } else {
         liveRevealBtn.classList.remove('active');
-        liveRevealBtn.textContent = 'Reveal Answer';
+        liveRevealBtn.textContent = 'Reveal';
     }
 
     // 5. Audio Playback indicator active button
@@ -377,7 +478,7 @@ function syncLiveControlsUI() {
 
     const simQuestionBox = document.querySelector('.sim-question-box');
     if (q) {
-        simQLevelBadge.textContent = `Level ${q.level || 1}`;
+        simQLevelBadge.textContent = `L${q.level || 1}`;
         simQText.textContent = q.question_text || '(Audio Question)';
         
         if (q.image_url) {
@@ -395,11 +496,11 @@ function syncLiveControlsUI() {
 
         if (currentLiveState.show_question) {
             simQuestionBox.classList.remove('blurred');
-            simVisibilityBadge.textContent = 'Visible';
+            simVisibilityBadge.textContent = 'Vis';
             simVisibilityBadge.className = 'badge';
         } else {
             simQuestionBox.classList.add('blurred');
-            simVisibilityBadge.textContent = 'Hidden';
+            simVisibilityBadge.textContent = 'Hid';
             simVisibilityBadge.className = 'badge secondary';
         }
 
@@ -458,19 +559,13 @@ function updateLiveQuestionDropdown() {
 }
 
 // Attach Event Listeners
-welcomeScreenBtn.addEventListener('click', () => {
-    updateLiveState({ active_screen: 'welcome' });
-});
-quizScreenBtn.addEventListener('click', () => {
-    updateLiveState({ active_screen: 'quiz' });
+liveScreenSelect.addEventListener('change', () => {
+    updateLiveState({ active_screen: liveScreenSelect.value });
 });
 
-[level1Btn, level2Btn, level3Btn].forEach((btn, index) => {
-    btn.addEventListener('click', () => {
-        const lvl = index + 1;
-        updateLiveState({ active_level: lvl }).then(() => {
-            updateLiveQuestionDropdown();
-        });
+liveLevelSelect.addEventListener('change', () => {
+    updateLiveState({ active_level: parseInt(liveLevelSelect.value) }).then(() => {
+        updateLiveQuestionDropdown();
     });
 });
 
@@ -529,4 +624,5 @@ liveAudioStop.addEventListener('click', () => {
 setInterval(pollLiveState, 1000);
 
 // Initial load
+loadStudioSettings();
 loadQuestions();

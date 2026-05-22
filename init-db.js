@@ -31,9 +31,29 @@ const createPresentationStateTableQuery = `
   );
 `;
 
+const createStudioSettingsTableQuery = `
+  CREATE TABLE IF NOT EXISTS studio_settings (
+    id INTEGER PRIMARY KEY,
+    welcome_title TEXT DEFAULT 'College Union Quiz 2026',
+    welcome_subtitle TEXT DEFAULT 'The Ultimate Battle of Minds',
+    theme_primary VARCHAR(50) DEFAULT '#00e5ff',
+    theme_secondary VARCHAR(50) DEFAULT '#ffd700',
+    bg_dark VARCHAR(50) DEFAULT '#070B19',
+    bg_card VARCHAR(50) DEFAULT 'rgba(16, 24, 45, 0.8)',
+    font_family VARCHAR(50) DEFAULT '''Anek Malayalam'', sans-serif',
+    animation_enabled BOOLEAN DEFAULT TRUE
+  );
+`;
+
 const seedPresentationStateQuery = `
   INSERT INTO presentation_state (id, active_screen, active_level, show_question, show_options, reveal_answer, audio_status)
   VALUES (1, 'welcome', 1, TRUE, FALSE, FALSE, 'stopped')
+  ON CONFLICT (id) DO NOTHING;
+`;
+
+const seedStudioSettingsQuery = `
+  INSERT INTO studio_settings (id)
+  VALUES (1)
   ON CONFLICT (id) DO NOTHING;
 `;
 
@@ -64,6 +84,8 @@ async function initDB() {
     await sql.query(alterTableQuery);
     await sql.query(createPresentationStateTableQuery);
     await sql.query(seedPresentationStateQuery);
+    await sql.query(createStudioSettingsTableQuery);
+    await sql.query(seedStudioSettingsQuery);
     console.log("✅ Table schemas are up to date.");
     
     // Check if table is empty
