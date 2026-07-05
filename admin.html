@@ -1,302 +1,687 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Admin Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Udan Panam — Admin Dashboard</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="admin.css" />
 </head>
-<body>
-    <div class="admin-container">
-        <header>
-            <h1>Quiz Admin Panel</h1>
-            <div class="actions">
-                <button id="add-btn" class="btn primary">Add New Question</button>
-                <button id="export-json-btn" class="btn secondary">Export JSON</button>
-                <button id="download-template-btn" class="btn secondary">Template JSON</button>
-                <label for="import-json" class="btn secondary" style="cursor: pointer;">
-                    Import JSON
-                    <input type="file" id="import-json" accept=".json" style="display: none;">
-                </label>
-                <button id="delete-all-btn" class="btn danger">Clear Data</button>
-            </div>
-        </header>
+<body class="dark-mode">
 
-        <!-- Tab Navigation -->
-        <div class="tabs-container">
-            <button class="tab-btn active" data-target="tab-control-center">Control Center</button>
-            <button class="tab-btn" data-target="tab-question-manager">Question Manager</button>
-            <button class="tab-btn" data-target="tab-studio">Studio Panel</button>
+  <!-- ─── Login Overlay ─── -->
+  <div id="login-overlay" class="login-overlay active">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">🎛️</div>
+        <h2>Udan Panam Control Room</h2>
+        <p>Please enter your access password to continue</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <input type="password" id="login-password" placeholder="Access Password" required />
         </div>
+        <div id="login-error" class="login-error"></div>
+        <button type="submit" class="primary-btn full-width">Unlock Dashboard</button>
+      </form>
+    </div>
+  </div>
 
-        <!-- TAB: Live Control Center -->
-        <section id="tab-control-center" class="tab-content active">
-            <div class="live-control-card">
-                <div class="card-header">
-                    <h2>Live Control Center</h2>
-                    <div class="live-indicator">
-                        <span class="pulse-dot"></span>
-                        <span>LIVE</span>
-                    </div>
+  <!-- ─── Main Admin Layout ─── -->
+  <div id="admin-layout" class="admin-layout" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">🎰</span>
+        <span class="brand-text">Udan Panam v2.0</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-tab="live"><span class="nav-icon">🎮</span><span class="nav-text">Live Control</span></a>
+        <a href="#" class="nav-item" data-tab="questions"><span class="nav-icon">📋</span><span class="nav-text">Questions</span></a>
+        <a href="#" class="nav-item" data-tab="contestants"><span class="nav-icon">👥</span><span class="nav-text">Contestants</span></a>
+        <a href="#" class="nav-item" data-tab="sessions"><span class="nav-icon">🏆</span><span class="nav-text">Sessions</span></a>
+        <a href="#" class="nav-item" data-tab="studio"><span class="nav-icon">🎨</span><span class="nav-text">Studio</span></a>
+        <a href="#" class="nav-item" data-tab="sounds"><span class="nav-icon">🔊</span><span class="nav-text">Sound Board</span></a>
+        <a href="#" class="nav-item" data-tab="analytics"><span class="nav-icon">📊</span><span class="nav-text">Analytics</span></a>
+        <a href="#" class="nav-item" data-tab="preview"><span class="nav-icon">👁</span><span class="nav-text">Preview</span></a>
+        <a href="#" class="nav-item" data-tab="settings"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="ghost-btn full-width"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="main-header">
+        <div class="header-left">
+          <button id="sidebar-toggle" class="icon-btn">☰</button>
+          <h1 id="page-title">Live Control Room</h1>
+        </div>
+        <div class="header-right">
+          <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span>LIVE BROADCAST</span>
+          </div>
+          <div id="connection-status" class="connection-pill green">Connected</div>
+        </div>
+      </header>
+
+      <!-- Scrollable Tab Content Wrapper -->
+      <div class="content-body">
+
+        <!-- 🎮 Live Control Tab -->
+        <section id="tab-live" class="tab-section active">
+          <div class="grid-layout cols-3">
+            <!-- Col 1: Screen & Level Switches -->
+            <div class="card bg-glass">
+              <h3>Presentation Controls</h3>
+              <div class="form-group margin-top">
+                <label>Screen Select</label>
+                <div class="segmented-control">
+                  <button id="screen-welcome-btn" class="active">Welcome Screen</button>
+                  <button id="screen-quiz-btn">Quiz Screen</button>
                 </div>
-                
-                <div class="control-grid-minimal">
-                    <!-- Streamlined Screen & Level Controls -->
-                    <div class="control-box-minimal">
-                        <div class="minimal-label">Screen & Filter</div>
-                        <div class="minimal-row">
-                            <select id="live-screen-select" class="minimal-select">
-                                <option value="welcome">Welcome Screen</option>
-                                <option value="quiz">Quiz Screen</option>
-                            </select>
-                            <select id="live-level-select" class="minimal-select">
-                                <option value="1">L1 - Text</option>
-                                <option value="2">L2 - Image</option>
-                                <option value="3">L3 - Audio</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Streamlined Question Puncher -->
-                    <div class="control-box-minimal full-width">
-                        <div class="minimal-label">Question Selection</div>
-                        <div class="puncher-row-minimal">
-                            <button id="punch-prev-btn" class="minimal-icon-btn">◀</button>
-                            <select id="live-question-select" class="minimal-select punch-select">
-                                <!-- Populated dynamically -->
-                            </select>
-                            <button id="punch-next-btn" class="minimal-icon-btn">▶</button>
-                            <button id="punch-btn" class="btn primary glow-btn-minimal">Punch</button>
-                        </div>
-                    </div>
-
-                    <!-- Streamlined Display & Action Controls -->
-                    <div class="control-box-minimal">
-                        <div class="minimal-label">Display & Actions</div>
-                        <div class="toggle-row-minimal">
-                            <label class="switch-minimal">
-                                <input type="checkbox" id="toggle-question-view" checked>
-                                <span class="slider-minimal"></span>
-                                <span class="lbl">Q</span>
-                            </label>
-                            <label class="switch-minimal">
-                                <input type="checkbox" id="toggle-options-view">
-                                <span class="slider-minimal"></span>
-                                <span class="lbl">Opt</span>
-                            </label>
-                            <button id="live-reveal-btn" class="btn danger minimal-action-btn">Reveal</button>
-                            
-                            <!-- Audio Controls -->
-                            <div id="live-audio-controls" class="minimal-audio-group" style="display: none;">
-                                <button id="live-audio-play" class="minimal-icon-btn play">▶</button>
-                                <button id="live-audio-pause" class="minimal-icon-btn">⏸</button>
-                                <button id="live-audio-stop" class="minimal-icon-btn">⏹</button>
-                            </div>
-                        </div>
-                    </div>
+              </div>
+              <div class="form-group">
+                <label>Level Filter</label>
+                <div class="segmented-control">
+                  <button id="level-1-btn" class="active">L1: Text</button>
+                  <button id="level-2-btn">L2: Image</button>
+                  <button id="level-3-btn">L3: Audio</button>
                 </div>
-
-                <!-- Live Screen Simulator -->
-                <div class="simulator-panel-minimal">
-                    <div class="minimal-label">Preview</div>
-                    <div class="simulator-preview">
-                        <div id="sim-screen" class="sim-screen welcome">
-                            <!-- Welcome Preview -->
-                            <div id="sim-welcome-view" class="sim-view active">
-                                <div class="sim-logo" id="sim-welcome-title">College Union Quiz 2026</div>
-                                <div class="sim-tagline" id="sim-welcome-subtitle">Welcome Screen Active</div>
-                            </div>
-                            <!-- Quiz Preview -->
-                            <div id="sim-quiz-view" class="sim-view">
-                                <div class="sim-question-box">
-                                    <div class="sim-badge-row">
-                                        <span id="sim-q-level-badge" class="badge">L1</span>
-                                        <span id="sim-visibility-badge" class="badge secondary">Visible</span>
-                                    </div>
-                                    <p id="sim-q-text">No question loaded</p>
-                                    <div id="sim-image-container" style="display: none;">
-                                        <span class="sim-placeholder-label">🖼 Image</span>
-                                    </div>
-                                    <div id="sim-q-audio" class="sim-audio-indicator" style="display: none;">
-                                        🎵 Audio (<span id="sim-q-audio-state">stopped</span>)
-                                    </div>
-                                </div>
-                                <div id="sim-options-box" class="sim-options-grid">
-                                    <!-- Options injected via JS -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+              </div>
+              <div class="form-group">
+                <label>Game Mode</label>
+                <div class="segmented-control">
+                  <button id="mode-single-btn" class="active">Single Player</button>
+                  <button id="mode-team-btn">Team Mode</button>
                 </div>
-            </div>
-        </section>
-
-        <!-- TAB: Question Manager -->
-        <section id="tab-question-manager" class="tab-content">
-            <div class="filter-bar">
-                <input type="text" id="search-input" placeholder="Search questions..." class="search-input">
-                <select id="level-filter" class="filter-select">
-                    <option value="all">All Levels</option>
-                    <option value="1">1 - Text</option>
-                    <option value="2">2 - Image</option>
-                    <option value="3">3 - Audio</option>
+              </div>
+              <div class="form-group">
+                <label>Active Contestant</label>
+                <select id="live-contestant-select" class="form-control">
+                  <option value="">No Active Contestant</option>
                 </select>
+              </div>
+              <div class="form-group">
+                <label>Active Game Session</label>
+                <select id="live-session-select" class="form-control">
+                  <option value="">No Active Session</option>
+                </select>
+              </div>
             </div>
 
-            <div class="table-container">
-                <table id="questions-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Level</th>
-                            <th>Question</th>
-                            <th>A</th>
-                            <th>B</th>
-                            <th>C</th>
-                            <th>D</th>
-                            <th>Ans</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
+            <!-- Col 2: Question Controller -->
+            <div class="card bg-glass">
+              <h3>Question Dispatch</h3>
+              <div class="current-question-preview margin-top">
+                <div id="live-question-progress" class="question-number">No Question Active</div>
+                <div id="live-question-text" class="question-text">Use Next/Prev to punch a question onto the screen.</div>
+              </div>
+              <div class="grid-layout cols-2 gap-small margin-top">
+                <button id="prev-question-btn" class="ghost-btn">◀ Previous</button>
+                <button id="next-question-btn" class="primary-btn">Next Question ▶</button>
+              </div>
+              <hr class="divider" />
+              <div class="form-group">
+                <label>Visibility Controls</label>
+                <div class="grid-layout cols-2 gap-small">
+                  <button id="toggle-question-btn" class="toggle-btn active">Show Question</button>
+                  <button id="toggle-options-btn" class="toggle-btn">Show Options</button>
+                  <button id="reveal-answer-btn" class="toggle-btn danger-color">Reveal Answer</button>
+                  <button id="toggle-explanation-btn" class="toggle-btn">Explanation</button>
+                </div>
+              </div>
             </div>
+
+            <!-- Col 3: Timer & Lifelines & Media -->
+            <div class="card bg-glass">
+              <h3>Timer & Lifelines</h3>
+              <div class="timer-control-panel margin-top">
+                <div class="timer-display-circle">
+                  <span id="live-timer-text">30</span>s
+                </div>
+                <div class="grid-layout cols-3 gap-small margin-top">
+                  <button id="timer-start-btn" class="success-btn">Start</button>
+                  <button id="timer-pause-btn" class="warning-btn">Pause</button>
+                  <button id="timer-stop-btn" class="ghost-btn">Reset</button>
+                </div>
+              </div>
+              <hr class="divider" />
+              <div class="form-group">
+                <label>Contestant Lifelines</label>
+                <div class="grid-layout cols-2 gap-small">
+                  <button id="lifeline-fifty-btn" class="ghost-btn">50 : 50</button>
+                  <button id="lifeline-poll-btn" class="ghost-btn">Audience Poll</button>
+                </div>
+              </div>
+              <hr class="divider" />
+              <div class="form-group">
+                <label>Media Controls</label>
+                <div class="grid-layout cols-3 gap-small">
+                  <button id="audio-play-btn" class="ghost-btn">▶ Play</button>
+                  <button id="audio-pause-btn" class="ghost-btn">⏸ Pause</button>
+                  <button id="audio-stop-btn" class="ghost-btn">⏹ Stop</button>
+                </div>
+              </div>
+              <div class="grid-layout cols-2 gap-small margin-top">
+                <button id="trigger-confetti-btn" class="success-btn">🎉 Celebration</button>
+                <button id="sound-suspense-btn" class="warning-btn">🔊 Suspense</button>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <!-- TAB: Studio Panel -->
-        <section id="tab-studio" class="tab-content">
-            <div class="studio-card">
-                <h2>Studio Panel</h2>
-                <p class="studio-desc">Customize the look and feel of the presentation screens.</p>
-                
-                <form id="studio-form" class="studio-form">
-                    <div class="studio-grid">
-                        <div class="form-group">
-                            <label>Welcome Title</label>
-                            <input type="text" id="studio-welcome-title" class="studio-input" />
-                        </div>
-                        <div class="form-group">
-                            <label>Welcome Subtitle</label>
-                            <input type="text" id="studio-welcome-subtitle" class="studio-input" />
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Primary Theme Color</label>
-                            <div class="color-picker-wrapper">
-                                <input type="color" id="studio-theme-primary" class="studio-color" />
-                                <input type="text" id="studio-theme-primary-txt" class="studio-input-small" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Secondary Theme Color</label>
-                            <div class="color-picker-wrapper">
-                                <input type="color" id="studio-theme-secondary" class="studio-color" />
-                                <input type="text" id="studio-theme-secondary-txt" class="studio-input-small" />
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Background Dark Color</label>
-                            <div class="color-picker-wrapper">
-                                <input type="color" id="studio-bg-dark" class="studio-color" />
-                                <input type="text" id="studio-bg-dark-txt" class="studio-input-small" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Card Background (Hex/RGBA)</label>
-                            <input type="text" id="studio-bg-card" class="studio-input" placeholder="rgba(16, 24, 45, 0.8)" />
-                        </div>
-
-                        <div class="form-group">
-                            <label>Font Family</label>
-                            <select id="studio-font-family" class="studio-select">
-                                <option value="'Anek Malayalam', sans-serif">Anek Malayalam</option>
-                                <option value="'Inter', sans-serif">Inter</option>
-                                <option value="'Outfit', sans-serif">Outfit</option>
-                                <option value="'Roboto', sans-serif">Roboto</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group toggle-group">
-                            <label class="switch-minimal">
-                                <input type="checkbox" id="studio-animation-enabled">
-                                <span class="slider-minimal"></span>
-                            </label>
-                            <span class="lbl-text">Enable Dynamic Animations</span>
-                        </div>
-                    </div>
-                    
-                    <div class="studio-actions">
-                        <button type="submit" class="btn primary glow-btn-minimal" id="save-studio-btn">Save Changes</button>
-                        <span id="studio-save-status" class="save-status"></span>
-                    </div>
-                </form>
+        <!-- 📋 Questions CRUD Tab -->
+        <section id="tab-questions" class="tab-section">
+          <div class="card bg-glass">
+            <div class="table-header">
+              <div class="table-actions-left">
+                <input type="text" id="question-search-input" placeholder="Search questions..." class="form-control search-input" />
+                <select id="question-level-filter" class="form-control filter-select">
+                  <option value="">All Levels</option>
+                  <option value="1">Level 1 (Text)</option>
+                  <option value="2">Level 2 (Image)</option>
+                  <option value="3">Level 3 (Audio)</option>
+                </select>
+              </div>
+              <div class="table-actions-right">
+                <button id="add-question-btn" class="success-btn">+ Add New</button>
+                <button id="import-btn" class="ghost-btn">Import JSON</button>
+                <button id="export-btn" class="ghost-btn">Export JSON</button>
+                <button id="template-btn" class="ghost-btn">Template</button>
+                <button id="clear-all-questions-btn" class="danger-btn">Clear All</button>
+              </div>
             </div>
+            <div class="table-wrapper">
+              <table id="questions-table">
+                <thead>
+                  <tr>
+                    <th>Sort</th>
+                    <th>ID</th>
+                    <th>Level</th>
+                    <th>Question Text</th>
+                    <th>Category</th>
+                    <th>Points</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="questions-table-body">
+                  <!-- JS generated rows -->
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination" id="questions-pagination">
+              <!-- JS generated controls -->
+            </div>
+          </div>
         </section>
-    </div>
 
-    <!-- Modal for Add/Edit -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h2 id="modal-title">Add Question</h2>
-            <form id="question-form">
-                <input type="hidden" id="q-id">
+        <!-- 👥 Contestants Tab -->
+        <section id="tab-contestants" class="tab-section">
+          <div class="grid-layout cols-3">
+            <div class="card bg-glass col-span-1">
+              <h3>Add Contestant</h3>
+              <form id="add-contestant-form" class="margin-top">
                 <div class="form-group">
-                    <label>Level</label>
-                    <select id="q-level" required>
-                        <option value="1">1 - Text</option>
-                        <option value="2">2 - Image</option>
-                        <option value="3">3 - Audio</option>
-                    </select>
+                  <label>Name</label>
+                  <input type="text" id="contestant-name-input" placeholder="Contestant Name" class="form-control" required />
                 </div>
                 <div class="form-group">
-                    <label>Question Text (Optional for Audio)</label>
-                    <textarea id="q-text"></textarea>
+                  <label>Avatar Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="contestant-color-picker" value="#00e5ff" />
+                    <input type="text" id="contestant-color-text" value="#00e5ff" class="form-control" />
+                  </div>
                 </div>
                 <div class="form-group">
-                    <label>Audio URL (For Level 3)</label>
-                    <input type="text" id="q-audio-url" placeholder="https://example.com/audio.mp3">
+                  <label>Select Session</label>
+                  <select id="contestant-session-select" class="form-control" required>
+                    <option value="">Select a Game Session</option>
+                  </select>
+                </div>
+                <button type="submit" class="success-btn full-width margin-top">Create Contestant</button>
+              </form>
+            </div>
+            <div class="col-span-2">
+              <div class="grid-layout cols-2 gap-medium" id="contestants-grid">
+                <!-- JS generated contestant cards -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 🏆 Game Sessions Tab -->
+        <section id="tab-sessions" class="tab-section">
+          <div class="grid-layout cols-3">
+            <div class="card bg-glass col-span-1">
+              <h3>Create Game Session</h3>
+              <form id="create-session-form" class="margin-top">
+                <div class="form-group">
+                  <label>Session Name</label>
+                  <input type="text" id="session-name-input" placeholder="e.g. College Union Quiz Round 1" class="form-control" required />
                 </div>
                 <div class="form-group">
-                    <label>Image URL (For Level 2)</label>
-                    <input type="text" id="q-image-url" placeholder="https://example.com/image.jpg">
+                  <label>Scoring Mode</label>
+                  <select id="session-scoring-select" class="form-control">
+                    <option value="fixed">Fixed Points (10 pts)</option>
+                    <option value="speed_bonus">Speed Bonus (Fast Response)</option>
+                    <option value="streak">Streak multiplier</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                    <label>Option A</label>
-                    <input type="text" id="q-opt-a" required>
+                  <label>Default Timer (seconds)</label>
+                  <input type="number" id="session-timer-input" value="30" class="form-control" />
                 </div>
                 <div class="form-group">
-                    <label>Option B</label>
-                    <input type="text" id="q-opt-b" required>
+                  <label>Game Mode</label>
+                  <select id="session-mode-select" class="form-control">
+                    <option value="single">Single Player (Udan Panam tree)</option>
+                    <option value="team">Team Mode (Group score)</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                    <label>Option C</label>
-                    <input type="text" id="q-opt-c" required>
+                  <label>Notes</label>
+                  <textarea id="session-notes-input" placeholder="Optional notes..." class="form-control"></textarea>
+                </div>
+                <button type="submit" class="success-btn full-width margin-top">Create Session</button>
+              </form>
+            </div>
+            <div class="col-span-2">
+              <div class="grid-layout cols-2 gap-medium" id="sessions-grid">
+                <!-- JS generated session cards -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 🎨 Studio Theming Tab -->
+        <section id="tab-studio" class="tab-section">
+          <div class="card bg-glass">
+            <h3>Visual Theme Editor</h3>
+            <form id="studio-settings-form" class="margin-top grid-layout cols-2">
+              <div>
+                <div class="form-group">
+                  <label>Theme Preset</label>
+                  <select id="theme-preset-select" class="form-control">
+                    <option value="neon-night">Neon Night (Dark Cyan/Gold)</option>
+                    <option value="sunset-blaze">Sunset Blaze (Dark Red/Gold)</option>
+                    <option value="ocean-deep">Ocean Deep (Dark Blue/Teal)</option>
+                    <option value="minimal-white">Minimal White (Light Gray/Black)</option>
+                    <option value="retro-arcade">Retro Arcade (Purple/Green)</option>
+                    <option value="custom">Custom Configuration</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                    <label>Option D</label>
-                    <input type="text" id="q-opt-d" required>
+                  <label>Primary Glow Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="theme-primary-picker" value="#00e5ff" />
+                    <input type="text" id="theme-primary-text" value="#00e5ff" class="form-control" />
+                  </div>
                 </div>
                 <div class="form-group">
-                    <label>Correct Answer</label>
-                    <select id="q-ans" required>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                    </select>
+                  <label>Secondary Glow Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="theme-secondary-picker" value="#ffd700" />
+                    <input type="text" id="theme-secondary-text" value="#ffd700" class="form-control" />
+                  </div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" id="cancel-btn" class="btn secondary">Cancel</button>
-                    <button type="submit" class="btn primary">Save</button>
+                <div class="form-group">
+                  <label>Background Dark Color</label>
+                  <div class="color-picker-group">
+                    <input type="color" id="theme-bg-picker" value="#070B19" />
+                    <input type="text" id="theme-bg-text" value="#070B19" class="form-control" />
+                  </div>
                 </div>
+                <div class="form-group">
+                  <label>Card Background Color</label>
+                  <input type="text" id="theme-card-text" value="rgba(16, 24, 45, 0.8)" class="form-control" />
+                </div>
+              </div>
+
+              <div>
+                <div class="form-group">
+                  <label>Welcome Screen Title</label>
+                  <input type="text" id="theme-welcome-title" placeholder="Welcome" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Welcome Screen Subtitle</label>
+                  <input type="text" id="theme-welcome-subtitle" placeholder="Subtitle" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Font Family</label>
+                  <select id="theme-font-select" class="form-control">
+                    <option value="'Anek Malayalam', sans-serif">Anek Malayalam</option>
+                    <option value="'Inter', sans-serif">Inter</option>
+                    <option value="'Outfit', sans-serif">Outfit</option>
+                    <option value="'Roboto', sans-serif">Roboto</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Logo Image URL</label>
+                  <input type="text" id="theme-logo-url" placeholder="https://..." class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Background Video URL</label>
+                  <input type="text" id="theme-bg-video-url" placeholder="https://..." class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Background Image URL</label>
+                  <input type="text" id="theme-bg-image-url" placeholder="https://..." class="form-control" />
+                </div>
+              </div>
+
+              <div class="col-span-2 grid-layout cols-3 margin-top">
+                <div class="form-group">
+                  <label>Transition Effect</label>
+                  <div class="radio-group">
+                    <label><input type="radio" name="transition-style" value="fade" checked /> Fade</label>
+                    <label><input type="radio" name="transition-style" value="slide" /> Slide</label>
+                    <label><input type="radio" name="transition-style" value="zoom" /> Zoom</label>
+                    <label><input type="radio" name="transition-style" value="flip" /> Flip</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Option Reveal Mode</label>
+                  <div class="radio-group">
+                    <label><input type="radio" name="reveal-style" value="all" /> All At Once</label>
+                    <label><input type="radio" name="reveal-style" value="staggered" checked /> Staggered</label>
+                    <label><input type="radio" name="reveal-style" value="onebyone" /> One by One</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Control Toggles</label>
+                  <div class="toggle-container">
+                    <label class="switch-label">
+                      <input type="checkbox" id="theme-animations-toggle" checked />
+                      <span class="switch-slider"></span>
+                      Animations Active
+                    </label>
+                  </div>
+                  <div class="toggle-container margin-top">
+                    <label class="switch-label">
+                      <input type="checkbox" id="theme-lang-toggle" />
+                      <span class="switch-slider"></span>
+                      Malayalam UI labels
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="success-btn col-span-2 margin-top">Save & Apply Settings</button>
             </form>
-        </div>
-    </div>
+          </div>
+        </section>
 
-    <script src="admin.js"></script>
+        <!-- 🔊 Sound Board Tab -->
+        <section id="tab-sounds" class="tab-section">
+          <div class="card bg-glass">
+            <h3>Sound Effects Configuration</h3>
+            <div class="grid-layout cols-2 gap-medium margin-top" id="sounds-list-container">
+              <!-- JS generated sound effects configurations -->
+            </div>
+            <hr class="divider" />
+            <h3>Background Music Controls</h3>
+            <div class="form-group margin-top grid-layout cols-3">
+              <input type="text" id="bg-music-url-input" placeholder="Background Music URL" class="form-control" />
+              <button id="bg-music-test-btn" class="ghost-btn">▶ Play Music</button>
+              <button id="bg-music-save-btn" class="success-btn">Save URL</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 📊 Analytics Tab -->
+        <section id="tab-analytics" class="tab-section">
+          <div class="grid-layout cols-5 margin-bottom">
+            <div class="card bg-glass stat-card">
+              <span class="stat-icon">🏆</span>
+              <div class="stat-num" id="stat-sessions">0</div>
+              <div class="stat-label">Total Sessions</div>
+            </div>
+            <div class="card bg-glass stat-card">
+              <span class="stat-icon">📋</span>
+              <div class="stat-num" id="stat-questions">0</div>
+              <div class="stat-label">Total Questions</div>
+            </div>
+            <div class="card bg-glass stat-card">
+              <span class="stat-icon">🗳</span>
+              <div class="stat-num" id="stat-answers">0</div>
+              <div class="stat-label">Answers Logged</div>
+            </div>
+            <div class="card bg-glass stat-card">
+              <span class="stat-icon">🎯</span>
+              <div class="stat-num" id="stat-accuracy">0%</div>
+              <div class="stat-label">Overall Accuracy</div>
+            </div>
+            <div class="card bg-glass stat-card">
+              <span class="stat-icon">👥</span>
+              <div class="stat-num" id="stat-contestants">0</div>
+              <div class="stat-label">Total Contestants</div>
+            </div>
+          </div>
+          <div class="card bg-glass">
+            <h3>Question Difficulty Analytics</h3>
+            <div class="table-wrapper margin-top">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Question Text</th>
+                    <th>Level</th>
+                    <th>Times Asked</th>
+                    <th>Accuracy</th>
+                    <th>Avg Time (ms)</th>
+                  </tr>
+                </thead>
+                <tbody id="difficulty-table-body">
+                  <!-- JS generated analytics rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 👁 Preview Tab -->
+        <section id="tab-preview" class="tab-section">
+          <div class="card bg-glass">
+            <div class="table-header">
+              <h3>Live Screen Broadcast Simulator</h3>
+              <button id="preview-refresh-btn" class="ghost-btn">🔄 Refresh Feed</button>
+            </div>
+            <div class="preview-iframe-container margin-top">
+              <iframe id="preview-iframe" src="/"></iframe>
+            </div>
+          </div>
+        </section>
+
+        <!-- ⚙️ Settings Tab -->
+        <section id="tab-settings" class="tab-section">
+          <div class="grid-layout cols-2">
+            <!-- Password & Defaults -->
+            <div class="card bg-glass">
+              <h3>Dashboard Security</h3>
+              <form id="change-password-form" class="margin-top">
+                <div class="form-group">
+                  <label>Current Password</label>
+                  <input type="password" id="current-password-input" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label>New Password</label>
+                  <input type="password" id="new-password-input" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label>Confirm New Password</label>
+                  <input type="password" id="confirm-password-input" class="form-control" required />
+                </div>
+                <button type="submit" class="success-btn full-width margin-top">Change Password</button>
+              </form>
+
+              <hr class="divider" />
+              <h3>App Defaults</h3>
+              <form id="admin-settings-form">
+                <div class="form-group">
+                  <label>Default Timer Duration (seconds)</label>
+                  <input type="number" id="default-timer-input" value="30" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Default Scoring Mode</label>
+                  <select id="default-scoring-select" class="form-control">
+                    <option value="fixed">Fixed</option>
+                    <option value="speed_bonus">Speed Bonus</option>
+                    <option value="streak">Streak</option>
+                  </select>
+                </div>
+                <button type="submit" class="success-btn full-width margin-top">Save Defaults</button>
+              </form>
+            </div>
+
+            <!-- Backup & Keyboard -->
+            <div class="card bg-glass">
+              <h3>Data Management</h3>
+              <div class="margin-top">
+                <p class="description">Download a comprehensive JSON archive containing all questions, contestants, sessions, answer logs, sound effects, and configurations.</p>
+                <button id="backup-download-btn" class="primary-btn full-width margin-top">📥 Download DB Backup</button>
+              </div>
+              <div class="margin-top">
+                <p class="description">Restore database states or import bulk settings from a valid Udan Panam v2.0 JSON backup file.</p>
+                <div class="file-upload-group margin-top">
+                  <input type="file" id="backup-upload-input" accept=".json" style="display: none;" />
+                  <button id="backup-upload-btn" class="ghost-btn full-width">📤 Upload DB Backup</button>
+                </div>
+              </div>
+              
+              <hr class="divider" />
+              <h3>Keyboard Shortcuts Reference</h3>
+              <div class="table-wrapper margin-top">
+                <table class="shortcuts-table">
+                  <thead>
+                    <tr>
+                      <th>Key</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><kbd>Space</kbd></td><td>Next Question / Dispatch Question</td></tr>
+                    <tr><td><kbd>R</kbd></td><td>Reveal Correct Answer</td></tr>
+                    <tr><td><kbd>T</kbd></td><td>Toggle Timer Start / Pause</td></tr>
+                    <tr><td><kbd>O</kbd></td><td>Toggle Options Visibility</td></tr>
+                    <tr><td><kbd>Q</kbd></td><td>Toggle Question Visibility</td></tr>
+                    <tr><td><kbd>E</kbd></td><td>Toggle Explanation Visibility</td></tr>
+                    <tr><td><kbd>Escape</kbd></td><td>Force Switch to Welcome Screen</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── Add/Edit Question Modal ─── -->
+  <div id="question-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="close-question-modal">&times;</span>
+      <h2 id="modal-title">Add New Question</h2>
+      <form id="question-form" class="margin-top">
+        <input type="hidden" id="form-question-id" />
+        <div class="grid-layout cols-2">
+          <div>
+            <div class="form-group">
+              <label>Level</label>
+              <select id="form-level" class="form-control">
+                <option value="1">Level 1 (Text only)</option>
+                <option value="2">Level 2 (Image questions)</option>
+                <option value="3">Level 3 (Audio/Video questions)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Question Text (Malayalam/English)</label>
+              <textarea id="form-question-text" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Audio URL (Optional)</label>
+              <input type="text" id="form-audio-url" placeholder="https://..." class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Image URL (Optional)</label>
+              <input type="text" id="form-image-url" placeholder="https://..." class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Video URL (Optional)</label>
+              <input type="text" id="form-video-url" placeholder="https://..." class="form-control" />
+            </div>
+          </div>
+
+          <div>
+            <div class="form-group">
+              <label>Option A</label>
+              <input type="text" id="form-option-a" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Option B</label>
+              <input type="text" id="form-option-b" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Option C</label>
+              <input type="text" id="form-option-c" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Option D</label>
+              <input type="text" id="form-option-d" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Correct Answer</label>
+              <select id="form-correct-answer" class="form-control">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-layout cols-3 margin-top">
+          <div class="form-group">
+            <label>Category (Topic)</label>
+            <input type="text" id="form-category" placeholder="General Knowledge" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Points Value</label>
+            <input type="number" id="form-points" value="10" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Timer Override (seconds)</label>
+            <input type="number" id="form-timer-override" placeholder="Use default" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-group margin-top">
+          <label>Correct Answer Explanation</label>
+          <textarea id="form-explanation" placeholder="Shown after answer reveal..." class="form-control" rows="2"></textarea>
+        </div>
+
+        <button type="submit" class="success-btn full-width margin-top">Save Question</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hidden File Input for JSON Imports -->
+  <input type="file" id="import-file-input" accept=".json" style="display: none;" />
+
+  <!-- ─── Toast Notification Container ─── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>

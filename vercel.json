@@ -1,35 +1,27 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "script.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "admin.js",
-      "use": "@vercel/static"
-    }
+    { "src": "server.js", "use": "@vercel/node" }
   ],
   "routes": [
+    { "src": "/admin", "dest": "/server.js" },
+    { "src": "/api/(.*)", "dest": "/server.js" },
+    { "src": "/socket.io/(.*)", "dest": "/server.js" },
+    { "src": "/admin\\.html", "dest": "/admin.html" },
+    { "src": "/admin\\.css", "dest": "/admin.css" },
+    { "src": "/admin\\.js", "dest": "/admin.js" },
+    { "src": "/style\\.css", "dest": "/style.css" },
+    { "src": "/script\\.js", "dest": "/script.js" },
+    { "src": "/(.*)", "dest": "/server.js" }
+  ],
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
     }
   ]
 }

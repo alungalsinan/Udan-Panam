@@ -1,311 +1,650 @@
-let quizData = [];
-let currentQuestionId = null;
-let currentAudioStatus = 'stopped';
-let currentScreen = 'welcome';
-let isRevealed = false;
+/* ═══════════════════════════════════════
+   Udan Panam v2.0 — Presentation Screen Client
+   Real-Time Event Driven (Socket.IO)
+   ═══════════════════════════════════════ */
+
+const socket = io();
 
 // DOM Elements
-const welcomeScreen = document.getElementById('welcome-screen');
-const quizScreen = document.getElementById('quiz-screen');
-const startBtn = document.getElementById('start-btn');
-const questionText = document.getElementById('question-text');
-const questionImage = document.getElementById('question-image');
-const optionAText = document.getElementById('option-a-text');
-const optionBText = document.getElementById('option-b-text');
-const optionCText = document.getElementById('option-c-text');
-const optionDText = document.getElementById('option-d-text');
+const connectionDot = document.getElementById('connectionIndicator');
+const welcomeScreen = document.getElementById('screenWelcome');
+const quizScreen = document.getElementById('screenQuiz');
+const startBtn = document.getElementById('btnStart');
+const welcomeTitle = document.getElementById('welcomeTitle');
+const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+
+const timerContainer = document.getElementById('timerContainer');
+const timerRing = document.getElementById('timerProgress');
+const timerText = document.getElementById('timerValue');
+
+const questionProgress = document.getElementById('questionProgress');
+const questionText = document.getElementById('questionText');
+const questionImage = document.getElementById('questionImage');
+const questionVideo = document.getElementById('questionVideo');
+const audioContainer = document.getElementById('questionAudioWrap');
+const questionAudio = document.getElementById('questionAudio');
+const playPauseBtn = document.getElementById('audioPlayBtn');
+const audioIconPlay = document.getElementById('audioIconPlay');
+const audioIconPause = document.getElementById('audioIconPause');
+const progressBar = document.getElementById('audioProgress');
+const progressContainer = document.querySelector('.audio-player__track');
+const visualizer = document.getElementById('audioVisualizer');
+
 const optionCards = document.querySelectorAll('.option-card');
-const quizContainer = document.querySelector('.quiz-container');
+const explanationContainer = document.getElementById('explanationSection');
+const explanationCard = document.getElementById('explanationText');
 
-// Audio Elements
-const audioContainer = document.getElementById('audio-container');
-const questionAudio = document.getElementById('question-audio');
-const playPauseBtn = document.getElementById('play-pause-btn');
-const playIcon = document.getElementById('play-icon');
-const progressContainer = document.getElementById('progress-container');
-const progressBar = document.getElementById('progress-bar');
-const visualizer = document.getElementById('visualizer');
+const contestantName = document.getElementById('contestantName');
+const contestantScore = document.getElementById('contestantScore');
+const gameModeBadge = document.getElementById('modeBadgeText');
+const lifelineIcons = document.querySelectorAll('.lifeline-icon');
 
-// Studio Elements
-const welcomeTitle = document.getElementById('welcome-title');
-const welcomeSubtitle = document.getElementById('welcome-subtitle');
+const audiencePollOverlay = document.getElementById('overlayAudiencePoll');
+const confettiCanvas = document.getElementById('confettiCanvas');
+const fullscreenBtn = document.getElementById('btnFullscreen');
+
+const questionHeader = document.getElementById('questionArea');
+
+// Local Variables
+let currentScreen = 'welcome';
+let currentQuestionId = null;
 let lastStudioConfig = null;
+let currentLanguage = 'ml'; // ml or en
+let audioContext = null;
+let audioInstance = null;
 
-// Fetch Questions from Backend (for local nav fallback indexing)
-async function fetchQuestions() {
-    try {
-        const res = await fetch('/api/questions');
-        quizData = await res.json();
-    } catch (err) {
-        console.error("Error fetching questions:", err);
-    }
-}
+// ─── Socket.IO Connection ───
+socket.on('connect', () => {
+  console.log('Connected to server');
+  connectionDot.className = 'connection-indicator';
+  socket.emit('join', 'presentation');
+});
 
-// State Synchronization Polling
-async function pollPresenterState() {
-    try {
-        const [stateRes, studioRes] = await Promise.all([
-            fetch('/api/presentation/state'),
-            fetch('/api/studio')
-        ]);
-        
-        const state = await stateRes.json();
-        const studio = await studioRes.json();
-        
-        applyStudioSettings(studio);
-        applyPresenterState(state);
-    } catch (err) {
-        console.error("Error polling state:", err);
-    }
-}
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
+  connectionDot.className = 'connection-indicator disconnected';
+});
 
-function applyStudioSettings(s) {
-    if (!s) return;
-    // Prevent redundant DOM updates if settings haven't changed
-    if (JSON.stringify(s) === JSON.stringify(lastStudioConfig)) return;
-    lastStudioConfig = s;
-    
-    const root = document.documentElement;
-    root.style.setProperty('--primary-glow', s.theme_primary || '#00e5ff');
-    root.style.setProperty('--secondary-glow', s.theme_secondary || '#ffd700');
-    root.style.setProperty('--bg-dark', s.bg_dark || '#070B19');
-    root.style.setProperty('--bg-card', s.bg_card || 'rgba(16, 24, 45, 0.8)');
-    root.style.setProperty('--font-main', s.font_family || "'Anek Malayalam', sans-serif");
-    
-    welcomeTitle.textContent = s.welcome_title || 'Welcome';
-    welcomeSubtitle.textContent = s.welcome_subtitle || '';
-    
-    if (s.animation_enabled === false) {
-        document.body.classList.add('no-animations');
+// ─── State Sync Event ───
+socket.on('state:sync', (state) => {
+  if (!state) return;
+  console.log('State Synced:', state);
+
+  // 1. Handle Screen Switch
+  if (state.active_screen !== currentScreen) {
+    currentScreen = state.active_screen;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    if (currentScreen === 'welcome') {
+      welcomeScreen.classList.add('active');
     } else {
-        document.body.classList.remove('no-animations');
+      quizScreen.classList.add('active');
     }
-}
+  }
 
-// Reactively apply state received from server
-function applyPresenterState(state) {
-    if (!state) return;
+  // 2. Handle Game Mode
+  if (state.game_mode) {
+    gameModeBadge.textContent = state.game_mode === 'single' ? 'Single Player' : 'Team Mode';
+  }
 
-    // 1. Sync Screen Switching
-    if (state.active_screen !== currentScreen) {
-        currentScreen = state.active_screen;
-        if (currentScreen === 'welcome') {
-            quizScreen.classList.remove('active');
-            setTimeout(() => {
-                welcomeScreen.classList.add('active');
-            }, 400);
-        } else {
-            welcomeScreen.classList.remove('active');
-            setTimeout(() => {
-                quizScreen.classList.add('active');
-            }, 400);
-        }
+  // 3. Question & Content loading
+  if (state.question) {
+    if (state.question.id !== currentQuestionId) {
+      currentQuestionId = state.question.id;
+      loadQuestionContent(state.question);
     }
 
-    const q = state.question;
-    
-    // 2. Load Question if ID changed
-    if (q) {
-        if (state.current_question_id !== currentQuestionId) {
-            currentQuestionId = state.current_question_id;
-            loadQuestionData(q);
-        }
+    // Toggle Visibility of Question
+    if (state.show_question) {
+      if (questionHeader) questionHeader.classList.remove('blurred');
+    } else {
+      if (questionHeader) questionHeader.classList.add('blurred');
+    }
 
-        // 3. Question Visibility (Blur/Show)
-        const questionHeader = document.querySelector('.question-header');
-        if (state.show_question) {
-            questionHeader.classList.remove('blurred');
-        } else {
-            questionHeader.classList.add('blurred');
-        }
+    // Toggle Visibility of Options
+    if (state.show_options) {
+      optionCards.forEach(card => card.classList.add('visible'));
+    } else {
+      optionCards.forEach(card => card.classList.remove('visible'));
+    }
 
-        // 4. Staggered Option Reveal
-        optionCards.forEach(card => {
-            if (state.show_options) {
-                card.classList.add('visible-card');
+    // Toggle Answer Reveal
+    if (state.reveal_answer) {
+      revealCorrectAnswer(state.question.correct_answer);
+    } else {
+      resetAnswerReveal();
+    }
+
+    // Toggle Explanation
+    if (state.show_explanation && state.reveal_answer && state.question.explanation) {
+      explanationCard.textContent = state.question.explanation;
+      explanationContainer.classList.add('visible');
+    } else {
+      explanationContainer.classList.remove('visible');
+    }
+  } else {
+    currentQuestionId = null;
+    clearQuestionContent();
+  }
+
+  // 4. Timer State
+  if (state.show_timer) {
+    timerContainer.classList.remove('hidden');
+  } else {
+    timerContainer.classList.add('hidden');
+  }
+
+  // 5. Active Contestant Sync
+  if (state.active_contestant_id) {
+    // Scoreboard trigger
+    fetch(`/api/contestants`)
+      .then(r => r.json())
+      .then(contestants => {
+        const active = contestants.find(c => c.id === state.active_contestant_id);
+        if (active) {
+          contestantName.textContent = active.name;
+          contestantScore.textContent = `Points: ${active.score}`;
+          
+          // Update lifelines
+          let usedLifelines = [];
+          try {
+            usedLifelines = typeof active.lifelines_used === 'string' 
+              ? JSON.parse(active.lifelines_used) 
+              : (active.lifelines_used || []);
+          } catch(e) {}
+          
+          lifelineIcons.forEach(icon => {
+            const life = icon.dataset.lifeline;
+            if (usedLifelines.includes(life)) {
+              icon.classList.add('used');
             } else {
-                card.classList.remove('visible-card');
+              icon.classList.remove('used');
             }
-        });
-
-        // 5. Reveal Answer
-        if (state.reveal_answer && !isRevealed) {
-            revealAnswer(q.correct_answer);
-        } else if (!state.reveal_answer && isRevealed) {
-            // Admin reset the reveal
-            isRevealed = false;
-            quizContainer.classList.remove('revealed');
-            optionCards.forEach(card => {
-                card.classList.remove('correct', 'wrong');
-            });
+          });
         }
+      });
+  }
 
-        // 6. Remote Audio Sync
-        if (state.audio_status !== currentAudioStatus) {
-            currentAudioStatus = state.audio_status;
-            syncRemoteAudio(currentAudioStatus);
-        }
+  // 6. Remote Audio Sync
+  if (state.question && state.question.audio_url) {
+    syncAudioStatus(state.audio_status);
+  }
+});
+
+// ─── Studio Sync Event ───
+socket.on('studio:sync', (studio) => {
+  if (!studio) return;
+  if (JSON.stringify(studio) === JSON.stringify(lastStudioConfig)) return;
+  lastStudioConfig = studio;
+
+  console.log('Studio Synced:', studio);
+
+  currentLanguage = studio.ui_language || 'ml';
+
+  // Apply visual style variables
+  const root = document.documentElement;
+  root.style.setProperty('--primary-glow', studio.theme_primary || '#00e5ff');
+  root.style.setProperty('--secondary-glow', studio.theme_secondary || '#ffd700');
+  root.style.setProperty('--bg-dark', studio.bg_dark || '#070B19');
+  root.style.setProperty('--bg-card', studio.bg_card || 'rgba(16, 24, 45, 0.8)');
+  root.style.setProperty('--font-main', studio.font_family || "'Anek Malayalam', sans-serif");
+
+  welcomeTitle.textContent = studio.welcome_title || 'Welcome';
+  welcomeSubtitle.textContent = studio.welcome_subtitle || '';
+
+  // Language setup labels
+  if (currentLanguage === 'ml') {
+    startBtn.innerHTML = 'കളി തുടങ്ങുക <span>▶</span>';
+  } else {
+    startBtn.innerHTML = 'Start Game <span>▶</span>';
+  }
+
+  if (studio.animation_enabled === false) {
+    document.body.classList.add('no-animations');
+  } else {
+    document.body.classList.remove('no-animations');
+  }
+
+  // Apply background video / image if provided
+  if (studio.bg_video_url) {
+    // Add BG Video element dynamically if not present
+    let bgVideo = document.getElementById('bg-video');
+    if (!bgVideo) {
+      bgVideo = document.createElement('video');
+      bgVideo.id = 'bg-video';
+      bgVideo.autoplay = true;
+      bgVideo.loop = true;
+      bgVideo.muted = true;
+      bgVideo.style.position = 'fixed';
+      bgVideo.style.inset = '0';
+      bgVideo.style.width = '100vw';
+      bgVideo.style.height = '100vh';
+      bgVideo.style.objectFit = 'cover';
+      bgVideo.style.zIndex = '-2';
+      bgVideo.style.opacity = '0.4';
+      document.body.appendChild(bgVideo);
     }
-}
+    bgVideo.src = studio.bg_video_url;
+  } else {
+    const bgVideo = document.getElementById('bg-video');
+    if (bgVideo) bgVideo.remove();
+  }
 
-// Populate UI with active question data
-function loadQuestionData(data) {
-    isRevealed = false;
-    quizContainer.classList.remove('revealed');
+  if (studio.bg_image_url) {
+    document.body.style.backgroundImage = `url('${studio.bg_image_url}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+  } else {
+    document.body.style.backgroundImage = 'none';
+  }
+});
+
+// ─── Timer Sync Events ───
+socket.on('timer:tick', (data) => {
+  updateTimerUI(data.remaining);
+});
+
+socket.on('timer:started', (data) => {
+  updateTimerUI(data.remaining);
+  playLocalSound('timer');
+});
+
+socket.on('timer:paused', (data) => {
+  updateTimerUI(data.remaining);
+  stopLocalSound('timer');
+});
+
+socket.on('timer:stopped', () => {
+  updateTimerUI(30);
+  stopLocalSound('timer');
+});
+
+socket.on('timer:expired', () => {
+  timerRing.classList.add('danger');
+  timerText.classList.add('danger');
+  playLocalSound('expired');
+  stopLocalSound('timer');
+});
+
+// ─── Lifeline Sync Events ───
+socket.on('lifeline:fifty-fifty-result', (data) => {
+  const { eliminated } = data;
+  if (!eliminated) return;
+  playLocalSound('lifeline');
+  optionCards.forEach(card => {
+    if (eliminated.includes(card.dataset.key)) {
+      card.classList.add('eliminated');
+    }
+  });
+});
+
+socket.on('lifeline:audience-poll-result', (data) => {
+  const { poll } = data;
+  if (!poll) return;
+  playLocalSound('lifeline');
+  
+  // Update overlay charts
+  Object.keys(poll).forEach(opt => {
+    const bar = document.getElementById(`pollBar${opt}`);
+    const pct = document.getElementById(`pollPct${opt}`);
+    if (bar) {
+      bar.style.width = '0%';
+      setTimeout(() => {
+        bar.style.width = `${poll[opt]}%`;
+      }, 100);
+    }
+    if (pct) {
+      pct.textContent = `${poll[opt]}%`;
+    }
+  });
+  
+  audiencePollOverlay.classList.add('visible');
+  
+  // Auto dismiss after 8 seconds
+  setTimeout(() => {
+    audiencePollOverlay.classList.remove('visible');
+  }, 8000);
+});
+
+// ─── Celebration Sync Events ───
+socket.on('celebration:trigger', (data) => {
+  startConfetti();
+  playLocalSound('celebration');
+});
+
+// ─── Contestant Sync Event ───
+socket.on('contestant:update', (contestant) => {
+  // Sync contestant display if it matches active contestant
+  fetch('/api/presentation/state')
+    .then(r => r.json())
+    .then(state => {
+      if (state.active_contestant_id === contestant.id) {
+        contestantName.textContent = contestant.name;
+        contestantScore.textContent = `Points: ${contestant.score}`;
+      }
+    });
+});
+
+// ─── Play Custom Sound Event ───
+socket.on('sound:play', (data) => {
+  playLocalSound(data.category, data.url);
+});
+
+socket.on('sound:stop', () => {
+  stopAllLocalSounds();
+});
+
+// ─── UI Helper Functions ───
+
+function loadQuestionContent(q) {
+  // Staged Question Reveal Transitions
+  if (questionHeader) questionHeader.style.opacity = '0';
+  
+  setTimeout(() => {
+    questionText.textContent = q.question_text || '';
+    
+    // Media assets
+    if (q.image_url) {
+      questionImage.src = q.image_url;
+      questionImage.style.display = 'block';
+    } else {
+      questionImage.style.display = 'none';
+      questionImage.src = '';
+    }
+
+    if (q.video_url) {
+      questionVideo.src = q.video_url;
+      questionVideo.style.display = 'block';
+      questionVideo.load();
+    } else {
+      questionVideo.style.display = 'none';
+      questionVideo.src = '';
+    }
+
+    if (q.audio_url) {
+      questionAudio.src = q.audio_url;
+      audioContainer.style.display = 'flex';
+      questionAudio.load();
+    } else {
+      audioContainer.style.display = 'none';
+      questionAudio.src = '';
+    }
+
+    // Reset option cards
     optionCards.forEach(card => {
-        card.classList.remove('correct', 'wrong', 'clicked-correct', 'clicked-wrong', 'visible-card');
+      const opt = card.dataset.key;
+      const optText = document.getElementById(`option${opt}Text`);
+      if (optText) {
+        optText.textContent = q[`option_${opt.toLowerCase()}`] || '';
+      }
+      card.className = 'option-card'; // clear classes
+      card.style.display = q[`option_${opt.toLowerCase()}`] ? 'flex' : 'none';
     });
 
-    // Reset local audio UI
+    if (questionHeader) questionHeader.style.opacity = '1';
+  }, 300);
+
+  // Set visual progress info
+  fetch('/api/questions?level=' + q.level)
+    .then(r => r.json())
+    .then(qs => {
+      const idx = qs.findIndex(item => item.id === q.id);
+      if (idx !== -1) {
+        questionProgress.textContent = `${currentLanguage === 'ml' ? 'ചോദ്യം' : 'Question'} ${idx + 1}/${qs.length}`;
+      } else {
+        questionProgress.textContent = '';
+      }
+    })
+    .catch(() => { questionProgress.textContent = ''; });
+}
+
+function clearQuestionContent() {
+  questionText.textContent = '';
+  questionImage.style.display = 'none';
+  questionVideo.style.display = 'none';
+  audioContainer.style.display = 'none';
+  questionAudio.src = '';
+  optionCards.forEach(card => card.classList.remove('visible'));
+  explanationContainer.classList.remove('visible');
+}
+
+function updateTimerUI(sec) {
+  timerText.textContent = sec;
+  
+  // Update circle path
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius; // ~327
+  timerRing.style.strokeDasharray = circumference;
+  const pct = Math.max(0, Math.min(sec, 30)) / 30;
+  const offset = circumference * (1 - pct);
+  timerRing.style.strokeDashoffset = offset;
+
+  // Visual Warning colors
+  timerRing.classList.remove('warning', 'danger');
+  timerText.classList.remove('danger');
+  
+  if (sec <= 5) {
+    timerRing.classList.add('danger');
+    timerText.classList.add('danger');
+  } else if (sec <= 10) {
+    timerRing.classList.add('warning');
+  }
+}
+
+function revealCorrectAnswer(correctOpt) {
+  optionCards.forEach(card => {
+    card.classList.remove('correct', 'wrong');
+    if (card.dataset.key === correctOpt) {
+      card.classList.add('correct');
+    } else {
+      card.classList.add('wrong');
+    }
+  });
+  playLocalSound('reveal');
+}
+
+function resetAnswerReveal() {
+  optionCards.forEach(card => {
+    card.classList.remove('correct', 'wrong', 'eliminated', 'clicked-correct', 'clicked-wrong');
+  });
+}
+
+function syncAudioStatus(status) {
+  if (!questionAudio.src || questionAudio.src === window.location.href) return;
+  
+  if (status === 'playing') {
+    questionAudio.play().catch(e => console.log('Autoplay blocked:', e));
+    if (audioIconPlay) audioIconPlay.style.display = 'none';
+    if (audioIconPause) audioIconPause.style.display = 'block';
+    visualizer.classList.remove('paused');
+  } else {
     questionAudio.pause();
-    questionAudio.currentTime = 0;
-    playIcon.textContent = '▶';
-    visualizer.classList.remove('playing');
-    progressBar.style.width = '0%';
-
-    // Text fields
-    questionText.textContent = data.question_text || '';
-    optionAText.textContent = data.option_a;
-    optionBText.textContent = data.option_b;
-    optionCText.textContent = data.option_c;
-    optionDText.textContent = data.option_d;
-
-    // Image logic
-    if (data.image_url) {
-        questionImage.src = data.image_url;
-        questionImage.style.display = 'block';
-    } else {
-        questionImage.style.display = 'none';
-    }
-
-    // Audio container logic
-    if (data.level == 3 || data.audio_url) {
-        audioContainer.style.display = 'flex';
-        questionAudio.src = data.audio_url || '';
-        questionText.style.display = data.question_text ? 'block' : 'none';
-    } else {
-        audioContainer.style.display = 'none';
-        questionText.style.display = 'block';
-    }
-
-    // Setup correct answer attributes
-    optionCards.forEach(card => {
-        if (card.getAttribute('data-option') === data.correct_answer) {
-            card.dataset.isCorrect = "true";
-        } else {
-            card.dataset.isCorrect = "false";
-        }
-    });
+    if (audioIconPlay) audioIconPlay.style.display = 'block';
+    if (audioIconPause) audioIconPause.style.display = 'none';
+    visualizer.classList.add('paused');
+  }
 }
 
-// Reveal Answer locally
-function revealAnswer(correctAnswer) {
-    isRevealed = true;
-    quizContainer.classList.add('revealed');
-    optionCards.forEach(card => {
-        if (card.dataset.isCorrect === "true") {
-            card.classList.add('correct');
-        } else {
-            card.classList.add('wrong');
-        }
-    });
-}
+// ─── Sound System ───
+const localAudioElements = {};
 
-// Sync audio playback remotely
-function syncRemoteAudio(status) {
-    if (!questionAudio.src) return;
+function playLocalSound(category, customUrl = '') {
+  // Check if sound effects enabled in theme
+  if (lastStudioConfig && lastStudioConfig.animation_enabled === false) return;
 
-    if (status === 'playing') {
-        if (questionAudio.paused) {
-            questionAudio.play().catch(err => console.log("Audio play deferred until user gesture", err));
-            playIcon.textContent = '⏸';
-            visualizer.classList.add('playing');
-        }
-    } else if (status === 'paused') {
-        if (!questionAudio.paused) {
-            questionAudio.pause();
-            playIcon.textContent = '▶';
-            visualizer.classList.remove('playing');
-        }
-    } else if (status === 'stopped') {
-        questionAudio.pause();
-        questionAudio.currentTime = 0;
-        playIcon.textContent = '▶';
-        visualizer.classList.remove('playing');
-        progressBar.style.width = '0%';
+  // Check if we already have an element for this category
+  let audioEl = localAudioElements[category];
+  if (!audioEl) {
+    audioEl = new Audio();
+    localAudioElements[category] = audioEl;
+  }
+
+  // Set source URL
+  let soundUrl = customUrl;
+  if (!soundUrl && lastStudioConfig) {
+    if (category === 'correct') soundUrl = lastStudioConfig.correct_sound_url;
+    else if (category === 'wrong') soundUrl = lastStudioConfig.wrong_sound_url;
+    else if (category === 'timer') soundUrl = lastStudioConfig.timer_sound_url;
+    else if (category === 'background') soundUrl = lastStudioConfig.bg_music_url;
+  }
+
+  if (!soundUrl) {
+    // Fallback urls or templates
+    const fallbacks = {
+      correct: 'https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav',
+      wrong: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-84.wav',
+      timer: 'https://assets.mixkit.co/active_storage/sfx/2006/2006-84.wav',
+      expired: 'https://assets.mixkit.co/active_storage/sfx/2008/2008-84.wav',
+      reveal: 'https://assets.mixkit.co/active_storage/sfx/2010/2010-84.wav',
+      lifeline: 'https://assets.mixkit.co/active_storage/sfx/2002/2002-84.wav',
+      celebration: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-84.wav'
+    };
+    soundUrl = fallbacks[category];
+  }
+
+  if (soundUrl) {
+    audioEl.src = soundUrl;
+    if (category === 'background' || category === 'timer') {
+      audioEl.loop = true;
     }
+    audioEl.play().catch(e => console.log('Audio playback blocked:', e));
+  }
 }
 
-// Local Button event handlers that update the server state (bi-directional sync)
-startBtn.addEventListener('click', async () => {
-    welcomeScreen.classList.remove('active');
-    setTimeout(() => {
-        quizScreen.classList.add('active');
-    }, 600);
-    
-    try {
-        await fetch('/api/presentation/state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ active_screen: 'quiz' })
-        });
-    } catch (e) {}
-});
+function stopLocalSound(category) {
+  const audioEl = localAudioElements[category];
+  if (audioEl) {
+    audioEl.pause();
+    audioEl.currentTime = 0;
+  }
+}
 
-// Local Option Clicks (Contestants selection effect)
-optionCards.forEach(card => {
-    card.addEventListener('click', () => {
-        if (isRevealed) return;
-        if (card.dataset.isCorrect === "true") {
-            card.classList.add('clicked-correct');
-        } else {
-            card.classList.add('clicked-wrong');
-        }
-    });
-});
+function stopAllLocalSounds() {
+  Object.keys(localAudioElements).forEach(category => {
+    stopLocalSound(category);
+  });
+}
 
-// Local Audio Player Logic updates the Server so that Admin stays in sync!
-playPauseBtn.addEventListener('click', async () => {
-    if (!questionAudio.src) return;
-    const nextStatus = questionAudio.paused ? 'playing' : 'paused';
-    
-    try {
-        await fetch('/api/presentation/state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audio_status: nextStatus })
-        });
-    } catch (e) {}
+// ─── Local Audio Player Event Handlers ───
+playPauseBtn.addEventListener('click', () => {
+  if (!questionAudio.src) return;
+  const isPlaying = !questionAudio.paused;
+  socket.emit('state:update', { audio_status: isPlaying ? 'paused' : 'playing' });
 });
 
 questionAudio.addEventListener('timeupdate', () => {
-    const progressPercent = (questionAudio.currentTime / questionAudio.duration) * 100;
-    progressBar.style.width = `${progressPercent}%`;
+  const pct = (questionAudio.currentTime / questionAudio.duration) * 100;
+  progressBar.style.width = `${pct}%`;
 });
 
-questionAudio.addEventListener('ended', async () => {
-    try {
-        await fetch('/api/presentation/state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ audio_status: 'stopped' })
-        });
-    } catch (e) {}
+questionAudio.addEventListener('ended', () => {
+  socket.emit('state:update', { audio_status: 'stopped' });
 });
 
 progressContainer.addEventListener('click', (e) => {
-    const width = progressContainer.clientWidth;
-    const clickX = e.offsetX;
-    const duration = questionAudio.duration;
-    if (duration) {
-        questionAudio.currentTime = (clickX / width) * duration;
-    }
+  const width = progressContainer.clientWidth;
+  const clickX = e.offsetX;
+  const duration = questionAudio.duration;
+  if (duration) {
+    questionAudio.currentTime = (clickX / width) * duration;
+  }
 });
 
-// Initializations
-document.addEventListener('DOMContentLoaded', () => {
-    fetchQuestions().then(() => {
-        pollPresenterState();
-        setInterval(pollPresenterState, 1000);
+// ─── Confetti System ───
+let confettiInterval = null;
+function startConfetti() {
+  const canvas = confettiCanvas;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#f50057', '#00e5ff', '#ffeb3b', '#00e676', '#ff9100', '#2979ff'];
+  const particles = [];
+
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 6 + 4,
+      d: Math.random() * canvas.height,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.random() * 10 - 5,
+      tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+      tiltAngle: 0
     });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach((p, idx) => {
+      ctx.beginPath();
+      ctx.lineWidth = p.r / 2;
+      ctx.strokeStyle = p.color;
+      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+      ctx.stroke();
+    });
+
+    update();
+  }
+
+  function update() {
+    let activeParticles = 0;
+    particles.forEach((p) => {
+      p.tiltAngle += p.tiltAngleIncremental;
+      p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+      p.tilt = Math.sin(p.tiltAngle - p.r / 2) * 5;
+      
+      if (p.y < canvas.height) activeParticles++;
+    });
+
+    if (activeParticles > 0) {
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  draw();
+}
+
+// ─── Fullscreen & Start Controls ───
+fullscreenBtn.addEventListener('click', () => {
+  const expandSvg = fullscreenBtn.querySelector('.fs-expand');
+  const collapseSvg = fullscreenBtn.querySelector('.fs-collapse');
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch((err) => {
+      console.error(`Error attempting to enable fullscreen: ${err.message}`);
+    });
+    if (expandSvg) expandSvg.style.display = 'none';
+    if (collapseSvg) collapseSvg.style.display = 'block';
+  } else {
+    document.exitFullscreen();
+    if (expandSvg) expandSvg.style.display = 'block';
+    if (collapseSvg) collapseSvg.style.display = 'none';
+  }
+});
+
+startBtn.addEventListener('click', () => {
+  // Start game triggers screen switch to quiz
+  socket.emit('state:update', { active_screen: 'quiz' });
+});
+
+// Option Clicking for Local Display Testing
+optionCards.forEach(card => {
+  card.addEventListener('click', () => {
+    // Only local effects if someone clicks on presentation screen
+    fetch('/api/presentation/state')
+      .then(r => r.json())
+      .then(state => {
+        if (state.reveal_answer) return;
+        const correct = state.question.correct_answer;
+        if (card.dataset.key === correct) {
+          card.classList.add('clicked-correct');
+          playLocalSound('correct');
+        } else {
+          card.classList.add('clicked-wrong');
+          playLocalSound('wrong');
+        }
+      });
+  });
 });
