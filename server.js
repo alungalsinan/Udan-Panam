@@ -57,6 +57,39 @@ let adminPasswordHash = null;
 let timerInterval = null;
 let timerRemaining = 30;
 
+// ─── Celebration Timer Engine ───
+let celebrationInterval = null;
+let celebrationRemaining = 0;
+
+function startCelebrationTimer(duration) {
+  stopCelebrationTimer();
+  celebrationRemaining = duration;
+  io.to('presentation').emit('celebration:start', { duration });
+  io.to('admin').emit('celebration:start', { duration });
+
+  if (duration > 0) {
+    celebrationInterval = setInterval(() => {
+      celebrationRemaining--;
+      io.to('presentation').emit('celebration:tick', { remaining: celebrationRemaining });
+      io.to('admin').emit('celebration:tick', { remaining: celebrationRemaining });
+
+      if (celebrationRemaining <= 0) {
+        stopCelebrationTimer();
+        io.to('presentation').emit('celebration:stop');
+        io.to('admin').emit('celebration:stop');
+      }
+    }, 1000);
+  }
+}
+
+function stopCelebrationTimer() {
+  if (celebrationInterval) {
+    clearInterval(celebrationInterval);
+    celebrationInterval = null;
+  }
+  celebrationRemaining = 0;
+}
+
 function startTimer(duration) {
   stopTimer();
   timerRemaining = duration || 30;
@@ -95,6 +128,9 @@ function pauseTimer() {
 // ─── Initialize Cache ───
 async function initCache() {
   try {
+    // Auto-migrate presented column if not exists
+    await sql.query('ALTER TABLE questions ADD COLUMN IF NOT EXISTS presented BOOLEAN DEFAULT FALSE');
+
     const pStateRes = await sql.query('SELECT * FROM presentation_state WHERE id = 1');
     if (pStateRes.length > 0) {
       cachedPresentationState = pStateRes[0];
@@ -111,7 +147,7 @@ async function initCache() {
     const adminRes = await sql.query('SELECT admin_password FROM admin_settings WHERE id = 1');
     if (adminRes.length > 0) adminPasswordHash = adminRes[0].admin_password;
   } catch (err) {
-    console.error('Failed to initialize cache:', err);
+    console.error('Failed to initialize cache / database:', err);
   }
 }
 initCache();
@@ -179,7 +215,7 @@ app.get('/api/auth/verify', requireAuth, (req, res) => {
 
 app.get('/api/questions', async (req, res) => {
   try {
-    const { level, category, search, page, limit } = req.query;
+    const { level, category, search, presented, page, limit } = req.query;
     let query = 'SELECT * FROM questions';
     const conditions = [];
     const values = [];
@@ -187,6 +223,13 @@ app.get('/api/questions', async (req, res) => {
 
     if (level) { conditions.push(`level = $${idx++}`); values.push(parseInt(level)); }
     if (category) { conditions.push(`category = $${idx++}`); values.push(category); }
+    if (presented !== undefined) {
+      if (presented === 'true') {
+        conditions.push(`presented = TRUE`);
+      } else if (presented === 'false') {
+        conditions.push(`(presented = FALSE OR presented IS NULL)`);
+      }
+    }
     if (search) { conditions.push(`(question_text ILIKE $${idx} OR option_a ILIKE $${idx} OR option_b ILIKE $${idx} OR option_c ILIKE $${idx} OR option_d ILIKE $${idx})`); values.push(`%${search}%`); idx++; }
 
     if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
@@ -210,7 +253,7 @@ app.get('/api/questions', async (req, res) => {
 });
 
 app.post('/api/questions', requireAuth, async (req, res) => {
-  const { level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation } = req.body;
+  const { level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation, presented } = req.body;
   if (!option_a || !option_b || !option_c || !option_d || !correct_answer) {
     return res.status(400).json({ error: 'Options and correct answer are required' });
   }
@@ -219,9 +262,9 @@ app.post('/api/questions', requireAuth, async (req, res) => {
   }
   try {
     const result = await sql.query(
-      `INSERT INTO questions (level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
-      [level||1, question_text, audio_url||null, image_url||null, video_url||null, option_a, option_b, option_c, option_d, correct_answer.toUpperCase(), category||null, tags||null, points||10, timer_override||null, explanation||null]
+      `INSERT INTO questions (level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation, presented)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+      [level||1, question_text, audio_url||null, image_url||null, video_url||null, option_a, option_b, option_c, option_d, correct_answer.toUpperCase(), category||null, tags||null, points||10, timer_override||null, explanation||null, !!presented]
     );
     res.status(201).json(result[0]);
   } catch (err) {
@@ -232,12 +275,12 @@ app.post('/api/questions', requireAuth, async (req, res) => {
 
 app.put('/api/questions/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const { level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation, sort_order } = req.body;
+  const { level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation, sort_order, presented } = req.body;
   try {
     const result = await sql.query(
-      `UPDATE questions SET level=$1, question_text=$2, audio_url=$3, image_url=$4, video_url=$5, option_a=$6, option_b=$7, option_c=$8, option_d=$9, correct_answer=$10, category=$11, tags=$12, points=$13, timer_override=$14, explanation=$15, sort_order=$16
-       WHERE id=$17 RETURNING *`,
-      [level||1, question_text, audio_url||null, image_url||null, video_url||null, option_a, option_b, option_c, option_d, correct_answer, category||null, tags||null, points||10, timer_override||null, explanation||null, sort_order||0, id]
+      `UPDATE questions SET level=$1, question_text=$2, audio_url=$3, image_url=$4, video_url=$5, option_a=$6, option_b=$7, option_c=$8, option_d=$9, correct_answer=$10, category=$11, tags=$12, points=$13, timer_override=$14, explanation=$15, sort_order=$16, presented=$17
+       WHERE id=$18 RETURNING *`,
+      [level||1, question_text, audio_url||null, image_url||null, video_url||null, option_a, option_b, option_c, option_d, correct_answer, category||null, tags||null, points||10, timer_override||null, explanation||null, sort_order||0, presented !== undefined ? !!presented : false, id]
     );
     if (result.length === 0) return res.status(404).json({ error: 'Question not found' });
     res.json(result[0]);
@@ -275,9 +318,9 @@ app.post('/api/questions/import', requireAuth, async (req, res) => {
     let imported = 0;
     for (let q of questions) {
       await sql.query(
-        `INSERT INTO questions (level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-        [q.level||1, q.question_text, q.audio_url||null, q.image_url||null, q.video_url||null, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.category||null, q.tags||null, q.points||10, q.timer_override||null, q.explanation||null]
+        `INSERT INTO questions (level, question_text, audio_url, image_url, video_url, option_a, option_b, option_c, option_d, correct_answer, category, tags, points, timer_override, explanation, presented)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+        [q.level||1, q.question_text, q.audio_url||null, q.image_url||null, q.video_url||null, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.category||null, q.tags||null, q.points||10, q.timer_override||null, q.explanation||null, !!q.presented]
       );
       imported++;
     }
@@ -285,6 +328,29 @@ app.post('/api/questions/import', requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error importing questions' });
+  }
+});
+
+app.put('/api/questions/:id/presented', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { presented } = req.body;
+  try {
+    const result = await sql.query('UPDATE questions SET presented = $1 WHERE id = $2 RETURNING *', [!!presented, id]);
+    if (result.length === 0) return res.status(404).json({ error: 'Question not found' });
+    res.json(result[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error updating presented status' });
+  }
+});
+
+app.post('/api/questions/reset-presented', requireAuth, async (req, res) => {
+  try {
+    await sql.query('UPDATE questions SET presented = FALSE');
+    res.json({ message: 'All questions reset to unpresented.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error resetting questions' });
   }
 });
 
@@ -451,7 +517,7 @@ app.delete('/api/sessions/:id', requireAuth, async (req, res) => {
 
 // ─── Contestants ───
 
-app.get('/api/contestants', requireAuth, async (req, res) => {
+app.get('/api/contestants', async (req, res) => {
   const { session_id } = req.query;
   try {
     let result;
@@ -689,6 +755,8 @@ app.post('/api/admin-settings', requireAuth, async (req, res) => {
 
 // ─── Page Routes ───
 
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
@@ -712,6 +780,13 @@ io.on('connection', (socket) => {
     if (room === 'presentation' || room === 'admin') {
       if (cachedPresentationState) socket.emit('state:sync', cachedPresentationState);
       if (cachedStudioSettings) socket.emit('studio:sync', cachedStudioSettings);
+      
+      // Sync active celebration status
+      if (celebrationRemaining > 0) {
+        socket.emit('celebration:start', { duration: celebrationRemaining });
+      } else if (celebrationInterval && celebrationRemaining === 0) {
+        socket.emit('celebration:start', { duration: 0 });
+      }
     }
   });
 
@@ -735,8 +810,13 @@ io.on('connection', (socket) => {
       const state = result[0];
 
       if (state.current_question_id) {
+        // Auto-mark question as presented/used
+        await sql.query('UPDATE questions SET presented = TRUE WHERE id = $1', [state.current_question_id]);
         const qRes = await sql.query('SELECT * FROM questions WHERE id = $1', [state.current_question_id]);
         state.question = qRes[0] || null;
+        if (state.question) {
+          state.question.presented = true; // ensure local sync reflects it
+        }
       } else { state.question = null; }
 
       cachedPresentationState = state;
@@ -785,6 +865,33 @@ io.on('connection', (socket) => {
     } catch (e) { console.error('Timer stop DB error:', e); }
     io.to('presentation').emit('timer:stopped');
     io.to('admin').emit('timer:stopped');
+  });
+
+  socket.on('timer:adjust', async (data) => {
+    const amount = parseInt(data?.amount) || 0;
+    if (amount === 0) return;
+    timerRemaining = Math.max(0, timerRemaining + amount);
+    try {
+      await sql.query('UPDATE presentation_state SET timer_remaining = $1 WHERE id = 1', [timerRemaining]);
+      if (cachedPresentationState) {
+        cachedPresentationState.timer_remaining = timerRemaining;
+      }
+    } catch (e) { console.error('Timer adjust DB error:', e); }
+    io.to('presentation').emit('timer:tick', { remaining: timerRemaining });
+    io.to('admin').emit('timer:tick', { remaining: timerRemaining });
+  });
+
+  socket.on('timer:set', async (data) => {
+    const duration = parseInt(data?.duration) || 30;
+    timerRemaining = duration;
+    try {
+      await sql.query('UPDATE presentation_state SET timer_remaining = $1 WHERE id = 1', [timerRemaining]);
+      if (cachedPresentationState) {
+        cachedPresentationState.timer_remaining = timerRemaining;
+      }
+    } catch (e) { console.error('Timer set DB error:', e); }
+    io.to('presentation').emit('timer:tick', { remaining: timerRemaining });
+    io.to('admin').emit('timer:tick', { remaining: timerRemaining });
   });
 
   // ── Lifeline Events ──
@@ -847,8 +954,19 @@ io.on('connection', (socket) => {
   });
 
   // ── Celebration Events ──
+  socket.on('celebration:start', (data) => {
+    const duration = parseInt(data?.duration) || 10;
+    startCelebrationTimer(duration);
+  });
+
+  socket.on('celebration:stop', () => {
+    stopCelebrationTimer();
+    io.to('presentation').emit('celebration:stop');
+    io.to('admin').emit('celebration:stop');
+  });
+
   socket.on('celebration:trigger', (data) => {
-    io.to('presentation').emit('celebration:trigger', data);
+    startCelebrationTimer(10);
   });
 
   socket.on('disconnect', () => {

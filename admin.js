@@ -15,9 +15,15 @@ let qPage = 1;
 let qLimit = 20;
 let qSearch = '';
 let qLevelFilter = '';
+let qPresentedFilter = '';
+let soundEffectsCache = [];
 
 // Theme Preset Colors
 const themePresets = {
+  'emerald-gold': { primary: '#10b981', secondary: '#fbbf24', bg: '#022c22', card: 'rgba(6, 78, 59, 0.85)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'ruby-rose': { primary: '#f43f5e', secondary: '#fda4af', bg: '#4c0519', card: 'rgba(159, 18, 57, 0.85)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'sapphire-glow': { primary: '#3b82f6', secondary: '#93c5fd', bg: '#1e3a8a', card: 'rgba(30, 58, 138, 0.85)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'amethyst-spark': { primary: '#a855f7', secondary: '#f472b6', bg: '#3b0764', card: 'rgba(88, 28, 135, 0.85)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
   'neon-night': { primary: '#00e5ff', secondary: '#ffd700', bg: '#070B19', card: 'rgba(16, 24, 45, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
   'sunset-blaze': { primary: '#ff6b6b', secondary: '#ffd93d', bg: '#1a0a0a', card: 'rgba(40, 15, 15, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
   'ocean-deep': { primary: '#0abde3', secondary: '#10ac84', bg: '#0a1628', card: 'rgba(10, 22, 40, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
@@ -43,14 +49,33 @@ const pageTitle = document.getElementById('page-title');
 const toastContainer = document.getElementById('toast-container');
 const logoutBtn = document.getElementById('logout-btn');
 
-// Initialize Auth
+// Initialize Auth & Theme
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   if (currentToken) {
     verifyToken(currentToken);
   } else {
     showLogin();
   }
 });
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('admin-theme') || 'dark';
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-theme');
+  } else {
+    document.body.classList.remove('light-theme');
+  }
+  updateThemeToggleUI();
+}
+
+function updateThemeToggleUI() {
+  const themeBtn = document.getElementById('theme-toggle-btn');
+  if (themeBtn) {
+    const isLight = document.body.classList.contains('light-theme');
+    themeBtn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+  }
+}
 
 // ─── Authentication ───
 function showLogin() {
@@ -136,6 +161,30 @@ function initDashboard() {
     document.getElementById('live-timer-text').textContent = data.remaining;
   });
 
+  socket.on('celebration:start', (data) => {
+    const duration = data?.duration || 0;
+    const celebStatusText = document.getElementById('celebration-status-text');
+    if (celebStatusText) {
+      celebStatusText.textContent = duration > 0 ? `ACTIVE (${duration}s)` : 'ACTIVE';
+      celebStatusText.classList.add('active');
+    }
+  });
+
+  socket.on('celebration:tick', (data) => {
+    const celebStatusText = document.getElementById('celebration-status-text');
+    if (celebStatusText) {
+      celebStatusText.textContent = `ACTIVE (${data.remaining}s)`;
+    }
+  });
+
+  socket.on('celebration:stop', () => {
+    const celebStatusText = document.getElementById('celebration-status-text');
+    if (celebStatusText) {
+      celebStatusText.textContent = 'IDLE';
+      celebStatusText.classList.remove('active');
+    }
+  });
+
   // Tab Setup
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
@@ -149,11 +198,43 @@ function initDashboard() {
   // Sidebar toggle
   sidebarToggle.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
+    
+    // Mobile responsive backdrop management
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      let overlay = document.querySelector('.sidebar-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => {
+          sidebar.classList.add('collapsed');
+          overlay.classList.remove('active');
+        });
+      }
+      if (!sidebar.classList.contains('collapsed')) {
+        overlay.classList.add('active');
+      } else {
+        overlay.classList.remove('active');
+      }
+    }
   });
+
+  // Theme toggle button setup
+  const themeBtn = document.getElementById('theme-toggle-btn');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      localStorage.setItem('admin-theme', isLight ? 'light' : 'dark');
+      updateThemeToggleUI();
+    });
+  }
 
   // Initial tab loading
   switchTab('live');
   loadLiveControlData();
+  loadSoundEffectsBoard(); // Preload sound board cache for mocking controls
   setupLiveControlListeners();
   setupQuestionsListeners();
   setupContestantsListeners();
@@ -258,6 +339,7 @@ async function loadQuestionsForLevel(level) {
       currentQuestionIndex = currentQuestions.findIndex(q => q.id === state.current_question_id);
     }
     updateLiveQuestionDisplay();
+    renderLiveQuestionsList();
   } catch (err) {
     showNotification('Error loading questions for level', 'error');
   }
@@ -275,6 +357,38 @@ function updateLiveQuestionDisplay() {
     progressDiv.textContent = 'No Question Active';
     textDiv.textContent = 'Use Next/Prev to punch a question onto the screen.';
   }
+}
+
+function renderLiveQuestionsList() {
+  const container = document.getElementById('live-questions-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  currentQuestions.forEach((q, idx) => {
+    const item = document.createElement('div');
+    item.className = 'live-question-item';
+    if (idx === currentQuestionIndex) item.classList.add('active');
+    if (q.presented) item.classList.add('presented');
+
+    const title = document.createElement('span');
+    title.className = 'q-title';
+    title.textContent = `${idx + 1}. ${q.question_text.length > 50 ? q.question_text.substring(0, 50) + '...' : q.question_text}`;
+
+    const badge = document.createElement('span');
+    badge.className = 'q-badge';
+    badge.textContent = q.presented ? 'USED' : 'UNUSED';
+
+    item.appendChild(title);
+    item.appendChild(badge);
+
+    item.addEventListener('click', () => {
+      currentQuestionIndex = idx;
+      dispatchActiveQuestion();
+      renderLiveQuestionsList();
+    });
+
+    container.appendChild(item);
+  });
 }
 
 function setupLiveControlListeners() {
@@ -321,6 +435,7 @@ function setupLiveControlListeners() {
     if (currentQuestionIndex > 0) {
       currentQuestionIndex--;
       dispatchActiveQuestion();
+      renderLiveQuestionsList();
     }
   });
 
@@ -328,6 +443,7 @@ function setupLiveControlListeners() {
     if (currentQuestionIndex < currentQuestions.length - 1) {
       currentQuestionIndex++;
       dispatchActiveQuestion();
+      renderLiveQuestionsList();
     }
   });
 
@@ -339,7 +455,7 @@ function setupLiveControlListeners() {
 
   // Timer controls
   document.getElementById('timer-start-btn').addEventListener('click', () => {
-    const durInput = parseInt(document.getElementById('session-timer-input').value) || 30;
+    const durInput = parseInt(document.getElementById('timer-duration-input').value) || 30;
     socket.emit('timer:start', { duration: durInput });
   });
   document.getElementById('timer-pause-btn').addEventListener('click', () => {
@@ -347,6 +463,22 @@ function setupLiveControlListeners() {
   });
   document.getElementById('timer-stop-btn').addEventListener('click', () => {
     socket.emit('timer:stop');
+  });
+  document.getElementById('timer-minus-10').addEventListener('click', () => {
+    socket.emit('timer:adjust', { amount: -10 });
+  });
+  document.getElementById('timer-minus-5').addEventListener('click', () => {
+    socket.emit('timer:adjust', { amount: -5 });
+  });
+  document.getElementById('timer-plus-5').addEventListener('click', () => {
+    socket.emit('timer:adjust', { amount: 5 });
+  });
+  document.getElementById('timer-plus-10').addEventListener('click', () => {
+    socket.emit('timer:adjust', { amount: 10 });
+  });
+  document.getElementById('timer-set-btn').addEventListener('click', () => {
+    const dur = parseInt(document.getElementById('timer-duration-input').value) || 30;
+    socket.emit('timer:set', { duration: dur });
   });
 
   // Lifelines
@@ -370,13 +502,39 @@ function setupLiveControlListeners() {
     socket.emit('state:update', { audio_status: 'stopped' });
   });
 
-  // Confetti / Suspense
-  document.getElementById('trigger-confetti-btn').addEventListener('click', () => {
-    socket.emit('celebration:trigger');
+  // Celebration Manager Start / Stop
+  const celebStartBtn = document.getElementById('celebration-start-btn');
+  if (celebStartBtn) {
+    celebStartBtn.addEventListener('click', () => {
+      const duration = parseInt(document.getElementById('celebration-duration-select').value);
+      socket.emit('celebration:start', { duration });
+    });
+  }
+  const celebStopBtn = document.getElementById('celebration-stop-btn');
+  if (celebStopBtn) {
+    celebStopBtn.addEventListener('click', () => {
+      socket.emit('celebration:stop');
+    });
+  }
+
+  // Mocking Sounds triggers
+  document.querySelectorAll('.mock-sound-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const soundKey = btn.dataset.sound;
+      const category = `mocking_${soundKey}`;
+      const soundObj = soundEffectsCache.find(s => s.category === category);
+      const url = soundObj && soundObj.enabled ? soundObj.url : '';
+      socket.emit('sound:play', { category, url });
+    });
   });
-  document.getElementById('sound-suspense-btn').addEventListener('click', () => {
-    socket.emit('sound:play', { category: 'reveal' });
-  });
+
+  // Ambient Suspense
+  const suspenseBtn = document.getElementById('sound-suspense-btn');
+  if (suspenseBtn) {
+    suspenseBtn.addEventListener('click', () => {
+      socket.emit('sound:play', { category: 'reveal' });
+    });
+  }
 }
 
 function setupLiveToggle(btnId, stateField) {
@@ -403,6 +561,39 @@ function dispatchActiveQuestion() {
     });
     updateLiveQuestionDisplay();
   }
+}
+
+async function dispatchQuestionById(q) {
+  socket.emit('state:update', {
+    current_question_id: q.id,
+    show_question: true,
+    show_options: false,
+    reveal_answer: false,
+    show_explanation: false,
+    audio_status: 'stopped',
+    timer_running: false,
+    timer_remaining: q.timer_override || 30,
+    active_level: q.level || 1
+  });
+  
+  // Update live controller UI tab to match active level
+  if (currentLevel !== q.level) {
+    currentLevel = q.level;
+    document.querySelectorAll('[id^="level-"]').forEach(btn => btn.classList.remove('active'));
+    const activeLevelBtn = document.getElementById(`level-${q.level}-btn`);
+    if (activeLevelBtn) activeLevelBtn.classList.add('active');
+    await loadQuestionsForLevel(q.level);
+  }
+  
+  // Set current index
+  const idx = currentQuestions.findIndex(x => x.id === q.id);
+  if (idx !== -1) {
+    currentQuestionIndex = idx;
+    updateLiveQuestionDisplay();
+    renderLiveQuestionsList();
+  }
+  
+  showNotification(`Question #${q.id} dispatched to presentation screen.`);
 }
 
 async function markLifelineUsedOnActiveContestant(lifeline) {
@@ -468,10 +659,18 @@ function syncLiveControls(state) {
   // Set Local Question dispatch tracking
   if (state.current_question_id && currentQuestions.length > 0) {
     const idx = currentQuestions.findIndex(q => q.id === state.current_question_id);
-    if (idx !== -1 && idx !== currentQuestionIndex) {
+    if (idx !== -1) {
       currentQuestionIndex = idx;
+      // Mark presented locally
+      currentQuestions[idx].presented = true;
       updateLiveQuestionDisplay();
     }
+  }
+  renderLiveQuestionsList();
+
+  if (state.timer_remaining !== undefined) {
+    document.getElementById('live-timer-text').textContent = state.timer_remaining;
+    document.getElementById('timer-duration-input').value = state.timer_remaining;
   }
 }
 
@@ -489,6 +688,7 @@ async function loadQuestionsTable() {
     let url = `/api/questions?page=${qPage}&limit=${qLimit}`;
     if (qSearch) url += `&search=${encodeURIComponent(qSearch)}`;
     if (qLevelFilter) url += `&level=${qLevelFilter}`;
+    if (qPresentedFilter) url += `&presented=${qPresentedFilter}`;
 
     const res = await fetch(url, { headers: { 'x-admin-token': currentToken } });
     const questions = await res.json();
@@ -525,10 +725,42 @@ async function loadQuestionsTable() {
       tdPts.textContent = q.points;
       tr.appendChild(tdPts);
 
+      const tdStatus = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = `status-badge ${q.presented ? 'used' : 'unused'}`;
+      badge.textContent = q.presented ? 'Used' : 'Unused';
+      badge.style.cursor = 'pointer';
+      badge.addEventListener('click', async () => {
+        try {
+          const nextState = !q.presented;
+          const res = await fetch(`/api/questions/${q.id}/presented`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
+            body: JSON.stringify({ presented: nextState })
+          });
+          if (res.ok) {
+            q.presented = nextState;
+            badge.className = `status-badge ${nextState ? 'used' : 'unused'}`;
+            badge.textContent = nextState ? 'Used' : 'Unused';
+            showNotification(`Question ${q.id} marked as ${nextState ? 'Used' : 'Unused'}`);
+            if (q.level === currentLevel) {
+              loadQuestionsForLevel(currentLevel);
+            }
+          } else {
+            showNotification('Failed to toggle question status', 'error');
+          }
+        } catch (err) {
+          showNotification('Failed to toggle question status', 'error');
+        }
+      });
+      tdStatus.appendChild(badge);
+      tr.appendChild(tdStatus);
+
       const tdAct = document.createElement('td');
       tdAct.innerHTML = `
-        <button class="action-row-btn edit" data-id="${q.id}">✏️</button>
-        <button class="action-row-btn delete" data-id="${q.id}">❌</button>
+        <button class="action-row-btn play" data-id="${q.id}" title="Present Question on Screen"><i class="fa-solid fa-tv"></i></button>
+        <button class="action-row-btn edit" data-id="${q.id}" title="Edit Question"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="action-row-btn delete" data-id="${q.id}" title="Delete Question"><i class="fa-solid fa-trash-can"></i></button>
       `;
       tr.appendChild(tdAct);
 
@@ -536,6 +768,14 @@ async function loadQuestionsTable() {
     });
 
     // Add CRUD event delegation
+    tbody.querySelectorAll('.play').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const q = questions.find(x => x.id === parseInt(btn.dataset.id));
+        if (q) {
+          dispatchQuestionById(q);
+        }
+      });
+    });
     tbody.querySelectorAll('.edit').forEach(btn => {
       btn.addEventListener('click', () => openEditQuestionModal(btn.dataset.id));
     });
@@ -575,6 +815,7 @@ function renderPaginationControls() {
 function setupQuestionsListeners() {
   const search = document.getElementById('question-search-input');
   const levelFilter = document.getElementById('question-level-filter');
+  const presentedFilter = document.getElementById('question-presented-filter');
   
   // Debounce search input
   let searchTimeout = null;
@@ -593,6 +834,12 @@ function setupQuestionsListeners() {
     loadQuestionsTable();
   });
 
+  presentedFilter.addEventListener('change', () => {
+    qPresentedFilter = presentedFilter.value;
+    qPage = 1;
+    loadQuestionsTable();
+  });
+
   // Modal open / close
   document.getElementById('add-question-btn').addEventListener('click', () => openAddQuestionModal());
   document.getElementById('close-question-modal').addEventListener('click', () => {
@@ -604,12 +851,156 @@ function setupQuestionsListeners() {
   // Bulk actions
   document.getElementById('clear-all-questions-btn').addEventListener('click', deleteAllQuestions);
   document.getElementById('export-btn').addEventListener('click', exportQuestionsJSON);
+  document.getElementById('export-excel-btn').addEventListener('click', exportQuestionsExcel);
   document.getElementById('template-btn').addEventListener('click', downloadTemplateJSON);
+  document.getElementById('excel-template-btn').addEventListener('click', downloadTemplateExcel);
   
+  // Reset presented status for all questions
+  const resetPresentedBtn = document.getElementById('reset-presented-btn');
+  if (resetPresentedBtn) {
+    resetPresentedBtn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to reset the presented status of all questions?')) return;
+      try {
+        const res = await fetch('/api/questions/reset-presented', {
+          method: 'POST',
+          headers: { 'x-admin-token': currentToken }
+        });
+        if (res.ok) {
+          showNotification('All questions reset to Unpresented (Unused).');
+          loadQuestionsTable();
+          if (typeof loadQuestionsForLevel === 'function') {
+            loadQuestionsForLevel(currentLevel);
+          }
+        } else {
+          showNotification('Failed to reset question statuses', 'error');
+        }
+      } catch (err) {
+        showNotification('Failed to reset question statuses', 'error');
+      }
+    });
+  }
+
+  // Import Modal & Handlers
   document.getElementById('import-btn').addEventListener('click', () => {
-    document.getElementById('import-file-input').click();
+    document.getElementById('import-modal').classList.add('active');
   });
-  document.getElementById('import-file-input').addEventListener('change', importQuestionsJSON);
+  document.getElementById('close-import-modal').addEventListener('click', () => {
+    document.getElementById('import-modal').classList.remove('active');
+  });
+  document.getElementById('modal-import-cancel-btn').addEventListener('click', () => {
+    document.getElementById('import-modal').classList.remove('active');
+  });
+
+  const modalFileInput = document.getElementById('modal-import-file-input');
+  const modalTextInput = document.getElementById('modal-import-text-input');
+  const modalSubmitBtn = document.getElementById('modal-import-submit-btn');
+
+  modalSubmitBtn.addEventListener('click', async () => {
+    const pastedText = modalTextInput.value.trim();
+    if (pastedText) {
+      try {
+        const data = JSON.parse(pastedText);
+        if (!Array.isArray(data)) {
+          showNotification('JSON must be an array of question objects', 'error');
+          return;
+        }
+        const res = await fetch('/api/questions/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          showNotification('Bulk questions imported successfully');
+          modalTextInput.value = '';
+          document.getElementById('import-modal').classList.remove('active');
+          loadQuestionsTable();
+          loadLiveControlData();
+        } else {
+          const errData = await res.json();
+          showNotification(errData.error || 'Import failed', 'error');
+        }
+      } catch (err) {
+        showNotification('Invalid JSON string parsed', 'error');
+      }
+    } else if (modalFileInput.files.length > 0) {
+      const file = modalFileInput.files[0];
+      const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          let questionsArray = [];
+          if (isExcel) {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rows = XLSX.utils.sheet_to_json(worksheet);
+            
+            questionsArray = rows.map(row => {
+              const getVal = (keys) => {
+                for (let k of keys) {
+                  if (row[k] !== undefined && row[k] !== null) return row[k];
+                }
+                return undefined;
+              };
+              
+              return {
+                level: parseInt(getVal(['Level', 'level'])) || 1,
+                question_text: getVal(['Question Text', 'question_text']) || '',
+                audio_url: getVal(['Audio URL', 'audio_url']) || null,
+                image_url: getVal(['Image URL', 'image_url']) || null,
+                video_url: getVal(['Video URL', 'video_url']) || null,
+                option_a: String(getVal(['Option A', 'option_a']) || ''),
+                option_b: String(getVal(['Option B', 'option_b']) || ''),
+                option_c: String(getVal(['Option C', 'option_c']) || ''),
+                option_d: String(getVal(['Option D', 'option_d']) || ''),
+                correct_answer: String(getVal(['Correct Answer', 'correct_answer']) || '').trim().toUpperCase(),
+                category: getVal(['Category', 'category']) || null,
+                points: parseInt(getVal(['Points', 'points'])) || 10,
+                timer_override: parseInt(getVal(['Timer Override (seconds)', 'Timer Override', 'timer_override'])) || null,
+                explanation: getVal(['Explanation', 'explanation']) || null,
+                presented: getVal(['Presented', 'presented']) === 'Yes' || getVal(['Presented', 'presented']) === true || getVal(['Presented', 'presented']) === 'true'
+              };
+            });
+          } else {
+            questionsArray = JSON.parse(event.target.result);
+          }
+
+          if (!Array.isArray(questionsArray)) {
+            showNotification(isExcel ? 'Parsed Excel data is invalid' : 'JSON must be an array of question objects', 'error');
+            return;
+          }
+
+          const res = await fetch('/api/questions/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
+            body: JSON.stringify(questionsArray)
+          });
+
+          if (res.ok) {
+            showNotification('Bulk questions imported successfully');
+            modalFileInput.value = '';
+            document.getElementById('import-modal').classList.remove('active');
+            loadQuestionsTable();
+            loadLiveControlData();
+          } else {
+            const errData = await res.json();
+            showNotification(errData.error || 'Import failed', 'error');
+          }
+        } catch (err) {
+          console.error(err);
+          showNotification(isExcel ? 'Error parsing Excel file' : 'Error parsing JSON file', 'error');
+        }
+      };
+      if (isExcel) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    } else {
+      showNotification('Please select a file or paste JSON content first.', 'error');
+    }
+  });
 }
 
 function openAddQuestionModal() {
@@ -783,23 +1174,152 @@ function downloadTemplateJSON() {
   URL.revokeObjectURL(url);
 }
 
+async function exportQuestionsExcel() {
+  try {
+    const res = await fetch('/api/questions?limit=5000', { headers: { 'x-admin-token': currentToken } });
+    const questions = await res.json();
+    
+    // Map to user-friendly Excel columns
+    const data = questions.map(q => ({
+      Level: q.level || 1,
+      'Question Text': q.question_text || '',
+      'Audio URL': q.audio_url || '',
+      'Image URL': q.image_url || '',
+      'Video URL': q.video_url || '',
+      'Option A': q.option_a || '',
+      'Option B': q.option_b || '',
+      'Option C': q.option_c || '',
+      'Option D': q.option_d || '',
+      'Correct Answer': q.correct_answer || '',
+      Category: q.category || '',
+      Points: q.points || 10,
+      'Timer Override (seconds)': q.timer_override || '',
+      Explanation: q.explanation || '',
+      Presented: q.presented ? 'Yes' : 'No'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Questions");
+    
+    // Auto-fit column widths
+    const max_widths = [];
+    data.forEach(row => {
+      Object.keys(row).forEach((key, col_idx) => {
+        const val = row[key] !== undefined && row[key] !== null ? row[key].toString() : '';
+        max_widths[col_idx] = Math.max(max_widths[col_idx] || 10, val.length + 2, key.length + 2);
+      });
+    });
+    worksheet['!cols'] = max_widths.map(w => ({ wch: Math.min(w, 50) }));
+
+    XLSX.writeFile(workbook, `udan-panam-questions-${new Date().toISOString().slice(0,10)}.xlsx`);
+    showNotification('Questions exported to Excel');
+  } catch (err) {
+    console.error(err);
+    showNotification('Error exporting questions to Excel', 'error');
+  }
+}
+
+function downloadTemplateExcel() {
+  const template = [
+    {
+      Level: 1,
+      'Question Text': "കേരളത്തിലെ ആദ്യത്തെ മുഖ്യമന്ത്രി ആര്?",
+      'Option A': "ഇ. എം. എസ്. നമ്പൂതിരിപ്പാട്",
+      'Option B': "പട്ടം താണുപിള്ള",
+      'Option C': "സി. അച്യുതമേനോൻ",
+      'Option D': "ആർ. ശങ്കർ",
+      'Correct Answer': "A",
+      Category: "Kerala GK",
+      Points: 10,
+      'Timer Override (seconds)': 30,
+      Explanation: "1957-ൽ ഇ. എം. എസ്. കേരളത്തിലെ ആദ്യ മന്ത്രിസഭ നയിച്ചു.",
+      Presented: "No"
+    }
+  ];
+  const worksheet = XLSX.utils.json_to_sheet(template);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+  
+  // Set explicit column widths for template
+  worksheet['!cols'] = [
+    { wch: 8 },  // Level
+    { wch: 45 }, // Question Text
+    { wch: 20 }, // Audio URL
+    { wch: 20 }, // Image URL
+    { wch: 20 }, // Video URL
+    { wch: 30 }, // Option A
+    { wch: 30 }, // Option B
+    { wch: 30 }, // Option C
+    { wch: 30 }, // Option D
+    { wch: 15 }, // Correct Answer
+    { wch: 15 }, // Category
+    { wch: 8 },  // Points
+    { wch: 25 }, // Timer Override (seconds)
+    { wch: 40 }, // Explanation
+    { wch: 10 }  // Presented
+  ];
+
+  XLSX.writeFile(workbook, "udan-panam-excel-template.xlsx");
+  showNotification('Excel template downloaded');
+}
+
 function importQuestionsJSON(e) {
   const file = e.target.files[0];
   if (!file) return;
 
+  const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
   const reader = new FileReader();
+  
   reader.onload = async (event) => {
     try {
-      const data = JSON.parse(event.target.result);
-      if (!Array.isArray(data)) {
-        showNotification('JSON must be an array of question objects', 'error');
+      let questionsArray = [];
+      if (isExcel) {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet);
+        
+        questionsArray = rows.map(row => {
+          const getVal = (keys) => {
+            for (let k of keys) {
+              if (row[k] !== undefined && row[k] !== null) return row[k];
+            }
+            return undefined;
+          };
+          
+          return {
+            level: parseInt(getVal(['Level', 'level'])) || 1,
+            question_text: getVal(['Question Text', 'question_text']) || '',
+            audio_url: getVal(['Audio URL', 'audio_url']) || null,
+            image_url: getVal(['Image URL', 'image_url']) || null,
+            video_url: getVal(['Video URL', 'video_url']) || null,
+            option_a: String(getVal(['Option A', 'option_a']) || ''),
+            option_b: String(getVal(['Option B', 'option_b']) || ''),
+            option_c: String(getVal(['Option C', 'option_c']) || ''),
+            option_d: String(getVal(['Option D', 'option_d']) || ''),
+            correct_answer: String(getVal(['Correct Answer', 'correct_answer']) || '').trim().toUpperCase(),
+            category: getVal(['Category', 'category']) || null,
+            points: parseInt(getVal(['Points', 'points'])) || 10,
+            timer_override: parseInt(getVal(['Timer Override (seconds)', 'Timer Override', 'timer_override'])) || null,
+            explanation: getVal(['Explanation', 'explanation']) || null,
+            presented: getVal(['Presented', 'presented']) === 'Yes' || getVal(['Presented', 'presented']) === true || getVal(['Presented', 'presented']) === 'true'
+          };
+        });
+      } else {
+        questionsArray = JSON.parse(event.target.result);
+      }
+
+      if (!Array.isArray(questionsArray)) {
+        showNotification(isExcel ? 'Parsed Excel data is invalid' : 'JSON must be an array of question objects', 'error');
         return;
       }
 
       const res = await fetch('/api/questions/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
-        body: JSON.stringify(data)
+        body: JSON.stringify(questionsArray)
       });
 
       if (res.ok) {
@@ -811,10 +1331,16 @@ function importQuestionsJSON(e) {
         showNotification(errData.error || 'Import failed', 'error');
       }
     } catch (err) {
-      showNotification('Error parsing JSON file', 'error');
+      console.error(err);
+      showNotification(isExcel ? 'Error parsing Excel file' : 'Error parsing JSON file', 'error');
     }
   };
-  reader.readAsText(file);
+
+  if (isExcel) {
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.readAsText(file);
+  }
 }
 
 // ═════════════════════════════════════════════
@@ -844,7 +1370,7 @@ async function loadContestantsList() {
             <div class="contestant-name-title">${escapeHTML(c.name)}</div>
             <div class="contestant-score-tag">Points: <span id="score-${c.id}">${c.score}</span></div>
           </div>
-          <button class="action-row-btn delete" data-id="${c.id}">❌</button>
+          <button class="action-row-btn delete" data-id="${c.id}" title="Delete Contestant"><i class="fa-solid fa-trash-can"></i></button>
         </div>
         <div class="form-group margin-top">
           <label>Lifelines Used</label>
@@ -1075,14 +1601,14 @@ async function loadStudioSettings() {
     const s = await res.json();
     if (!s) return;
 
-    document.getElementById('theme-preset-select').value = s.theme_preset || 'neon-night';
-    document.getElementById('theme-primary-picker').value = s.theme_primary || '#00e5ff';
-    document.getElementById('theme-primary-text').value = s.theme_primary || '#00e5ff';
-    document.getElementById('theme-secondary-picker').value = s.theme_secondary || '#ffd700';
-    document.getElementById('theme-secondary-text').value = s.theme_secondary || '#ffd700';
-    document.getElementById('theme-bg-picker').value = s.bg_dark || '#070B19';
-    document.getElementById('theme-bg-text').value = s.bg_dark || '#070B19';
-    document.getElementById('theme-card-text').value = s.bg_card || 'rgba(16, 24, 45, 0.8)';
+    document.getElementById('theme-preset-select').value = s.theme_preset || 'emerald-gold';
+    document.getElementById('theme-primary-picker').value = s.theme_primary || '#10b981';
+    document.getElementById('theme-primary-text').value = s.theme_primary || '#10b981';
+    document.getElementById('theme-secondary-picker').value = s.theme_secondary || '#fbbf24';
+    document.getElementById('theme-secondary-text').value = s.theme_secondary || '#fbbf24';
+    document.getElementById('theme-bg-picker').value = s.bg_dark || '#022c22';
+    document.getElementById('theme-bg-text').value = s.bg_dark || '#022c22';
+    document.getElementById('theme-card-text').value = s.bg_card || 'rgba(6, 78, 59, 0.85)';
     
     document.getElementById('theme-text-primary-picker').value = s.theme_text_primary || '#ffffff';
     document.getElementById('theme-text-primary-text').value = s.theme_text_primary || '#ffffff';
@@ -1187,6 +1713,7 @@ async function loadSoundEffectsBoard() {
   try {
     const res = await fetch('/api/sounds');
     const sounds = await res.json();
+    soundEffectsCache = sounds;
 
     const container = document.getElementById('sounds-list-container');
     container.innerHTML = '';
@@ -1274,10 +1801,10 @@ function setupSoundsListeners() {
     
     if (isPlaying) {
       socket.emit('sound:stop');
-      musicBtn.textContent = '▶ Play Music';
+      musicBtn.innerHTML = '<i class="fa-solid fa-play"></i> Play Music';
     } else {
       socket.emit('sound:play', { category: 'background', url });
-      musicBtn.textContent = '⏹ Stop Music';
+      musicBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Music';
     }
     isPlaying = !isPlaying;
   });

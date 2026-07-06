@@ -121,6 +121,18 @@
 
       <!-- ── Question Area ── -->
       <div class="question-area" id="questionArea">
+        <!-- Dynamic glowing border timer SVG -->
+        <svg id="questionBorderSvg" class="question-border-svg">
+          <rect id="questionBorderBg" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="5" rx="20" ry="20" />
+          <rect id="questionBorderRect" fill="none" stroke="url(#questionBorderGrad)" stroke-width="5" rx="20" ry="20" />
+          <defs>
+            <linearGradient id="questionBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--secondary-glow)" />
+              <stop offset="100%" stop-color="var(--primary-glow)" />
+            </linearGradient>
+          </defs>
+        </svg>
+
         <!-- Question Text -->
         <div class="question-text-wrap" id="questionTextWrap">
           <h2 class="question-text" id="questionText">ചോദ്യം ഇവിടെ കാണിക്കും…</h2>
@@ -170,18 +182,22 @@
         <button class="option-card" id="optionA" data-key="A" data-option="A">
           <span class="option-label">A</span>
           <span class="option-text" id="optionAText"></span>
+          <span class="option-status-badge">✔ CORRECT</span>
         </button>
         <button class="option-card" id="optionB" data-key="B" data-option="B">
           <span class="option-label">B</span>
           <span class="option-text" id="optionBText"></span>
+          <span class="option-status-badge">✔ CORRECT</span>
         </button>
         <button class="option-card" id="optionC" data-key="C" data-option="C">
           <span class="option-label">C</span>
           <span class="option-text" id="optionCText"></span>
+          <span class="option-status-badge">✔ CORRECT</span>
         </button>
         <button class="option-card" id="optionD" data-key="D" data-option="D">
           <span class="option-label">D</span>
           <span class="option-text" id="optionDText"></span>
+          <span class="option-status-badge">✔ CORRECT</span>
         </button>
       </div>
 

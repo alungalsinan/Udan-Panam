@@ -45,6 +45,46 @@ const fullscreenBtn = document.getElementById('btnFullscreen');
 
 const questionHeader = document.getElementById('questionArea');
 
+// Dynamic SVG border sizing
+const questionArea = document.getElementById('questionArea');
+const borderSvg = document.getElementById('questionBorderSvg');
+const borderRect = document.getElementById('questionBorderRect');
+
+if (questionArea && borderSvg && borderRect) {
+  const resizeObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+      // Get the full outer dimensions (including padding) of the question area card
+      const rect = entry.target.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+      
+      borderSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      const strokeWidth = 5;
+      const offset = strokeWidth / 2;
+      
+      // Update animating rect
+      borderRect.setAttribute('x', offset);
+      borderRect.setAttribute('y', offset);
+      borderRect.setAttribute('width', Math.max(0, width - strokeWidth));
+      borderRect.setAttribute('height', Math.max(0, height - strokeWidth));
+
+      // Update background rect
+      const bgRect = document.getElementById('questionBorderBg');
+      if (bgRect) {
+        bgRect.setAttribute('x', offset);
+        bgRect.setAttribute('y', offset);
+        bgRect.setAttribute('width', Math.max(0, width - strokeWidth));
+        bgRect.setAttribute('height', Math.max(0, height - strokeWidth));
+      }
+      
+      // Update timer UI layout with new dimensions
+      const currentSec = parseInt(timerText.textContent) || 0;
+      updateTimerUI(currentSec);
+    }
+  });
+  resizeObserver.observe(questionArea);
+}
+
 // Local Variables
 let currentScreen = 'welcome';
 let currentQuestionId = null;
@@ -133,12 +173,24 @@ socket.on('state:sync', (state) => {
     timerContainer.classList.add('hidden');
   }
 
+  if (state.timer_remaining !== undefined) {
+    timerMaxDuration = state.question?.timer_override || 30;
+    updateTimerUI(state.timer_remaining);
+  }
+
   // 5. Active Contestant Sync
   if (state.active_contestant_id) {
     // Scoreboard trigger
     fetch(`/api/contestants`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to fetch contestants');
+        return r.json();
+      })
       .then(contestants => {
+        if (!Array.isArray(contestants)) {
+          console.warn('Contestants response is not an array:', contestants);
+          return;
+        }
         const active = contestants.find(c => c.id === state.active_contestant_id);
         if (active) {
           if (contestantName) contestantName.textContent = active.name;
@@ -161,7 +213,8 @@ socket.on('state:sync', (state) => {
             }
           });
         }
-      });
+      })
+      .catch(err => console.error('Error syncing active contestant:', err));
   }
 
   // 6. Remote Audio Sync
@@ -182,10 +235,10 @@ socket.on('studio:sync', (studio) => {
 
   // Apply visual style variables
   const root = document.documentElement;
-  root.style.setProperty('--primary-glow', studio.theme_primary || '#00e5ff');
-  root.style.setProperty('--secondary-glow', studio.theme_secondary || '#ffd700');
-  root.style.setProperty('--bg-dark', studio.bg_dark || '#070B19');
-  root.style.setProperty('--bg-card', studio.bg_card || 'rgba(16, 24, 45, 0.8)');
+  root.style.setProperty('--primary-glow', studio.theme_primary || '#10b981');
+  root.style.setProperty('--secondary-glow', studio.theme_secondary || '#fbbf24');
+  root.style.setProperty('--bg-dark', studio.bg_dark || '#022c22');
+  root.style.setProperty('--bg-card', studio.bg_card || 'rgba(6, 78, 59, 0.85)');
   root.style.setProperty('--text-primary', studio.theme_text_primary || '#ffffff');
   root.style.setProperty('--text-secondary', studio.theme_text_secondary || 'rgba(255, 255, 255, 0.7)');
   root.style.setProperty('--font-main', studio.font_family || "'Anek Malayalam', sans-serif");
@@ -246,12 +299,16 @@ socket.on('studio:sync', (studio) => {
   }
 });
 
+// Local variable to track active timer duration
+let timerMaxDuration = 30;
+
 // ─── Timer Sync Events ───
 socket.on('timer:tick', (data) => {
   updateTimerUI(data.remaining);
 });
 
 socket.on('timer:started', (data) => {
+  timerMaxDuration = data.remaining || 30;
   updateTimerUI(data.remaining);
   playLocalSound('timer');
 });
@@ -262,12 +319,15 @@ socket.on('timer:paused', (data) => {
 });
 
 socket.on('timer:stopped', () => {
+  timerMaxDuration = 30;
   updateTimerUI(30);
   stopLocalSound('timer');
 });
 
 socket.on('timer:expired', () => {
-  timerRing.classList.add('danger');
+  const borderSvg = document.getElementById('questionBorderSvg');
+  if (borderSvg) borderSvg.classList.add('danger');
+  if (timerRing) timerRing.classList.add('danger');
   timerText.classList.add('danger');
   playLocalSound('expired');
   stopLocalSound('timer');
@@ -314,22 +374,69 @@ socket.on('lifeline:audience-poll-result', (data) => {
 });
 
 // ─── Celebration Sync Events ───
-socket.on('celebration:trigger', (data) => {
+let celebrationTimeout = null;
+let isCelebrating = false;
+
+socket.on('celebration:start', (data) => {
+  const duration = data?.duration || 0;
+  isCelebrating = true;
   startConfetti();
   playLocalSound('celebration');
+
+  if (celebrationTimeout) {
+    clearTimeout(celebrationTimeout);
+    celebrationTimeout = null;
+  }
+
+  if (duration > 0) {
+    celebrationTimeout = setTimeout(() => {
+      stopCelebrationLocal();
+    }, duration * 1000);
+  }
 });
+
+socket.on('celebration:tick', (data) => {
+  // Option to handle ticks locally if needed
+});
+
+socket.on('celebration:stop', () => {
+  stopCelebrationLocal();
+});
+
+socket.on('celebration:trigger', (data) => {
+  isCelebrating = true;
+  startConfetti();
+  playLocalSound('celebration');
+  if (celebrationTimeout) clearTimeout(celebrationTimeout);
+  celebrationTimeout = setTimeout(() => {
+    stopCelebrationLocal();
+  }, 10000);
+});
+
+function stopCelebrationLocal() {
+  isCelebrating = false;
+  stopLocalSound('celebration');
+  if (celebrationTimeout) {
+    clearTimeout(celebrationTimeout);
+    celebrationTimeout = null;
+  }
+}
 
 // ─── Contestant Sync Event ───
 socket.on('contestant:update', (contestant) => {
   // Sync contestant display if it matches active contestant
   fetch('/api/presentation/state')
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error('Failed to fetch state');
+      return r.json();
+    })
     .then(state => {
-      if (state.active_contestant_id === contestant.id) {
+      if (state && state.active_contestant_id === contestant.id) {
         if (contestantName) contestantName.textContent = contestant.name;
         if (contestantScore) contestantScore.textContent = `Points: ${contestant.score}`;
       }
-    });
+    })
+    .catch(err => console.error('Error fetching state in contestant update:', err));
 });
 
 // ─── Play Custom Sound Event ───
@@ -393,8 +500,15 @@ function loadQuestionContent(q) {
 
   // Set visual progress info
   fetch('/api/questions?level=' + q.level)
-    .then(r => r.json())
+    .then(r => {
+      if (!r.ok) throw new Error('Failed to fetch questions');
+      return r.json();
+    })
     .then(qs => {
+      if (!Array.isArray(qs)) {
+        console.warn('Questions list is not an array:', qs);
+        return;
+      }
       const idx = qs.findIndex(item => item.id === q.id);
       if (idx !== -1) {
         questionProgress.textContent = `${currentLanguage === 'ml' ? 'ചോദ്യം' : 'Question'} ${idx + 1}/${qs.length}`;
@@ -402,7 +516,10 @@ function loadQuestionContent(q) {
         questionProgress.textContent = '';
       }
     })
-    .catch(() => { questionProgress.textContent = ''; });
+    .catch(err => {
+      console.error('Error fetching level questions:', err);
+      questionProgress.textContent = '';
+    });
 }
 
 function clearQuestionContent() {
@@ -416,14 +533,33 @@ function clearQuestionContent() {
 }
 
 function updateTimerUI(sec) {
+  if (sec > timerMaxDuration) {
+    timerMaxDuration = sec;
+  }
   timerText.textContent = sec;
   
-  const pct = Math.max(0, Math.min(sec, 30)) / 30;
+  const pct = Math.max(0, Math.min(sec, timerMaxDuration)) / timerMaxDuration;
   if (timerRing) {
     timerRing.style.width = (pct * 100) + '%';
   }
 
+  // Update question border timer SVG stroke-dashoffset
+  const borderRect = document.getElementById('questionBorderRect');
+  if (borderRect) {
+    const width = parseFloat(borderRect.getAttribute('width')) || 0;
+    const height = parseFloat(borderRect.getAttribute('height')) || 0;
+    const r = 20; // corner radius
+    // Perimeter: 2 * (w + h) - 8 * r + 2 * Math.PI * r
+    const perimeter = 2 * (width + height) - 8 * r + 2 * Math.PI * r;
+    borderRect.style.strokeDasharray = perimeter;
+    borderRect.style.strokeDashoffset = perimeter * (1 - pct);
+  }
+
   // Visual Warning colors
+  const borderSvg = document.getElementById('questionBorderSvg');
+  if (borderSvg) {
+    borderSvg.classList.remove('warning', 'danger');
+  }
   if (timerRing) {
     timerRing.classList.remove('warning', 'danger');
   }
@@ -431,9 +567,11 @@ function updateTimerUI(sec) {
   
   if (sec <= 5) {
     if (timerRing) timerRing.classList.add('danger');
+    if (borderSvg) borderSvg.classList.add('danger');
     timerText.classList.add('danger');
   } else if (sec <= 10) {
     if (timerRing) timerRing.classList.add('warning');
+    if (borderSvg) borderSvg.classList.add('warning');
   }
 }
 
@@ -503,15 +641,21 @@ function playLocalSound(category, customUrl = '') {
       expired: 'https://assets.mixkit.co/active_storage/sfx/2008/2008-84.wav',
       reveal: 'https://assets.mixkit.co/active_storage/sfx/2010/2010-84.wav',
       lifeline: 'https://assets.mixkit.co/active_storage/sfx/2002/2002-84.wav',
-      celebration: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-84.wav'
+      celebration: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-84.wav',
+      mocking_laughter: 'https://assets.mixkit.co/active_storage/sfx/1971/1971-84.wav',
+      mocking_booing: 'https://assets.mixkit.co/active_storage/sfx/2048/2048-84.wav',
+      mocking_trombone: 'https://assets.mixkit.co/active_storage/sfx/1803/1803-84.wav',
+      mocking_shock: 'https://assets.mixkit.co/active_storage/sfx/2591/2591-84.wav'
     };
     soundUrl = fallbacks[category];
   }
 
   if (soundUrl) {
     audioEl.src = soundUrl;
-    if (category === 'background' || category === 'timer') {
+    if (category === 'background' || category === 'timer' || (category === 'celebration' && isCelebrating)) {
       audioEl.loop = true;
+    } else {
+      audioEl.loop = false;
     }
     audioEl.play().catch(e => console.log('Audio playback blocked:', e));
   }
@@ -601,7 +745,13 @@ function startConfetti() {
       p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
       p.tilt = Math.sin(p.tiltAngle - p.r / 2) * 5;
       
-      if (p.y < canvas.height) activeParticles++;
+      if (p.y < canvas.height) {
+        activeParticles++;
+      } else if (isCelebrating) {
+        p.y = Math.random() * -20 - 10;
+        p.x = Math.random() * canvas.width;
+        activeParticles++;
+      }
     });
 
     if (activeParticles > 0) {
@@ -641,8 +791,12 @@ optionCards.forEach(card => {
   card.addEventListener('click', () => {
     // Only local effects if someone clicks on presentation screen
     fetch('/api/presentation/state')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to fetch state');
+        return r.json();
+      })
       .then(state => {
+        if (!state || !state.question) return;
         if (state.reveal_answer) return;
         const correct = state.question.correct_answer;
         if (card.dataset.key === correct) {
@@ -652,6 +806,7 @@ optionCards.forEach(card => {
           card.classList.add('clicked-wrong');
           playLocalSound('wrong');
         }
-      });
+      })
+      .catch(err => console.error('Error fetching state on card click:', err));
   });
 });

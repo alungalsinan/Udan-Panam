@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <!-- Stylesheet -->
   <link rel="stylesheet" href="admin.css" />
 </head>
@@ -36,22 +38,22 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-icon">🎰</span>
+        <span class="brand-icon"><i class="fa-solid fa-coins"></i></span>
         <span class="brand-text">Udan Panam v2.0</span>
       </div>
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-tab="live"><span class="nav-icon">🎮</span><span class="nav-text">Live Control</span></a>
-        <a href="#" class="nav-item" data-tab="questions"><span class="nav-icon">📋</span><span class="nav-text">Questions</span></a>
-        <a href="#" class="nav-item" data-tab="contestants"><span class="nav-icon">👥</span><span class="nav-text">Contestants</span></a>
-        <a href="#" class="nav-item" data-tab="sessions"><span class="nav-icon">🏆</span><span class="nav-text">Sessions</span></a>
-        <a href="#" class="nav-item" data-tab="studio"><span class="nav-icon">🎨</span><span class="nav-text">Studio</span></a>
-        <a href="#" class="nav-item" data-tab="sounds"><span class="nav-icon">🔊</span><span class="nav-text">Sound Board</span></a>
-        <a href="#" class="nav-item" data-tab="analytics"><span class="nav-icon">📊</span><span class="nav-text">Analytics</span></a>
-        <a href="#" class="nav-item" data-tab="preview"><span class="nav-icon">👁</span><span class="nav-text">Preview</span></a>
-        <a href="#" class="nav-item" data-tab="settings"><span class="nav-icon">⚙️</span><span class="nav-text">Settings</span></a>
+        <a href="#" class="nav-item active" data-tab="live"><span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span><span class="nav-text">Live Control</span></a>
+        <a href="#" class="nav-item" data-tab="questions"><span class="nav-icon"><i class="fa-solid fa-clipboard-question"></i></span><span class="nav-text">Questions</span></a>
+        <a href="#" class="nav-item" data-tab="contestants"><span class="nav-icon"><i class="fa-solid fa-users"></i></span><span class="nav-text">Contestants</span></a>
+        <a href="#" class="nav-item" data-tab="sessions"><span class="nav-icon"><i class="fa-solid fa-trophy"></i></span><span class="nav-text">Sessions</span></a>
+        <a href="#" class="nav-item" data-tab="studio"><span class="nav-icon"><i class="fa-solid fa-palette"></i></span><span class="nav-text">Studio</span></a>
+        <a href="#" class="nav-item" data-tab="sounds"><span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span><span class="nav-text">Sound Board</span></a>
+        <a href="#" class="nav-item" data-tab="analytics"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="nav-text">Analytics</span></a>
+        <a href="#" class="nav-item" data-tab="preview"><span class="nav-icon"><i class="fa-solid fa-eye"></i></span><span class="nav-text">Preview</span></a>
+        <a href="#" class="nav-item" data-tab="settings"><span class="nav-icon"><i class="fa-solid fa-gears"></i></span><span class="nav-text">Settings</span></a>
       </nav>
       <div class="sidebar-footer">
-        <button id="logout-btn" class="ghost-btn full-width"><span class="nav-icon">🚪</span><span class="nav-text">Logout</span></button>
+        <button id="logout-btn" class="ghost-btn full-width"><span class="nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="nav-text">Logout</span></button>
       </div>
     </aside>
 
@@ -60,10 +62,11 @@
       <!-- Header -->
       <header class="main-header">
         <div class="header-left">
-          <button id="sidebar-toggle" class="icon-btn">☰</button>
+          <button id="sidebar-toggle" class="icon-btn"><i class="fa-solid fa-bars"></i></button>
           <h1 id="page-title">Live Control Room</h1>
         </div>
         <div class="header-right">
+          <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Light/Dark Theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
           <div class="live-indicator">
             <span class="pulse-dot"></span>
             <span>LIVE BROADCAST</span>
@@ -125,17 +128,23 @@
                 <div id="live-question-text" class="question-text">Use Next/Prev to punch a question onto the screen.</div>
               </div>
               <div class="grid-layout cols-2 gap-small margin-top">
-                <button id="prev-question-btn" class="ghost-btn">◀ Previous</button>
-                <button id="next-question-btn" class="primary-btn">Next Question ▶</button>
+                <button id="prev-question-btn" class="ghost-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                <button id="next-question-btn" class="primary-btn">Next Question <i class="fa-solid fa-chevron-right"></i></button>
+              </div>
+              <div class="form-group margin-top">
+                <label>Level Questions Quick Select</label>
+                <div id="live-questions-list" class="live-questions-list neumorphic-inset">
+                  <!-- Generated dynamically in JS -->
+                </div>
               </div>
               <hr class="divider" />
               <div class="form-group">
                 <label>Visibility Controls</label>
                 <div class="grid-layout cols-2 gap-small">
-                  <button id="toggle-question-btn" class="toggle-btn active">Show Question</button>
-                  <button id="toggle-options-btn" class="toggle-btn">Show Options</button>
-                  <button id="reveal-answer-btn" class="toggle-btn danger-color">Reveal Answer</button>
-                  <button id="toggle-explanation-btn" class="toggle-btn">Explanation</button>
+                  <button id="toggle-question-btn" class="toggle-btn active"><i class="fa-solid fa-eye"></i> Show Question</button>
+                  <button id="toggle-options-btn" class="toggle-btn"><i class="fa-solid fa-list-ul"></i> Show Options</button>
+                  <button id="reveal-answer-btn" class="toggle-btn danger-color"><i class="fa-solid fa-key"></i> Reveal Answer</button>
+                  <button id="toggle-explanation-btn" class="toggle-btn"><i class="fa-solid fa-circle-info"></i> Explanation</button>
                 </div>
               </div>
             </div>
@@ -147,32 +156,83 @@
                 <div class="timer-display-circle">
                   <span id="live-timer-text">30</span>s
                 </div>
+                <!-- Quick Adjustment Buttons -->
+                <div class="grid-layout cols-4 gap-small margin-top">
+                  <button id="timer-minus-10" class="danger-btn">-10s</button>
+                  <button id="timer-minus-5" class="warning-btn">-5s</button>
+                  <button id="timer-plus-5" class="warning-btn">+5s</button>
+                  <button id="timer-plus-10" class="success-btn">+10s</button>
+                </div>
+                <!-- Set Starting Duration -->
+                <div class="timer-set-duration margin-top" style="margin-bottom: 0.5rem;">
+                  <label for="timer-duration-input" style="font-size: 0.75rem; color: var(--admin-text-muted); display: block; text-align: left;">Set Duration:</label>
+                  <div style="display: flex; gap: 0.5rem; margin-top: 0.2rem;">
+                    <input type="number" id="timer-duration-input" value="30" class="form-control" style="flex: 1; padding: 0.4rem 0.6rem; font-size: 0.85rem;" />
+                    <button id="timer-set-btn" class="primary-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Set</button>
+                  </div>
+                </div>
                 <div class="grid-layout cols-3 gap-small margin-top">
-                  <button id="timer-start-btn" class="success-btn">Start</button>
-                  <button id="timer-pause-btn" class="warning-btn">Pause</button>
-                  <button id="timer-stop-btn" class="ghost-btn">Reset</button>
+                  <button id="timer-start-btn" class="success-btn"><i class="fa-solid fa-play"></i> Start</button>
+                  <button id="timer-pause-btn" class="warning-btn"><i class="fa-solid fa-pause"></i> Pause</button>
+                  <button id="timer-stop-btn" class="ghost-btn"><i class="fa-solid fa-rotate-left"></i> Reset</button>
                 </div>
               </div>
               <hr class="divider" />
               <div class="form-group">
                 <label>Contestant Lifelines</label>
                 <div class="grid-layout cols-2 gap-small">
-                  <button id="lifeline-fifty-btn" class="ghost-btn">50 : 50</button>
-                  <button id="lifeline-poll-btn" class="ghost-btn">Audience Poll</button>
+                  <button id="lifeline-fifty-btn" class="ghost-btn"><i class="fa-solid fa-scale-balanced"></i> 50 : 50</button>
+                  <button id="lifeline-poll-btn" class="ghost-btn"><i class="fa-solid fa-chart-bar"></i> Audience Poll</button>
                 </div>
               </div>
               <hr class="divider" />
               <div class="form-group">
                 <label>Media Controls</label>
                 <div class="grid-layout cols-3 gap-small">
-                  <button id="audio-play-btn" class="ghost-btn">▶ Play</button>
-                  <button id="audio-pause-btn" class="ghost-btn">⏸ Pause</button>
-                  <button id="audio-stop-btn" class="ghost-btn">⏹ Stop</button>
+                  <button id="audio-play-btn" class="ghost-btn"><i class="fa-solid fa-play"></i> Play</button>
+                  <button id="audio-pause-btn" class="ghost-btn"><i class="fa-solid fa-pause"></i> Pause</button>
+                  <button id="audio-stop-btn" class="ghost-btn"><i class="fa-solid fa-stop"></i> Stop</button>
                 </div>
               </div>
-              <div class="grid-layout cols-2 gap-small margin-top">
-                <button id="trigger-confetti-btn" class="success-btn">🎉 Celebration</button>
-                <button id="sound-suspense-btn" class="warning-btn">🔊 Suspense</button>
+              <hr class="divider" />
+              <div class="form-group">
+                <label>Celebration Manager</label>
+                <div class="celebration-panel neumorphic-inset">
+                  <div class="grid-layout cols-2 gap-small">
+                    <div>
+                      <label style="font-size: 0.7rem; margin-bottom: 0.2rem;">Timer Status</label>
+                      <div id="celebration-status-text" class="celebration-status-text">IDLE</div>
+                    </div>
+                    <div>
+                      <label style="font-size: 0.7rem; margin-bottom: 0.2rem;">Duration</label>
+                      <select id="celebration-duration-select" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+                        <option value="5">5s</option>
+                        <option value="10" selected>10s</option>
+                        <option value="20">20s</option>
+                        <option value="30">30s</option>
+                        <option value="0">Continuous</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="grid-layout cols-2 gap-small margin-top">
+                    <button id="celebration-start-btn" class="success-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Start</button>
+                    <button id="celebration-stop-btn" class="danger-btn"><i class="fa-solid fa-stop"></i> Stop</button>
+                  </div>
+                </div>
+              </div>
+              <hr class="divider" />
+              <div class="form-group">
+                <label>Mocking Sound Effects</label>
+                <div class="grid-layout cols-2 gap-small">
+                  <button class="mock-sound-btn ghost-btn" data-sound="laughter"><i class="fa-solid fa-face-laugh-beam"></i> Laughter</button>
+                  <button class="mock-sound-btn ghost-btn" data-sound="booing"><i class="fa-solid fa-thumbs-down"></i> Booing</button>
+                  <button class="mock-sound-btn ghost-btn" data-sound="trombone"><i class="fa-solid fa-face-frown"></i> Sad Trombone</button>
+                  <button class="mock-sound-btn ghost-btn" data-sound="shock"><i class="fa-solid fa-face-surprise"></i> Gasps/Shock</button>
+                </div>
+              </div>
+              <hr class="divider" />
+              <div class="grid-layout cols-1 gap-small">
+                <button id="sound-suspense-btn" class="warning-btn full-width"><i class="fa-solid fa-volume-high"></i> Play Ambient Suspense</button>
               </div>
             </div>
           </div>
@@ -190,12 +250,20 @@
                   <option value="2">Level 2 (Image)</option>
                   <option value="3">Level 3 (Audio)</option>
                 </select>
+                <select id="question-presented-filter" class="form-control filter-select">
+                  <option value="">All Statuses</option>
+                  <option value="false">Unpresented (Unused)</option>
+                  <option value="true">Presented (Used)</option>
+                </select>
               </div>
               <div class="table-actions-right">
                 <button id="add-question-btn" class="success-btn">+ Add New</button>
-                <button id="import-btn" class="ghost-btn">Import JSON</button>
+                <button id="import-btn" class="ghost-btn">Import Questions</button>
                 <button id="export-btn" class="ghost-btn">Export JSON</button>
-                <button id="template-btn" class="ghost-btn">Template</button>
+                <button id="export-excel-btn" class="ghost-btn">Export Excel</button>
+                <button id="template-btn" class="ghost-btn">JSON Template</button>
+                <button id="excel-template-btn" class="ghost-btn">Excel Template</button>
+                <button id="reset-presented-btn" class="warning-btn">Reset Used Status</button>
                 <button id="clear-all-questions-btn" class="danger-btn">Clear All</button>
               </div>
             </div>
@@ -209,6 +277,7 @@
                     <th>Question Text</th>
                     <th>Category</th>
                     <th>Points</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -310,6 +379,10 @@
                 <div class="form-group">
                   <label>Theme Preset</label>
                   <select id="theme-preset-select" class="form-control">
+                    <option value="emerald-gold" selected>Emerald Gold (Deep Green/Gold)</option>
+                    <option value="ruby-rose">Ruby Rose (Deep Red/Rose)</option>
+                    <option value="sapphire-glow">Sapphire Glow (Dark Blue/Cyan)</option>
+                    <option value="amethyst-spark">Amethyst Spark (Deep Purple/Pink)</option>
                     <option value="neon-night">Neon Night (Dark Cyan/Gold)</option>
                     <option value="sunset-blaze">Sunset Blaze (Dark Red/Gold)</option>
                     <option value="ocean-deep">Ocean Deep (Dark Blue/Teal)</option>
@@ -446,7 +519,7 @@
             <h3>Background Music Controls</h3>
             <div class="form-group margin-top grid-layout cols-3">
               <input type="text" id="bg-music-url-input" placeholder="Background Music URL" class="form-control" />
-              <button id="bg-music-test-btn" class="ghost-btn">▶ Play Music</button>
+              <button id="bg-music-test-btn" class="ghost-btn"><i class="fa-solid fa-play"></i> Play Music</button>
               <button id="bg-music-save-btn" class="success-btn">Save URL</button>
             </div>
           </div>
@@ -456,27 +529,27 @@
         <section id="tab-analytics" class="tab-section">
           <div class="grid-layout cols-5 margin-bottom">
             <div class="card bg-glass stat-card">
-              <span class="stat-icon">🏆</span>
+              <span class="stat-icon"><i class="fa-solid fa-trophy"></i></span>
               <div class="stat-num" id="stat-sessions">0</div>
               <div class="stat-label">Total Sessions</div>
             </div>
             <div class="card bg-glass stat-card">
-              <span class="stat-icon">📋</span>
+              <span class="stat-icon"><i class="fa-solid fa-clipboard-question"></i></span>
               <div class="stat-num" id="stat-questions">0</div>
               <div class="stat-label">Total Questions</div>
             </div>
             <div class="card bg-glass stat-card">
-              <span class="stat-icon">🗳</span>
+              <span class="stat-icon"><i class="fa-solid fa-check-to-slot"></i></span>
               <div class="stat-num" id="stat-answers">0</div>
               <div class="stat-label">Answers Logged</div>
             </div>
             <div class="card bg-glass stat-card">
-              <span class="stat-icon">🎯</span>
+              <span class="stat-icon"><i class="fa-solid fa-bullseye"></i></span>
               <div class="stat-num" id="stat-accuracy">0%</div>
               <div class="stat-label">Overall Accuracy</div>
             </div>
             <div class="card bg-glass stat-card">
-              <span class="stat-icon">👥</span>
+              <span class="stat-icon"><i class="fa-solid fa-users"></i></span>
               <div class="stat-num" id="stat-contestants">0</div>
               <div class="stat-label">Total Contestants</div>
             </div>
@@ -508,7 +581,7 @@
           <div class="card bg-glass">
             <div class="table-header">
               <h3>Live Screen Broadcast Simulator</h3>
-              <button id="preview-refresh-btn" class="ghost-btn">🔄 Refresh Feed</button>
+              <button id="preview-refresh-btn" class="ghost-btn"><i class="fa-solid fa-rotate"></i> Refresh Feed</button>
             </div>
             <div class="preview-iframe-container margin-top">
               <iframe id="preview-iframe" src="/"></iframe>
@@ -562,13 +635,13 @@
               <h3>Data Management</h3>
               <div class="margin-top">
                 <p class="description">Download a comprehensive JSON archive containing all questions, contestants, sessions, answer logs, sound effects, and configurations.</p>
-                <button id="backup-download-btn" class="primary-btn full-width margin-top">📥 Download DB Backup</button>
+                <button id="backup-download-btn" class="primary-btn full-width margin-top"><i class="fa-solid fa-download"></i> Download DB Backup</button>
               </div>
               <div class="margin-top">
                 <p class="description">Restore database states or import bulk settings from a valid Udan Panam v2.0 JSON backup file.</p>
                 <div class="file-upload-group margin-top">
                   <input type="file" id="backup-upload-input" accept=".json" style="display: none;" />
-                  <button id="backup-upload-btn" class="ghost-btn full-width">📤 Upload DB Backup</button>
+                  <button id="backup-upload-btn" class="ghost-btn full-width"><i class="fa-solid fa-upload"></i> Upload DB Backup</button>
                 </div>
               </div>
               
@@ -690,14 +763,49 @@
     </div>
   </div>
 
+  <!-- ─── Import Question Modal ─── -->
+  <div id="import-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="close-import-modal">&times;</span>
+      <h2>Import Questions</h2>
+      <div class="margin-top">
+        <p class="description">Select a JSON or Excel file (.json, .xlsx, .xls) or paste the JSON array below to import multiple questions at once.</p>
+        <div class="form-group margin-top">
+          <label>Option 1: Upload JSON or Excel File</label>
+          <input type="file" id="modal-import-file-input" accept=".json,.xlsx,.xls" class="form-control" />
+        </div>
+        <div class="form-group margin-top">
+          <label>Option 2: Paste JSON Content</label>
+          <textarea id="modal-import-text-input" class="form-control" rows="8" placeholder='[
+  {
+    "level": 1,
+    "question_text": "Sample Question?",
+    "option_a": "Option A",
+    "option_b": "Option B",
+    "option_c": "Option C",
+    "option_d": "Option D",
+    "correct_answer": "A",
+    "points": 10
+  }
+]'></textarea>
+        </div>
+        <div class="grid-layout cols-2 gap-small margin-top">
+          <button id="modal-import-cancel-btn" class="ghost-btn">Cancel</button>
+          <button id="modal-import-submit-btn" class="success-btn">Import Questions</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Hidden File Input for JSON Imports -->
-  <input type="file" id="import-file-input" accept=".json" style="display: none;" />
+  <input type="file" id="import-file-input" accept=".json,.xlsx,.xls" style="display: none;" />
 
   <!-- ─── Toast Notification Container ─── -->
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Scripts -->
   <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

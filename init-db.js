@@ -23,7 +23,8 @@ const createQuestionsTable = `
     points INTEGER DEFAULT 10,
     timer_override INTEGER,
     explanation TEXT,
-    sort_order INTEGER DEFAULT 0
+    sort_order INTEGER DEFAULT 0,
+    presented BOOLEAN DEFAULT FALSE
   );
 `;
 
@@ -54,10 +55,10 @@ const createStudioSettingsTable = `
     id INTEGER PRIMARY KEY,
     welcome_title TEXT DEFAULT 'College Union Quiz 2026',
     welcome_subtitle TEXT DEFAULT 'The Ultimate Battle of Minds',
-    theme_primary VARCHAR(50) DEFAULT '#00e5ff',
-    theme_secondary VARCHAR(50) DEFAULT '#ffd700',
-    bg_dark VARCHAR(50) DEFAULT '#070B19',
-    bg_card VARCHAR(50) DEFAULT 'rgba(16, 24, 45, 0.8)',
+    theme_primary VARCHAR(50) DEFAULT '#10b981',
+    theme_secondary VARCHAR(50) DEFAULT '#fbbf24',
+    bg_dark VARCHAR(50) DEFAULT '#022c22',
+    bg_card VARCHAR(50) DEFAULT 'rgba(6, 78, 59, 0.85)',
     font_family VARCHAR(100) DEFAULT '''Anek Malayalam'', sans-serif',
     animation_enabled BOOLEAN DEFAULT TRUE,
     logo_url TEXT,
@@ -69,7 +70,7 @@ const createStudioSettingsTable = `
     wrong_sound_url TEXT,
     timer_sound_url TEXT,
     bg_music_url TEXT,
-    theme_preset VARCHAR(30) DEFAULT 'neon-night',
+    theme_preset VARCHAR(30) DEFAULT 'emerald-gold',
     ui_language VARCHAR(10) DEFAULT 'ml'
   );
 `;
@@ -153,7 +154,8 @@ const alterQuestionsTable = `
     ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 10,
     ADD COLUMN IF NOT EXISTS timer_override INTEGER,
     ADD COLUMN IF NOT EXISTS explanation TEXT,
-    ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
+    ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS presented BOOLEAN DEFAULT FALSE;
 `;
 
 const alterPresentationStateTable = `
@@ -180,7 +182,7 @@ const alterStudioSettingsTable = `
     ADD COLUMN IF NOT EXISTS wrong_sound_url TEXT,
     ADD COLUMN IF NOT EXISTS timer_sound_url TEXT,
     ADD COLUMN IF NOT EXISTS bg_music_url TEXT,
-    ADD COLUMN IF NOT EXISTS theme_preset VARCHAR(30) DEFAULT 'neon-night',
+    ADD COLUMN IF NOT EXISTS theme_preset VARCHAR(30) DEFAULT 'emerald-gold',
     ADD COLUMN IF NOT EXISTS ui_language VARCHAR(10) DEFAULT 'ml';
 `;
 
@@ -215,7 +217,11 @@ const seedDefaultSounds = `
     ('Background Music', 'background', ''),
     ('Question Appear', 'transition', ''),
     ('Applause', 'celebration', ''),
-    ('Suspense', 'reveal', '')
+    ('Suspense', 'reveal', ''),
+    ('Mock: Laughter', 'mocking_laughter', ''),
+    ('Mock: Booing', 'mocking_booing', ''),
+    ('Mock: Sad Trombone', 'mocking_trombone', ''),
+    ('Mock: Gasps/Shock', 'mocking_shock', '')
   ON CONFLICT DO NOTHING;
 `;
 
@@ -272,6 +278,20 @@ async function initDB() {
     // Seed default sound effects
     await sql.query(seedDefaultSounds);
     console.log("✅ Default sound effects seeded.");
+
+    // Migrate old neon-night defaults if applicable
+    const migrateOldDefaultTheme = `
+      UPDATE studio_settings 
+      SET 
+        theme_preset = 'emerald-gold',
+        theme_primary = '#10b981',
+        theme_secondary = '#fbbf24',
+        bg_dark = '#022c22',
+        bg_card = 'rgba(6, 78, 59, 0.85)'
+      WHERE id = 1 AND (theme_preset = 'neon-night' OR theme_preset IS NULL);
+    `;
+    await sql.query(migrateOldDefaultTheme);
+    console.log("✅ Migrated default theme to Emerald Gold.");
 
     // Seed questions if table is empty
     const res = await sql.query('SELECT count(*) FROM questions');
