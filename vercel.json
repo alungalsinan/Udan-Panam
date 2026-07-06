@@ -3,11 +3,12 @@
   "builds": [
     { "src": "server.js", "use": "@vercel/node" }
   ],
+  "cleanUrls": true,
   "routes": [
-    { "src": "/admin", "dest": "/server.js" },
     { "src": "/api/(.*)", "dest": "/server.js" },
     { "src": "/socket.io/(.*)", "dest": "/server.js" },
-    { "src": "/(.*)", "dest": "/server.js" }
+    { "src": "/admin", "dest": "/admin.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ],
   "headers": [
     {

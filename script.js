@@ -100,13 +100,48 @@ socket.on('connect', () => {
   socket.emit('join', 'presentation');
 });
 
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
-  connectionDot.className = 'connection-indicator disconnected';
+let isSocketConnected = false;
+let pollingInterval = null;
+
+socket.on('connect', () => {
+  console.log('Connected to server');
+  isSocketConnected = true;
+  connectionDot.className = 'connection-indicator connected';
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
 });
 
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
+  isSocketConnected = false;
+  connectionDot.className = 'connection-indicator disconnected';
+  startPollingFallback();
+});
+
+function startPollingFallback() {
+  if (pollingInterval) return;
+  console.log('Starting polling fallback for state sync...');
+  pollingInterval = setInterval(async () => {
+    if (isSocketConnected) return;
+    try {
+      const res = await fetch('/api/presentation/state');
+      if (res.ok) {
+        const state = await res.json();
+        syncState(state);
+      }
+    } catch (e) {
+      console.error('Error polling state:', e);
+    }
+  }, 2000);
+}
+
+// Start polling fallback initially as a safety check
+startPollingFallback();
+
 // ─── State Sync Event ───
-socket.on('state:sync', (state) => {
+function syncState(state) {
   if (!state) return;
   console.log('State Synced:', state);
 
@@ -221,6 +256,10 @@ socket.on('state:sync', (state) => {
   if (state.question && state.question.audio_url) {
     syncAudioStatus(state.audio_status);
   }
+}
+
+socket.on('state:sync', (state) => {
+  syncState(state);
 });
 
 // ─── Studio Sync Event ───

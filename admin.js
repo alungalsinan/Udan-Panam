@@ -9,6 +9,8 @@ let currentQuestions = [];
 let currentQuestionIndex = -1;
 let currentLevel = 1;
 let currentTab = 'live';
+let isSocketConnected = false;
+let pollingInterval = null;
 
 // Question Manager Pagination & Filters
 let qPage = 1;
@@ -141,17 +143,76 @@ logoutBtn.addEventListener('click', () => {
 function initDashboard() {
   // Connect Socket.IO
   socket = io();
+
+  // Override socket.emit to support HTTP fallback for state:update
+  const originalEmit = socket.emit;
+  socket.emit = function(event, ...args) {
+    if (event === 'state:update') {
+      if (socket && socket.connected) {
+        originalEmit.apply(socket, [event, ...args]);
+      } else {
+        fetch('/api/presentation/state', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': currentToken
+          },
+          body: JSON.stringify(args[0])
+        })
+        .then(res => {
+          if (res.ok) return res.json();
+        })
+        .then(state => {
+          if (state) syncLiveControls(state);
+        })
+        .catch(err => console.error('HTTP state update failed:', err));
+      }
+    } else {
+      if (socket && socket.connected) {
+        originalEmit.apply(socket, [event, ...args]);
+      }
+    }
+  };
   
   socket.on('connect', () => {
+    isSocketConnected = true;
     connectionStatus.textContent = 'Connected';
     connectionStatus.className = 'connection-pill green';
     socket.emit('join', 'admin');
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
   });
 
   socket.on('disconnect', () => {
+    isSocketConnected = false;
     connectionStatus.textContent = 'Disconnected';
     connectionStatus.className = 'connection-pill red';
+    startPollingFallback();
   });
+
+  function startPollingFallback() {
+    if (pollingInterval) return;
+    console.log('Starting polling fallback for admin state sync...');
+    pollingInterval = setInterval(async () => {
+      if (isSocketConnected) return;
+      try {
+        const res = await fetch('/api/presentation/state', {
+          headers: { 'x-admin-token': currentToken }
+        });
+        if (res.ok) {
+          const state = await res.json();
+          syncLiveControls(state);
+        }
+      } catch (e) {
+        console.error('Error polling state in admin:', e);
+      }
+    }, 2000);
+  }
+
+  // Start polling fallback initially as a safety check
+  startPollingFallback();
 
   socket.on('state:sync', (state) => {
     syncLiveControls(state);
