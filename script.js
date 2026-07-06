@@ -83,7 +83,7 @@ socket.on('state:sync', (state) => {
 
   // 2. Handle Game Mode
   if (state.game_mode) {
-    gameModeBadge.textContent = state.game_mode === 'single' ? 'Single Player' : 'Team Mode';
+    if (gameModeBadge) gameModeBadge.textContent = state.game_mode === 'single' ? 'Single Player' : 'Team Mode';
   }
 
   // 3. Question & Content loading
@@ -141,8 +141,8 @@ socket.on('state:sync', (state) => {
       .then(contestants => {
         const active = contestants.find(c => c.id === state.active_contestant_id);
         if (active) {
-          contestantName.textContent = active.name;
-          contestantScore.textContent = `Points: ${active.score}`;
+          if (contestantName) contestantName.textContent = active.name;
+          if (contestantScore) contestantScore.textContent = `Points: ${active.score}`;
           
           // Update lifelines
           let usedLifelines = [];
@@ -186,7 +186,15 @@ socket.on('studio:sync', (studio) => {
   root.style.setProperty('--secondary-glow', studio.theme_secondary || '#ffd700');
   root.style.setProperty('--bg-dark', studio.bg_dark || '#070B19');
   root.style.setProperty('--bg-card', studio.bg_card || 'rgba(16, 24, 45, 0.8)');
+  root.style.setProperty('--text-primary', studio.theme_text_primary || '#ffffff');
+  root.style.setProperty('--text-secondary', studio.theme_text_secondary || 'rgba(255, 255, 255, 0.7)');
   root.style.setProperty('--font-main', studio.font_family || "'Anek Malayalam', sans-serif");
+
+  // Apply theme class to body
+  document.body.className = '';
+  if (studio.theme_preset) {
+    document.body.classList.add('theme-' + studio.theme_preset);
+  }
 
   welcomeTitle.textContent = studio.welcome_title || 'Welcome';
   welcomeSubtitle.textContent = studio.welcome_subtitle || '';
@@ -318,8 +326,8 @@ socket.on('contestant:update', (contestant) => {
     .then(r => r.json())
     .then(state => {
       if (state.active_contestant_id === contestant.id) {
-        contestantName.textContent = contestant.name;
-        contestantScore.textContent = `Points: ${contestant.score}`;
+        if (contestantName) contestantName.textContent = contestant.name;
+        if (contestantScore) contestantScore.textContent = `Points: ${contestant.score}`;
       }
     });
 });
@@ -410,23 +418,22 @@ function clearQuestionContent() {
 function updateTimerUI(sec) {
   timerText.textContent = sec;
   
-  // Update circle path
-  const radius = 52;
-  const circumference = 2 * Math.PI * radius; // ~327
-  timerRing.style.strokeDasharray = circumference;
   const pct = Math.max(0, Math.min(sec, 30)) / 30;
-  const offset = circumference * (1 - pct);
-  timerRing.style.strokeDashoffset = offset;
+  if (timerRing) {
+    timerRing.style.width = (pct * 100) + '%';
+  }
 
   // Visual Warning colors
-  timerRing.classList.remove('warning', 'danger');
+  if (timerRing) {
+    timerRing.classList.remove('warning', 'danger');
+  }
   timerText.classList.remove('danger');
   
   if (sec <= 5) {
-    timerRing.classList.add('danger');
+    if (timerRing) timerRing.classList.add('danger');
     timerText.classList.add('danger');
   } else if (sec <= 10) {
-    timerRing.classList.add('warning');
+    if (timerRing) timerRing.classList.add('warning');
   }
 }
 

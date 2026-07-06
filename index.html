@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="Udan Panam — Live Quiz Show Presentation" />
   <meta name="theme-color" content="#070B19" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>ഉഡൻ പണം — Live Quiz</title>
@@ -30,7 +31,7 @@
   <!-- Fullscreen Toggle                          -->
   <!-- ═══════════════════════════════════════════ -->
   <button id="btnFullscreen" class="fullscreen-btn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <path class="fs-expand" d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" />
       <path class="fs-collapse" d="M4 14h3a2 2 0 012 2v3m4-19v3a2 2 0 01-2 2H8m12 4h-3a2 2 0 01-2-2V8m-4 16v-3a2 2 0 012-2h3" style="display:none" />
     </svg>
@@ -45,7 +46,7 @@
   <!-- SCREEN: Welcome                            -->
   <!-- ═══════════════════════════════════════════ -->
   <section id="screenWelcome" class="screen screen--welcome active">
-    <div class="welcome-container">
+    <div class="welcome-content">
       <!-- Logo -->
       <div class="welcome-logo" id="welcomeLogo">
         <div class="welcome-logo__placeholder">
@@ -64,14 +65,14 @@
       </div>
 
       <!-- Title -->
-      <h1 class="welcome-title" id="welcomeTitle">ഉഡൻ പണം</h1>
-      <p class="welcome-subtitle" id="welcomeSubtitle">The Ultimate Battle of Minds</p>
+      <h1 class="welcome-title glow-text" id="welcomeTitle">ഉഡൻ പണം</h1>
+      <p class="welcome-subtitle subtitle" id="welcomeSubtitle">The Ultimate Battle of Minds</p>
 
       <!-- Decorative line -->
       <div class="welcome-divider"></div>
 
       <!-- Start Button -->
-      <button id="btnStart" class="btn-start">
+      <button id="btnStart" class="btn-start primary-btn">
         <span class="btn-start__text">ക്വിസ് ആരംഭിക്കുക</span>
         <span class="btn-start__en">Start Quiz</span>
         <svg class="btn-start__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -95,104 +96,103 @@
   <!-- SCREEN: Quiz                                -->
   <!-- ═══════════════════════════════════════════ -->
   <section id="screenQuiz" class="screen screen--quiz">
+    <div class="quiz-layout">
 
-    <!-- ── Top Bar ── -->
-    <header class="top-bar">
-      <!-- Logo (left) -->
-      <div class="top-bar__logo" id="topBarLogo">
-        <div class="top-bar__logo-placeholder">UP</div>
-        <img class="top-bar__logo-img" id="topBarLogoImg" src="" alt="Logo" style="display:none" />
-      </div>
-
-      <!-- Question Progress (center) -->
-      <div class="top-bar__progress" id="questionProgress">
-        <span class="progress-label">Q</span>
-        <span class="progress-current" id="progressCurrent">1</span>
-        <span class="progress-sep">/</span>
-        <span class="progress-total" id="progressTotal">10</span>
-      </div>
-
-      <!-- Circular Countdown Timer (right) -->
-      <div class="top-bar__timer" id="timerContainer">
-        <svg class="timer-svg" viewBox="0 0 120 120">
-          <circle class="timer-bg" cx="60" cy="60" r="52" />
-          <circle class="timer-ring" id="timerProgress" cx="60" cy="60" r="52" />
-        </svg>
-        <span class="timer-value" id="timerValue">30</span>
-      </div>
-    </header>
-
-    <!-- ── Question Area ── -->
-    <div class="question-area" id="questionArea">
-      <!-- Question Text -->
-      <div class="question-text-wrap" id="questionTextWrap">
-        <h2 class="question-text" id="questionText">ചോദ്യം ഇവിടെ കാണിക്കും…</h2>
-      </div>
-
-      <!-- Question Media: Image -->
-      <div class="question-media question-media--image" id="questionImageWrap" style="display:none">
-        <img class="question-image" id="questionImage" src="" alt="Question Image" />
-      </div>
-
-      <!-- Question Media: Video -->
-      <div class="question-media question-media--video" id="questionVideoWrap" style="display:none">
-        <video class="question-video" id="questionVideo" controls preload="metadata"></video>
-      </div>
-
-      <!-- Question Media: Audio Player -->
-      <div class="question-media question-media--audio" id="questionAudioWrap" style="display:none">
-        <div class="audio-player" id="audioPlayer">
-          <button class="audio-player__btn" id="audioPlayBtn" aria-label="Play/Pause Audio">
-            <svg class="audio-icon audio-icon--play" id="audioIconPlay" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            <svg class="audio-icon audio-icon--pause" id="audioIconPause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-            </svg>
-          </button>
-          <div class="audio-player__track">
-            <div class="audio-player__progress" id="audioProgress"></div>
-          </div>
-          <span class="audio-player__time" id="audioTime">0:00</span>
-          <!-- Visualizer Bars -->
-          <div class="audio-visualizer" id="audioVisualizer">
-            <span class="viz-bar"></span>
-            <span class="viz-bar"></span>
-            <span class="viz-bar"></span>
-            <span class="viz-bar"></span>
-            <span class="viz-bar"></span>
-          </div>
+      <!-- ── Top Bar ── -->
+      <header class="top-bar">
+        <!-- Question Progress (left) -->
+        <div class="question-progress" id="questionProgress">
+          <span class="progress-label">Question</span>
+          <span class="progress-current" id="progressCurrent">1</span>
+          <span class="progress-sep">/</span>
+          <span class="progress-total" id="progressTotal">10</span>
         </div>
-        <audio id="questionAudio" preload="metadata"></audio>
-      </div>
-    </div>
 
-    <!-- ── Options Grid (2×2) ── -->
-    <div class="options-grid" id="optionsGrid">
-      <button class="option-card" id="optionA" data-key="A">
-        <span class="option-card__key">A</span>
-        <span class="option-card__text" id="optionAText"></span>
-      </button>
-      <button class="option-card" id="optionB" data-key="B">
-        <span class="option-card__key">B</span>
-        <span class="option-card__text" id="optionBText"></span>
-      </button>
-      <button class="option-card" id="optionC" data-key="C">
-        <span class="option-card__key">C</span>
-        <span class="option-card__text" id="optionCText"></span>
-      </button>
-      <button class="option-card" id="optionD" data-key="D">
-        <span class="option-card__key">D</span>
-        <span class="option-card__text" id="optionDText"></span>
-      </button>
-    </div>
+        <!-- Numerical Countdown (right) -->
+        <div class="timer-numeric">
+          <span class="timer-text" id="timerValue">30</span>
+        </div>
+      </header>
 
-    <!-- ── Explanation Section ── -->
-    <div class="explanation-container" id="explanationSection">
-      <div class="explanation-card">
-        <span class="explanation-label">വിശദീകരണം</span>
-        <p class="explanation-text" id="explanationText"></p>
+      <!-- ── Horizontal Timer Progress Line ── -->
+      <div class="timer-bar-container" id="timerContainer">
+        <div class="timer-bar-fill" id="timerProgress"></div>
       </div>
+
+      <!-- ── Question Area ── -->
+      <div class="question-area" id="questionArea">
+        <!-- Question Text -->
+        <div class="question-text-wrap" id="questionTextWrap">
+          <h2 class="question-text" id="questionText">ചോദ്യം ഇവിടെ കാണിക്കും…</h2>
+        </div>
+
+        <!-- Question Media: Image -->
+        <div class="question-media question-media--image" id="questionImageWrap" style="display:none">
+          <img class="question-image" id="questionImage" src="" alt="Question Image" />
+        </div>
+
+        <!-- Question Media: Video -->
+        <div class="question-media question-media--video" id="questionVideoWrap" style="display:none">
+          <video class="question-video" id="questionVideo" controls preload="metadata"></video>
+        </div>
+
+        <!-- Question Media: Audio Player -->
+        <div class="question-media question-media--audio" id="questionAudioWrap" style="display:none">
+          <div class="audio-player-container" id="audioPlayer">
+            <button class="audio-btn" id="audioPlayBtn" aria-label="Play/Pause Audio">
+              <svg class="audio-icon audio-icon--play" id="audioIconPlay" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg class="audio-icon audio-icon--pause" id="audioIconPause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            </button>
+            <div class="progress-container audio-player__track">
+              <div class="progress-bar" id="audioProgress"></div>
+            </div>
+            <!-- Visualizer Bars -->
+            <div class="visualizer" id="audioVisualizer">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </div>
+          </div>
+          <audio id="questionAudio" preload="metadata"></audio>
+        </div>
+      </div>
+
+      <!-- ── Options Grid (2×2) ── -->
+      <div class="options-grid" id="optionsGrid">
+        <button class="option-card" id="optionA" data-key="A" data-option="A">
+          <span class="option-label">A</span>
+          <span class="option-text" id="optionAText"></span>
+        </button>
+        <button class="option-card" id="optionB" data-key="B" data-option="B">
+          <span class="option-label">B</span>
+          <span class="option-text" id="optionBText"></span>
+        </button>
+        <button class="option-card" id="optionC" data-key="C" data-option="C">
+          <span class="option-label">C</span>
+          <span class="option-text" id="optionCText"></span>
+        </button>
+        <button class="option-card" id="optionD" data-key="D" data-option="D">
+          <span class="option-label">D</span>
+          <span class="option-text" id="optionDText"></span>
+        </button>
+      </div>
+
+      <!-- ── Explanation Section ── -->
+      <div class="explanation-container" id="explanationSection">
+        <div class="explanation-card">
+          <span class="explanation-label">വിശദീകരണം</span>
+          <p class="explanation-text" id="explanationText"></p>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Audience Poll Overlay ── -->
@@ -203,22 +203,22 @@
           സദസ്സ് പോൾ
         </h3>
         <div class="poll-bars">
-          <div class="poll-row">
+          <div class="poll-bar-row">
             <span class="poll-label">A</span>
             <div class="poll-bar-track"><div class="poll-bar-fill" id="pollBarA" style="width:0%"></div></div>
             <span class="poll-pct" id="pollPctA">0%</span>
           </div>
-          <div class="poll-row">
+          <div class="poll-bar-row">
             <span class="poll-label">B</span>
             <div class="poll-bar-track"><div class="poll-bar-fill" id="pollBarB" style="width:0%"></div></div>
             <span class="poll-pct" id="pollPctB">0%</span>
           </div>
-          <div class="poll-row">
+          <div class="poll-bar-row">
             <span class="poll-label">C</span>
             <div class="poll-bar-track"><div class="poll-bar-fill" id="pollBarC" style="width:0%"></div></div>
             <span class="poll-pct" id="pollPctC">0%</span>
           </div>
-          <div class="poll-row">
+          <div class="poll-bar-row">
             <span class="poll-label">D</span>
             <div class="poll-bar-track"><div class="poll-bar-fill" id="pollBarD" style="width:0%"></div></div>
             <span class="poll-pct" id="pollPctD">0%</span>
@@ -226,57 +226,6 @@
         </div>
       </div>
     </div>
-
-    <!-- ── Bottom Bar ── -->
-    <footer class="bottom-bar">
-      <!-- Contestant Info (left) -->
-      <div class="bottom-bar__contestant">
-        <div class="contestant-avatar" id="contestantAvatar"></div>
-        <div class="contestant-info">
-          <span class="contestant-name" id="contestantName">—</span>
-          <span class="contestant-score" id="contestantScore">Score: 0</span>
-        </div>
-      </div>
-
-      <!-- Lifeline Indicators (center) -->
-      <div class="lifeline-indicators" id="lifelineIndicators">
-        <!-- 50:50 -->
-        <div class="lifeline-icon" id="lifeline5050" data-lifeline="fifty-fifty" title="50:50">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="2" x2="12" y2="22" />
-          </svg>
-          <span class="lifeline-label">50:50</span>
-        </div>
-        <!-- Audience Poll -->
-        <div class="lifeline-icon" id="lifelineAudience" data-lifeline="audience-poll" title="Audience Poll">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="4" y="14" width="4" height="6" rx="1" />
-            <rect x="10" y="8" width="4" height="12" rx="1" />
-            <rect x="16" y="4" width="4" height="16" rx="1" />
-          </svg>
-          <span class="lifeline-label">Poll</span>
-        </div>
-        <!-- Phone a Friend -->
-        <div class="lifeline-icon" id="lifelinePhone" data-lifeline="phone-friend" title="Phone a Friend">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-          </svg>
-          <span class="lifeline-label">Phone</span>
-        </div>
-      </div>
-
-      <!-- Game Mode Badge (right) -->
-      <div class="bottom-bar__mode">
-        <span class="game-mode-badge" id="modeBadge">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-          <span id="modeBadgeText">Single</span>
-        </span>
-      </div>
-    </footer>
-
   </section>
 
   <!-- ═══════════════════════════════════════════ -->

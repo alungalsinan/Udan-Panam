@@ -18,11 +18,16 @@ let qLevelFilter = '';
 
 // Theme Preset Colors
 const themePresets = {
-  'neon-night': { primary: '#00e5ff', secondary: '#ffd700', bg: '#070B19', card: 'rgba(16, 24, 45, 0.8)' },
-  'sunset-blaze': { primary: '#ff6b6b', secondary: '#ffd93d', bg: '#1a0a0a', card: 'rgba(40, 15, 15, 0.8)' },
-  'ocean-deep': { primary: '#0abde3', secondary: '#10ac84', bg: '#0a1628', card: 'rgba(10, 22, 40, 0.8)' },
-  'minimal-white': { primary: '#333333', secondary: '#666666', bg: '#f5f5f5', card: 'rgba(235, 235, 235, 0.9)' },
-  'retro-arcade': { primary: '#ff00ff', secondary: '#00ff00', bg: '#0d0221', card: 'rgba(13, 2, 33, 0.8)' }
+  'neon-night': { primary: '#00e5ff', secondary: '#ffd700', bg: '#070B19', card: 'rgba(16, 24, 45, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'sunset-blaze': { primary: '#ff6b6b', secondary: '#ffd93d', bg: '#1a0a0a', card: 'rgba(40, 15, 15, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'ocean-deep': { primary: '#0abde3', secondary: '#10ac84', bg: '#0a1628', card: 'rgba(10, 22, 40, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'retro-arcade': { primary: '#ff00ff', secondary: '#00ff00', bg: '#0d0221', card: 'rgba(13, 2, 33, 0.8)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'cyberpunk': { primary: '#ec4899', secondary: '#06b6d4', bg: '#09090b', card: 'rgba(18, 10, 24, 0.9)', textPrimary: '#ffffff', textSecondary: '#f472b6' },
+  'forest-mint': { primary: '#34d399', secondary: '#fcd34d', bg: '#022c22', card: 'rgba(6, 78, 59, 0.9)', textPrimary: '#f0fdf4', textSecondary: '#6ee7b7' },
+  'royal-gold': { primary: '#fbbf24', secondary: '#f8fafc', bg: '#2e1065', card: 'rgba(76, 29, 149, 0.9)', textPrimary: '#fdfba8', textSecondary: '#fcd34d' },
+  'pure-dark': { primary: '#ffffff', secondary: '#ffd700', bg: '#000000', card: 'rgba(20, 20, 20, 0.9)', textPrimary: '#ffffff', textSecondary: 'rgba(255, 255, 255, 0.7)' },
+  'minimal-white': { primary: '#2563eb', secondary: '#b45309', bg: '#f8fafc', card: 'rgba(255, 255, 255, 0.95)', textPrimary: '#0f172a', textSecondary: '#475569' },
+  'pure-light': { primary: '#1e40af', secondary: '#b45309', bg: '#ffffff', card: 'rgba(248, 250, 252, 0.95)', textPrimary: '#0f172a', textSecondary: '#475569' }
 };
 
 // DOM Elements
@@ -1079,6 +1084,10 @@ async function loadStudioSettings() {
     document.getElementById('theme-bg-text').value = s.bg_dark || '#070B19';
     document.getElementById('theme-card-text').value = s.bg_card || 'rgba(16, 24, 45, 0.8)';
     
+    document.getElementById('theme-text-primary-picker').value = s.theme_text_primary || '#ffffff';
+    document.getElementById('theme-text-primary-text').value = s.theme_text_primary || '#ffffff';
+    document.getElementById('theme-text-secondary-text').value = s.theme_text_secondary || 'rgba(255, 255, 255, 0.7)';
+
     document.getElementById('theme-welcome-title').value = s.welcome_title || '';
     document.getElementById('theme-welcome-subtitle').value = s.welcome_subtitle || '';
     document.getElementById('theme-font-select').value = s.font_family || "'Anek Malayalam', sans-serif";
@@ -1114,6 +1123,9 @@ function setupStudioListeners() {
       document.getElementById('theme-bg-picker').value = preset.bg;
       document.getElementById('theme-bg-text').value = preset.bg;
       document.getElementById('theme-card-text').value = preset.card;
+      document.getElementById('theme-text-primary-picker').value = preset.textPrimary;
+      document.getElementById('theme-text-primary-text').value = preset.textPrimary;
+      document.getElementById('theme-text-secondary-text').value = preset.textSecondary;
     }
   });
 
@@ -1121,6 +1133,7 @@ function setupStudioListeners() {
   setupColorSync('theme-primary-picker', 'theme-primary-text');
   setupColorSync('theme-secondary-picker', 'theme-secondary-text');
   setupColorSync('theme-bg-picker', 'theme-bg-text');
+  setupColorSync('theme-text-primary-picker', 'theme-text-primary-text');
 
   // Form Submit
   document.getElementById('studio-settings-form').addEventListener('submit', async (e) => {
@@ -1131,6 +1144,8 @@ function setupStudioListeners() {
       theme_secondary: document.getElementById('theme-secondary-text').value,
       bg_dark: document.getElementById('theme-bg-text').value,
       bg_card: document.getElementById('theme-card-text').value,
+      theme_text_primary: document.getElementById('theme-text-primary-text').value,
+      theme_text_secondary: document.getElementById('theme-text-secondary-text').value,
       welcome_title: document.getElementById('theme-welcome-title').value || null,
       welcome_subtitle: document.getElementById('theme-welcome-subtitle').value || null,
       font_family: document.getElementById('theme-font-select').value,
