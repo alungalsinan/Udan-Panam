@@ -10,11 +10,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>ഉഡൻ പണം — Live Quiz</title>
 
-  <!-- Fonts & Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&family=Inter:wght@400;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <!-- Local Fonts & Icons -->
+  <link rel="stylesheet" href="/node_modules/@fontsource/anek-malayalam/400.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/anek-malayalam/600.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/anek-malayalam/800.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/400.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/600.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/700.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/800.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/montserrat/700.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/montserrat/800.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/montserrat/900.css" />
+  <link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css" />
@@ -167,7 +174,7 @@
         <div class="promo-3d-tilt-box" id="promoTiltBox">
           <div class="promo-art-glass-plate">
             <div class="promo-art-glow"></div>
-            <img src="assets/promo-art.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
+            <img src="assets/promo-logo-3d.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
             <div class="promo-specular-sweep"></div>
           </div>
         </div>
@@ -214,19 +221,18 @@
         <div class="promo-card promo-card--conductors" id="promoCard3" data-scene="3">
           <div class="promo-card__halo"></div>
           <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-user-tie"></i>
+            <i class="fa-solid fa-crown"></i>
           </div>
           <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard3Tag">STAGE CONDUCTORS</span>
-            <div class="conductors-list">
-              <div class="conductor-item">
-                <span class="conductor-role">CHAIRMAN:</span>
-                <strong class="conductor-name" id="promoChairmanName">ADHIL S</strong>
+            <span class="promo-card__tag" id="promoCard3Tag">STAGE LEADERSHIP</span>
+            <div class="conductors-badge-row">
+              <div class="conductor-chip conductor-chip--chairman">
+                <span class="conductor-badge-title">CHAIRMAN</span>
+                <strong class="conductor-badge-name" id="promoChairmanName">ADHIL S</strong>
               </div>
-              <div class="conductor-sep">•</div>
-              <div class="conductor-item">
-                <span class="conductor-role">CONVENOR:</span>
-                <strong class="conductor-name" id="promoConvenorName">MUSTHAQEEM MUHAMMED</strong>
+              <div class="conductor-chip conductor-chip--convenor">
+                <span class="conductor-badge-title">CONVENOR</span>
+                <strong class="conductor-badge-name" id="promoConvenorName">MUSTHAQEEM MUHAMMED</strong>
               </div>
             </div>
             <p class="promo-card__malayalam" id="promoCard3Desc">നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് &amp; കൺവീനർ മുസ്തഖീം മുഹമ്മദ്</p>
@@ -479,7 +485,7 @@
   <!-- ═══════════════════════════════════════════ -->
   <!-- Socket.IO + App Script                      -->
   <!-- ═══════════════════════════════════════════ -->
-  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="script.js"></script>
 
 </body>

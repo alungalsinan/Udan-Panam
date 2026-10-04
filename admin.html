@@ -4,12 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Udan Panam — Broadcast Control Room</title>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anek+Malayalam:wght@500;700&display=swap" rel="stylesheet" />
+  <!-- Local Fonts -->
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/400.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/500.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/600.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/700.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/800.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/anek-malayalam/500.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/anek-malayalam/700.css" />
   <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
   <!-- Stylesheet -->
   <link rel="stylesheet" href="admin.css" />
 </head>
@@ -128,14 +132,33 @@
         </div>
 
         <div class="header-right">
+          <!-- Broadcast Run Time Stopwatch -->
+          <div class="clay-stopwatch-badge" id="broadcast-stopwatch" title="Live Broadcast Elapsed Stopwatch">
+            <i class="fa-solid fa-clock"></i>
+            <span id="stopwatch-display">00:00:00</span>
+            <button id="stopwatch-toggle-btn" class="stopwatch-mini-btn" title="Start/Pause Broadcast Clock"><i class="fa-solid fa-play"></i></button>
+            <button id="stopwatch-reset-btn" class="stopwatch-mini-btn" title="Reset Clock"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+
+          <!-- Emergency Stage Flash Alert Trigger -->
+          <button id="flash-alert-trigger-btn" class="btn btn-sm btn-outline clay-btn-flash" title="Dispatch Urgent Stage Flash Alert">
+            <i class="fa-solid fa-bullhorn text-warning"></i>
+            <span>Flash Alert</span>
+          </button>
+
+          <!-- Floating Studio Soundboard Toggle -->
+          <button id="sound-dock-toggle-btn" class="icon-btn" title="Toggle Studio FX Soundboard">
+            <i class="fa-solid fa-music"></i>
+          </button>
+
           <!-- Direct Links to Displays -->
           <a href="/" target="_blank" class="stage-link-btn" title="Open Stage Display in new window">
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            <span>Stage Screen</span>
+            <span>Stage</span>
           </a>
-          <a href="/cast" target="_blank" class="stage-link-btn cast-link-btn" title="Open Dedicated Clean Casting Screen">
+          <a href="/cast" target="_blank" class="stage-link-btn cast-link-btn" title="Open Clean Casting Screen">
             <i class="fa-solid fa-tv"></i>
-            <span>Cast Display</span>
+            <span>Cast</span>
           </a>
 
           <!-- Live Broadcast Pulse Indicator -->
@@ -144,11 +167,35 @@
             <span class="broadcast-label">ON AIR</span>
           </div>
 
-          <!-- Socket Connection Status -->
-          <div id="connection-status" class="connection-badge green">
+          <!-- Socket Diagnostics & Ping -->
+          <div id="ping-status-badge" class="clay-ping-badge green" title="WebSocket Latency Health">
+            <span class="ping-bars">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+            </span>
+            <span id="ping-ms-text">12ms</span>
+          </div>
+
+          <div id="connection-status" class="connection-badge green" title="Socket Connection State">
             <span class="status-dot"></span>
             <span class="status-text">Connected</span>
           </div>
+
+          <!-- Keyboard Shortcuts Cheat Sheet -->
+          <button id="hotkeys-modal-btn" class="icon-btn" title="Studio Keyboard Hotkeys (?)">
+            <i class="fa-solid fa-keyboard"></i>
+          </button>
+
+          <!-- Fullscreen Console Mode -->
+          <button id="fullscreen-toggle-btn" class="icon-btn" title="Toggle Fullscreen Control Room">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+
+          <!-- Claymorphism Studio Customizer -->
+          <button id="clay-customizer-btn" class="icon-btn clay-sparkle-btn" title="Claymorphism Studio & Depth Customizer">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
 
           <!-- Theme Toggle -->
           <button id="theme-toggle-btn" class="icon-btn" title="Toggle Light/Dark Theme">
@@ -227,6 +274,18 @@
                     <span id="live-question-status-badge" class="badge badge-success">Ready</span>
                   </div>
                   <div class="question-nav-controls">
+                    <!-- Host Teleprompter Font Zoom -->
+                    <div class="teleprompter-zoom-group" title="Adjust Question Font Scale">
+                      <button id="teleprompter-font-down" class="btn btn-xs btn-outline" title="Decrease Question Font Size"><i class="fa-solid fa-font"></i>-</button>
+                      <button id="teleprompter-font-reset" class="btn btn-xs btn-ghost" title="Reset Font Size">100%</button>
+                      <button id="teleprompter-font-up" class="btn btn-xs btn-outline" title="Increase Question Font Size"><i class="fa-solid fa-font"></i>+</button>
+                    </div>
+
+                    <!-- Operator Answer Peek Toggle -->
+                    <button id="teleprompter-peek-btn" class="btn btn-sm btn-outline" title="Peek / Hide Correct Answer (Operator Only)">
+                      <i class="fa-solid fa-eye"></i> <span>Peek Ans</span>
+                    </button>
+
                     <button id="live-quick-edit-btn" class="btn btn-sm btn-outline btn-live-edit" title="Edit Question & Options Live">
                       <i class="fa-solid fa-pen-to-square"></i> Quick Edit
                     </button>
@@ -1859,6 +1918,291 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 🚨 MODAL: EMERGENCY STAGE FLASH ALERT       -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="flash-alert-modal" class="modal">
+    <div class="modal-dialog modal-dialog-clay">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-bullhorn text-warning"></i> Dispatch Stage Flash Alert</h2>
+        <button class="modal-close-btn" id="close-flash-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="card-description">
+          Instantly dispatch an urgent ticker banner across all live Stage and Clean Cast screens.
+        </p>
+        
+        <div class="form-group margin-top">
+          <label>Quick Preset Announcements</label>
+          <div class="flash-presets-grid">
+            <button type="button" class="flash-preset-btn" data-text="⏱️ 10 SECONDS REMAINING ON CLOCK!">⏱️ 10s Left</button>
+            <button type="button" class="flash-preset-btn" data-text="⚠️ TECHNICAL TIMEOUT — STAND BY">⚠️ Timeout</button>
+            <button type="button" class="flash-preset-btn" data-text="🎉 WELCOME SPECIAL GUEST ON STAGE!">🎉 Guest</button>
+            <button type="button" class="flash-preset-btn" data-text="🔥 TIE-BREAKER SUDDEN DEATH ROUND!">🔥 Sudden Death</button>
+            <button type="button" class="flash-preset-btn" data-text="🏆 FINAL WINNER ANNOUNCEMENT IN 1 MINUTE!">🏆 Winner</button>
+            <button type="button" class="flash-preset-btn" data-text="📢 AUDIT CONFIRMED: POINT AWARDED!">📢 Audit Point</button>
+          </div>
+        </div>
+
+        <div class="form-group margin-top">
+          <label>Custom Announcement Message</label>
+          <textarea id="flash-custom-text" class="form-control" rows="3" placeholder="Type urgent announcement to display immediately on stage..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem;">
+            <input type="checkbox" id="flash-sound-chime" checked />
+            <span>Play chime tone on stage with announcement</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button id="flash-clear-btn" class="btn btn-outline text-danger">
+            <i class="fa-solid fa-ban"></i> Clear Ticker
+          </button>
+          <button id="flash-submit-btn" class="btn btn-warning">
+            <i class="fa-solid fa-paper-plane"></i> Broadcast Live Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- ⌨️ MODAL: STUDIO KEYBOARD SHORTCUTS GUIDE    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="hotkeys-modal" class="modal">
+    <div class="modal-dialog modal-dialog-clay modal-dialog-lg">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-keyboard text-primary"></i> Studio Broadcast Hotkeys Guide</h2>
+        <button class="modal-close-btn" id="close-hotkeys-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="card-description">
+          Execute rapid live broadcast operations with precision director hotkeys.
+        </p>
+        <div class="hotkeys-grid margin-top">
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">Space</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Next Question</span>
+              <span class="hotkey-desc">Advance directly to next question in round</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">Q</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Push Question</span>
+              <span class="hotkey-desc">Show/Hide question text on main stage</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">O</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Reveal Options</span>
+              <span class="hotkey-desc">Reveal 4 options on stage display</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">T</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Start / Pause Timer</span>
+              <span class="hotkey-desc">Toggle the stage countdown timer</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">R</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Reveal Correct Answer</span>
+              <span class="hotkey-desc">Trigger fanfare & illuminate right option</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">E</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Explanation</span>
+              <span class="hotkey-desc">Display trivia / answer note on stage</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">5</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">50:50 Lifeline</span>
+              <span class="hotkey-desc">Eliminate 2 incorrect options instantly</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">P</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Audience Poll</span>
+              <span class="hotkey-desc">Display audience vote breakdown</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">C</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Confetti Celebration</span>
+              <span class="hotkey-desc">Trigger gold stage confetti burst</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">M</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Panic Mute Audio</span>
+              <span class="hotkey-desc">Silence all playing audio and loops</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">Esc</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Welcome Screen / Close</span>
+              <span class="hotkey-desc">Return stage to Welcome screen or close modal</span>
+            </div>
+          </div>
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">?</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Hotkeys Guide</span>
+              <span class="hotkey-desc">Toggle this studio shortcut modal</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 🎨 MODAL: CLAYMORPHISM STUDIO CUSTOMIZER    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="clay-customizer-modal" class="modal">
+    <div class="modal-dialog modal-dialog-clay">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Claymorphism Studio Suite</h2>
+        <button class="modal-close-btn" id="close-clay-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="card-description">
+          Personalize the tactile 3D aesthetic, clay depth level, studio accent colors, and tactile haptic feedback.
+        </p>
+
+        <!-- Theme Mode -->
+        <div class="form-group margin-top">
+          <label>Clay Theme Surface</label>
+          <div class="clay-segmented-toggle" id="clay-theme-toggle">
+            <button type="button" class="clay-segment-btn" data-theme="dark">
+              <i class="fa-solid fa-moon"></i> Dark Clay
+            </button>
+            <button type="button" class="clay-segment-btn" data-theme="light">
+              <i class="fa-solid fa-sun"></i> Porcelain Light
+            </button>
+          </div>
+        </div>
+
+        <!-- Clay 3D Depth Level -->
+        <div class="form-group margin-top">
+          <label>Clay 3D Tactile Depth Level</label>
+          <div class="clay-depth-picker" id="clay-depth-picker">
+            <button type="button" class="clay-depth-btn" data-depth="soft">
+              <span class="depth-name">Soft 3D</span>
+              <span class="depth-desc">Gentle, subtle pillowy curve</span>
+            </button>
+            <button type="button" class="clay-depth-btn active" data-depth="classic">
+              <span class="depth-name">Puffy Clay</span>
+              <span class="depth-desc">Dual-bevel tactile 3D</span>
+            </button>
+            <button type="button" class="clay-depth-btn" data-depth="neo">
+              <span class="depth-name">Neo-Glow</span>
+              <span class="depth-desc">Puffy clay + neon halo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Clay Accent Color Palette -->
+        <div class="form-group margin-top">
+          <label>Studio Accent Color</label>
+          <div class="clay-accent-picker" id="clay-accent-picker">
+            <button type="button" class="clay-accent-swatch active" data-accent="cyan" style="--accent-color: #00f2fe;" title="Cyan Broadcast"></button>
+            <button type="button" class="clay-accent-swatch" data-accent="emerald" style="--accent-color: #10b981;" title="Studio Emerald"></button>
+            <button type="button" class="clay-accent-swatch" data-accent="gold" style="--accent-color: #f59e0b;" title="Royal Gold"></button>
+            <button type="button" class="clay-accent-swatch" data-accent="ruby" style="--accent-color: #f43f5e;" title="Neon Ruby"></button>
+            <button type="button" class="clay-accent-swatch" data-accent="purple" style="--accent-color: #a855f7;" title="Cyber Amethyst"></button>
+            <button type="button" class="clay-accent-swatch" data-accent="ocean" style="--accent-color: #0284c7;" title="Ocean Deep"></button>
+          </div>
+        </div>
+
+        <!-- Tactile Sound Feedback -->
+        <div class="form-group margin-top">
+          <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+            <div>
+              <div style="font-weight:700; color:var(--text-main); font-size:0.9rem;">Tactile Haptic Audio Feedback</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Synthesize soft physical click sounds on buttons</div>
+            </div>
+            <input type="checkbox" id="clay-sound-haptic-toggle" checked style="width:20px; height:20px; cursor:pointer;" />
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button id="clay-reset-defaults-btn" class="btn btn-ghost">Reset Defaults</button>
+          <button id="clay-save-close-btn" class="btn btn-primary">Done & Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 🔊 FLOATING CLAY STUDIO SOUNDBOARD DOCK    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="floating-sound-dock" class="floating-sound-dock" style="display: none;">
+    <div class="sound-dock-header">
+      <div class="dock-title">
+        <i class="fa-solid fa-music text-primary"></i>
+        <span>Studio FX Soundboard</span>
+      </div>
+      <div class="dock-actions">
+        <button id="sound-dock-minimize-btn" class="sound-dock-min-btn" title="Close Soundboard">&times;</button>
+      </div>
+    </div>
+    <div class="sound-dock-pads-grid">
+      <button class="sound-pad-btn sound-pad-primary" data-sound="applause" title="Audience Applause">
+        <span class="pad-icon">👏</span>
+        <span class="pad-label">Applause</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-success" data-sound="correct" title="Correct Answer Fanfare">
+        <span class="pad-icon">✅</span>
+        <span class="pad-label">Correct</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-danger" data-sound="wrong" title="Wrong Buzzer">
+        <span class="pad-icon">❌</span>
+        <span class="pad-label">Wrong</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-warning" data-sound="drumroll" title="Drumroll Suspense">
+        <span class="pad-icon">🥁</span>
+        <span class="pad-label">Drumroll</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-purple" data-sound="heartbeat" title="Heartbeat Tension">
+        <span class="pad-icon">💓</span>
+        <span class="pad-label">Heartbeat</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-cyan" data-sound="tick" title="Countdown Tick">
+        <span class="pad-icon">⏰</span>
+        <span class="pad-label">Tick-Tock</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-gold" data-sound="cash" title="ATM Cash Dispenser">
+        <span class="pad-icon">💸</span>
+        <span class="pad-label">Cash 50K</span>
+      </button>
+      <button class="sound-pad-btn sound-pad-stop" data-sound="stop-all" title="Panic Stop All Audio">
+        <span class="pad-icon">🛑</span>
+        <span class="pad-label">Mute All</span>
+      </button>
+    </div>
+    <div class="sound-dock-footer">
+      <i class="fa-solid fa-volume-low text-muted"></i>
+      <input type="range" id="sound-dock-volume" min="0" max="100" value="85" class="sound-dock-vol-slider" />
+      <i class="fa-solid fa-volume-high text-muted"></i>
+    </div>
+  </div>
+
   <!-- Hidden File Input for JSON/Excel Direct Upload -->
   <input type="file" id="import-file-input" accept=".json,.xlsx,.xls" style="display: none;" />
 
@@ -1866,8 +2210,8 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- External Vendor Libraries -->
-  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/node_modules/xlsx/dist/xlsx.full.min.js"></script>
 
   <!-- Application Logic -->
   <script src="admin.js"></script>
