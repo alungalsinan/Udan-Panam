@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Udan Panam 3.0 — Casting Display</title>
+
+  <!-- Typography: Inter, Montserrat & Anek Malayalam -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;900&family=Montserrat:wght@700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Primary Application Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    /* ── Dedicated Broadcast Feed Styles ── */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #010b1a;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Hide web interactive controls in cast mode */
+    .promo-controls-footer,
+    .controls-overlay,
+    .screen-indicator,
+    .audio-toggle-btn {
+      display: none !important;
+    }
+
+    /* Expand stage to 100% full view */
+    .screen {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Casting Pairing Status Pill (discreetly appears and fades) */
+    .cast-telemetry-badge {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 50px;
+      background: rgba(3, 24, 48, 0.7);
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      color: #00e5ff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+      pointer-events: none;
+    }
+    .cast-telemetry-badge.faded {
+      opacity: 0;
+    }
+    .cast-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00e5ff;
+      box-shadow: 0 0 10px #00e5ff;
+      animation: castPulse 1.6s infinite alternate;
+    }
+    @keyframes castPulse {
+      0% { opacity: 0.5; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.2); }
+    }
+  </style>
+</head>
+<body class="cast-display-mode">
+
+  <!-- Casting Screen Connection Badge -->
+  <aside id="castBadge" class="cast-telemetry-badge" aria-live="polite">
+    <span class="cast-dot"></span>
+    <span id="castBadgeText">CAST DISPLAY ONLINE • SYNCED</span>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SCREEN: Promo Animation (Next-Gen Clean)   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="screenPromo" class="screen screen--promo active" aria-label="Promo Presentation">
+    <div class="promo-bg-canvas" aria-hidden="true">
+      <div class="promo-ambient-mesh"></div>
+      <div class="promo-beam promo-beam--left"></div>
+      <div class="promo-beam promo-beam--center"></div>
+      <div class="promo-beam promo-beam--right"></div>
+      <div class="promo-radial-glow"></div>
+      
+      <!-- Ambient Micro-Particles -->
+      <div class="promo-stardust-layer">
+        <span class="p-star s1"></span>
+        <span class="p-star s2"></span>
+        <span class="p-star s3"></span>
+        <span class="p-star s4"></span>
+        <span class="p-star s5"></span>
+        <span class="p-star s6"></span>
+        <span class="p-star s7"></span>
+        <span class="p-star s8"></span>
+        <span class="p-star s9"></span>
+        <span class="p-star s10"></span>
+      </div>
+
+      <!-- Luxury 3D Minted Metallic Gold Rupee Coins -->
+      <div class="promo-floating-coins" aria-hidden="true">
+        <div class="promo-coin-3d coin-pos-1">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-2">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-3">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-4">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-5">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-6">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promo Stage Container -->
+    <div class="promo-stage-wrapper">
+      
+      <!-- Top Eyebrow Badges -->
+      <header class="promo-eyebrow animate-slide-down">
+        <div class="promo-badge-gold">
+          <span class="badge-shine"></span>
+          <i class="fa-solid fa-crown"></i>
+          <span id="promoEyebrowBadge">SRDB PRESENTS</span>
+        </div>
+        <div class="promo-producer-tag">
+          <i class="fa-solid fa-clapperboard"></i>
+          <span id="promoProducerWrapper">FROM THE PRODUCER <strong class="glow-producer" id="promoProducerTag">DC</strong></span>
+        </div>
+        <div class="promo-live-pill" title="Live Broadcast Cast Stream">
+          <span class="promo-live-dot"></span>
+          <span>ON AIR</span>
+        </div>
+      </header>
+
+      <!-- Centerpiece 3D Visual & Logo Artwork -->
+      <div class="promo-hero-centerpiece" id="promoHeroArea">
+        <div class="promo-3d-tilt-box" id="promoTiltBox">
+          <div class="promo-art-glass-plate">
+            <div class="promo-art-glow"></div>
+            <img src="assets/promo-art.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
+            <div class="promo-specular-sweep"></div>
+          </div>
+        </div>
+
+        <!-- Broadcast Tagline & Hashtag -->
+        <div class="promo-sub-ribbon">
+          <span class="promo-tagline" id="promoTagline">THE ULTIMATE BATTLE OF MINDS • GRAND TELECAST</span>
+          <span class="promo-hashtag-text" id="promoHashtag"># udan panam</span>
+        </div>
+      </div>
+
+      <!-- Feature Cards Grid (Overview Mode & Interactive Reel Mode) -->
+      <div class="promo-cards-grid" id="promoCardsGrid">
+        
+        <!-- Card 1: Classes 1 to 10 -->
+        <div class="promo-card promo-card--classes" id="promoCard1" data-scene="2">
+          <div class="promo-card__icon-wrap">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard1Tag">ELIGIBILITY</span>
+            <h3 class="promo-card__title" id="promoCard1Title">FOR CLASSES 1 TO 10</h3>
+            <p class="promo-card__malayalam" id="promoCard1Desc">1 മുതൽ 10 വരെയുള്ള ക്ലാസ്സുകളിലെ മിടുക്കന്മാർക്കായി</p>
+          </div>
+        </div>
+
+        <!-- Card 2: 1 Participant per class -->
+        <div class="promo-card promo-card--participants" id="promoCard2" data-scene="2">
+          <div class="promo-card__icon-wrap">
+            <i class="fa-solid fa-user-astronaut"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard2Tag">CONTESTANT RULE</span>
+            <h3 class="promo-card__title" id="promoCard2Title">ONE PARTICIPANT PER CLASS</h3>
+            <p class="promo-card__malayalam" id="promoCard2Desc">ഓരോ ക്ലാസ്സിൽ നിന്നും തിരഞ്ഞെടുക്കപ്പെടുന്ന ഒരു പ്രതിഭ വീതം!</p>
+          </div>
+        </div>
+
+        <!-- Card 3: Conductors & Leadership -->
+        <div class="promo-card promo-card--conductors" id="promoCard3" data-scene="3">
+          <div class="promo-card__icon-wrap">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard3Tag">STAGE CONDUCTORS</span>
+            <div class="conductors-list">
+              <div class="conductor-item">
+                <span class="conductor-role">CHAIRMAN:</span>
+                <strong class="conductor-name" id="promoChairmanName">ADHIL S</strong>
+              </div>
+              <div class="conductor-sep">•</div>
+              <div class="conductor-item">
+                <span class="conductor-role">CONVENOR:</span>
+                <strong class="conductor-name" id="promoConvenorName">MUSTHAQEEM MUHAMMED</strong>
+              </div>
+            </div>
+            <p class="promo-card__malayalam" id="promoCard3Desc">നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് &amp; കൺവീനർ മുസ്തഖീം മുഹമ്മദ്</p>
+          </div>
+        </div>
+
+        <!-- Card 4: Prizes & Rewards -->
+        <div class="promo-card promo-card--prizes" id="promoCard4" data-scene="4">
+          <div class="promo-card__icon-wrap prize-glow">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard4Tag">MEGA REWARDS</span>
+            <h3 class="promo-card__title" id="promoCard4Title">PARTICIPATE &amp; WIN VALUABLE PRIZES!</h3>
+            <p class="promo-card__malayalam" id="promoCard4Desc">പങ്കെടുക്കൂ, ആകർഷകവും അമൂല്യവുമായ സമ്മാനങ്ങൾ നേടൂ!</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SCREEN: Welcome / Title Screen              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="screenWelcome" class="screen screen--welcome" aria-label="Welcome Screen">
+    <div class="welcome-container animate-fade-in">
+      <div class="welcome-logo-wrapper">
+        <h1 class="welcome-title text-gradient-gold">ഉടൻ പണം 3.0</h1>
+        <p class="welcome-subtitle text-gradient-teal">The Ultimate Battle of Minds</p>
+      </div>
+      <div class="welcome-pulse-ring"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SCREEN: Quiz                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="screenQuiz" class="screen screen--quiz">
+    <div class="quiz-layout">
+      <!-- Question Container -->
+      <main class="question-container" id="questionContainer">
+        <div class="question-card" id="questionCard">
+          <div class="question-header">
+            <span class="question-badge" id="questionNumber">ചോദ്യം</span>
+            <span class="question-points-badge" id="questionPoints">+10 Pts</span>
+          </div>
+          <div class="question-text-wrapper">
+            <p class="question-text" id="questionText">ചോദ്യം ലോഡുചെയ്യുന്നു...</p>
+          </div>
+        </div>
+      </main>
+
+      <!-- Options Grid -->
+      <section class="options-container" id="optionsContainer">
+        <div class="options-grid">
+          <div class="option-card" id="optionA" data-option="A">
+            <span class="option-label">A</span>
+            <span class="option-text" id="optionTextA">ഓപ്ഷൻ A</span>
+          </div>
+          <div class="option-card" id="optionB" data-option="B">
+            <span class="option-label">B</span>
+            <span class="option-text" id="optionTextB">ഓപ്ഷൻ B</span>
+          </div>
+          <div class="option-card" id="optionC" data-option="C">
+            <span class="option-label">C</span>
+            <span class="option-text" id="optionTextC">ഓപ്ഷൻ C</span>
+          </div>
+          <div class="option-card" id="optionD" data-option="D">
+            <span class="option-label">D</span>
+            <span class="option-text" id="optionTextD">ഓപ്ഷൻ D</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- Stage Blackout Curtain -->
+  <div id="stageBlackout" class="stage-blackout-curtain" style="display:none;">
+    <div class="blackout-center">
+      <i class="fa-solid fa-moon blackout-icon"></i>
+      <h2 class="blackout-title">STANDBY</h2>
+      <p class="blackout-desc">Broadcast will resume shortly</p>
+    </div>
+  </div>
+
+  <!-- Broadcast Lower-Third Ticker -->
+  <aside id="stageTicker" class="stage-broadcast-ticker" style="display:none;" aria-live="polite">
+    <div class="ticker-badge"><i class="fa-solid fa-bullhorn"></i> ANNOUNCEMENT</div>
+    <div class="ticker-content">
+      <span id="stageTickerText" class="ticker-marquee-text"></span>
+    </div>
+  </aside>
+
+  <!-- Casting Screen Engine Script -->
+  <script>
+    const socket = io();
+    const castBadge = document.getElementById('castBadge');
+    let currentScreen = 'promo';
+    let currentPromoScene = 'all';
+    let promoReelTimer = null;
+    let promoReelSpeed = 5500;
+    const promoScenesList = ['1', '2', '3', '4', 'all'];
+    let currentSceneIndex = 4;
+
+    // Join room 'cast' and send display telemetry
+    socket.on('connect', () => {
+      console.log('Casting Screen connected:', socket.id);
+      socket.emit('join', 'cast', {
+        name: 'Cast Display ' + window.location.host,
+        resolution: `${window.innerWidth}x${window.innerHeight}`,
+        userAgent: navigator.userAgent
+      });
+
+      if (castBadge) {
+        castBadge.classList.remove('faded');
+        setTimeout(() => {
+          castBadge.classList.add('faded');
+        }, 3500);
+      }
+    });
+
+    // Handle screen switching
+    function switchScreen(screenName) {
+      currentScreen = screenName;
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenName === 'quiz' ? 'screenQuiz' : (screenName === 'welcome' ? 'screenWelcome' : 'screenPromo'));
+      if (target) target.classList.add('active');
+    }
+
+    let castSoundEnabled = false;
+
+    // Sync presentation & dual-screen broadcast state
+    socket.on('state:sync', (state) => {
+      if (!state) return;
+
+      // 1. Dual-Screen Routing: Independent vs Mirror
+      const isIndependent = state.cast_sync_mode === 'independent';
+      const targetScreen = isIndependent ? (state.cast_screen || 'promo') : (state.active_screen || 'promo');
+      switchScreen(targetScreen);
+
+      // 2. Promo Scene (if independent and promo screen)
+      if (targetScreen === 'promo' && isIndependent && state.cast_scene) {
+        triggerPromoScene(state.cast_scene);
+      }
+
+      // 3. Cast Blackout (Independent or Stage mirror when in mirror mode)
+      const isBlackedOut = isIndependent ? !!state.cast_blackout : (state.cast_blackout || state.stage_blackout);
+      const bo = document.getElementById('stageBlackout');
+      if (bo) bo.style.display = isBlackedOut ? 'flex' : 'none';
+
+      // 4. Lower-Third Ticker Sync
+      const tk = document.getElementById('stageTicker');
+      const txt = document.getElementById('stageTickerText');
+      if (tk && txt) {
+        if (state.cast_ticker_visible && state.cast_ticker_text) {
+          txt.textContent = state.cast_ticker_text;
+          tk.style.display = 'block';
+        } else if (!state.cast_ticker_visible) {
+          tk.style.display = 'none';
+        }
+      }
+
+      // 5. Watermark / Bug Visibility
+      const badge = document.getElementById('castBadge');
+      if (badge) {
+        badge.style.display = (state.cast_watermark_visible !== false) ? 'flex' : 'none';
+      }
+
+      // 6. Sound Preference
+      castSoundEnabled = !!state.cast_sound_enabled;
+
+      // 7. Question Sync (for quiz screen)
+      if (state.question) {
+        const qText = document.getElementById('questionText');
+        if (qText) qText.textContent = state.question.question_text || '';
+        const opA = document.getElementById('optionTextA'); if (opA) opA.textContent = state.question.option_a || '';
+        const opB = document.getElementById('optionTextB'); if (opB) opB.textContent = state.question.option_b || '';
+        const opC = document.getElementById('optionTextC'); if (opC) opC.textContent = state.question.option_c || '';
+        const opD = document.getElementById('optionTextD'); if (opD) opD.textContent = state.question.option_d || '';
+      }
+    });
+
+    // Promo Content Sync
+    socket.on('promo:sync', (promo) => {
+      if (!promo) return;
+      const eb = document.getElementById('promoEyebrowBadge'); if (eb && promo.eyebrow_badge) eb.textContent = promo.eyebrow_badge;
+      const pt = document.getElementById('promoProducerTag'); if (pt && promo.producer_tag) pt.textContent = promo.producer_tag.replace(/^FROM THE PRODUCER\s*/i, '');
+      const tl = document.getElementById('promoTagline'); if (tl && promo.tagline) tl.textContent = promo.tagline;
+      const ht = document.getElementById('promoHashtag'); if (ht && promo.hashtag) ht.textContent = promo.hashtag;
+      
+      const c1tag = document.getElementById('promoCard1Tag'); if (c1tag && promo.card1_tag) c1tag.textContent = promo.card1_tag;
+      const c1t = document.getElementById('promoCard1Title'); if (c1t && promo.card1_title) c1t.textContent = promo.card1_title;
+      const c1d = document.getElementById('promoCard1Desc'); if (c1d && promo.card1_desc) c1d.textContent = promo.card1_desc;
+      const c2tag = document.getElementById('promoCard2Tag'); if (c2tag && promo.card2_tag) c2tag.textContent = promo.card2_tag;
+      const c2t = document.getElementById('promoCard2Title'); if (c2t && promo.card2_title) c2t.textContent = promo.card2_title;
+      const c2d = document.getElementById('promoCard2Desc'); if (c2d && promo.card2_desc) c2d.textContent = promo.card2_desc;
+      const c3tag = document.getElementById('promoCard3Tag'); if (c3tag && promo.card3_tag) c3tag.textContent = promo.card3_tag;
+      const cm = document.getElementById('promoChairmanName'); if (cm && promo.card3_chairman) cm.textContent = promo.card3_chairman;
+      const cv = document.getElementById('promoConvenorName'); if (cv && promo.card3_convenor) cv.textContent = promo.card3_convenor;
+      const c3d = document.getElementById('promoCard3Desc'); if (c3d && promo.card3_desc) c3d.textContent = promo.card3_desc;
+      const c4tag = document.getElementById('promoCard4Tag'); if (c4tag && promo.card4_tag) c4tag.textContent = promo.card4_tag;
+      const c4t = document.getElementById('promoCard4Title'); if (c4t && promo.card4_title) c4t.textContent = promo.card4_title;
+      const c4d = document.getElementById('promoCard4Desc'); if (c4d && promo.card4_desc) c4d.textContent = promo.card4_desc;
+
+      if (promo.reel_speed) promoReelSpeed = parseInt(promo.reel_speed) || 5500;
+    });
+
+    // Promo Scene Choreography
+    function triggerPromoScene(sceneId) {
+      currentPromoScene = sceneId;
+      const cards = document.querySelectorAll('.promo-card');
+      const heroArea = document.getElementById('promoHeroArea');
+
+      if (sceneId === 'all') {
+        cards.forEach(card => card.classList.remove('scene-active', 'scene-dimmed'));
+        if (heroArea) heroArea.style.transform = 'scale(1)';
+        return;
+      }
+
+      cards.forEach(card => {
+        const cs = card.dataset.scene;
+        if (cs === sceneId) {
+          card.classList.add('scene-active');
+          card.classList.remove('scene-dimmed');
+        } else {
+          card.classList.remove('scene-active');
+          card.classList.add('scene-dimmed');
+        }
+      });
+
+      if (sceneId === '1') {
+        if (heroArea) heroArea.style.transform = 'scale(1.08)';
+        cards.forEach(card => card.classList.add('scene-dimmed'));
+      } else {
+        if (heroArea) heroArea.style.transform = 'scale(1)';
+      }
+
+      if (sceneId === '4') {
+        triggerConfetti(6);
+      }
+    }
+
+    // Promo Reel
+    function startPromoReel() {
+      function advance() {
+        currentSceneIndex = (currentSceneIndex + 1) % promoScenesList.length;
+        const nextScene = promoScenesList[currentSceneIndex];
+        triggerPromoScene(nextScene);
+        promoReelTimer = setTimeout(advance, promoReelSpeed || 5500);
+      }
+      currentSceneIndex = 0;
+      triggerPromoScene(promoScenesList[0]);
+      promoReelTimer = setTimeout(advance, promoReelSpeed || 5500);
+    }
+
+    function stopPromoReel() {
+      if (promoReelTimer) {
+        clearTimeout(promoReelTimer);
+        promoReelTimer = null;
+      }
+    }
+
+    socket.on('promo:control', (data) => {
+      if (!data) return;
+      if (data.action === 'play') startPromoReel();
+      else if (data.action === 'pause') stopPromoReel();
+      else if (data.action === 'scene') {
+        stopPromoReel();
+        triggerPromoScene(data.scene || 'all');
+      }
+    });
+
+    // Confetti
+    function triggerConfetti(level = 6) {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: level * 20,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#ffd700', '#00e5ff', '#ffffff', '#ff9800']
+        });
+      }
+    }
+    socket.on('celebration:start', () => triggerConfetti(8));
+
+    // Stage & Cast Blackout
+    socket.on('stage:blackout', (data) => {
+      // In mirror mode, stage blackout also blanks cast screen
+      const bo = document.getElementById('stageBlackout');
+      if (bo) bo.style.display = data?.blackout ? 'flex' : 'none';
+    });
+
+    socket.on('cast:blackout', (data) => {
+      const bo = document.getElementById('stageBlackout');
+      if (bo) bo.style.display = data?.blackout ? 'flex' : 'none';
+    });
+
+    socket.on('stage:ticker', (data) => {
+      const tk = document.getElementById('stageTicker');
+      const txt = document.getElementById('stageTickerText');
+      if (tk && txt) {
+        if (data?.show) {
+          txt.textContent = data.text;
+          tk.style.display = 'block';
+        } else {
+          tk.style.display = 'none';
+        }
+      }
+    });
+
+    // Remote Cast Command Execution
+    socket.on('cast:execute', (data) => {
+      if (!data) return;
+      if (data.command === 'fullscreen') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else if (data.command === 'reload') {
+        window.location.reload();
+      } else if (data.command === 'switch-screen') {
+        const sc = data.params?.screen || 'promo';
+        switchScreen(sc);
+      } else if (data.command === 'ping') {
+        triggerConfetti(6);
+        if (castBadge) {
+          castBadge.classList.remove('faded');
+          setTimeout(() => castBadge.classList.add('faded'), 3000);
+        }
+      }
+    });
+
+    // Keyboard Shortcuts for Cast Display
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'f') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

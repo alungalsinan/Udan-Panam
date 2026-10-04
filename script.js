@@ -8,10 +8,29 @@ const socket = io();
 // DOM Elements
 const connectionDot = document.getElementById('connectionIndicator');
 const welcomeScreen = document.getElementById('screenWelcome');
+const promoScreen = document.getElementById('screenPromo');
 const quizScreen = document.getElementById('screenQuiz');
 const startBtn = document.getElementById('btnStart');
 const welcomeTitle = document.getElementById('welcomeTitle');
 const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+
+// Second Screen Features
+const stageTicker = document.getElementById('stageTicker');
+const stageTickerText = document.getElementById('stageTickerText');
+const stageTickerCloseBtn = document.getElementById('stageTickerCloseBtn');
+const stageBlackout = document.getElementById('stageBlackout');
+
+
+// Promo Page Interactive Elements
+const promoTiltBox = document.getElementById('promoTiltBox');
+const promoHeroArea = document.getElementById('promoHeroArea');
+const promoPlayReelBtn = document.getElementById('promoPlayReelBtn');
+const promoPlayReelLabel = document.getElementById('promoPlayReelLabel');
+const promoSoundBtn = document.getElementById('promoSoundBtn');
+const promoConfettiBtn = document.getElementById('promoConfettiBtn');
+const promoStartQuizBtn = document.getElementById('promoStartQuizBtn');
+const promoReelTracker = document.getElementById('promoReelTracker');
+const promoCards = document.querySelectorAll('.promo-card');
 
 const timerContainer = document.getElementById('timerContainer');
 const timerRing = document.getElementById('timerProgress');
@@ -88,6 +107,8 @@ if (questionArea && borderSvg && borderRect) {
 // Local Variables
 let currentScreen = 'welcome';
 let currentQuestionId = null;
+let isOptionsVisible = false;
+let isAnswerRevealed = false;
 let lastStudioConfig = null;
 let currentLanguage = 'ml'; // ml or en
 let audioContext = null;
@@ -97,7 +118,11 @@ let audioInstance = null;
 socket.on('connect', () => {
   console.log('Connected to server');
   connectionDot.className = 'connection-indicator';
-  socket.emit('join', 'presentation');
+  socket.emit('join', 'presentation', {
+    name: 'Main Stage Screen',
+    resolution: `${window.innerWidth}x${window.innerHeight}`,
+    userAgent: navigator.userAgent
+  });
 });
 
 let isSocketConnected = false;
@@ -146,13 +171,16 @@ function syncState(state) {
   console.log('State Synced:', state);
 
   // 1. Handle Screen Switch
-  if (state.active_screen !== currentScreen) {
+  if (state.active_screen && state.active_screen !== currentScreen) {
     currentScreen = state.active_screen;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     if (currentScreen === 'welcome') {
-      welcomeScreen.classList.add('active');
+      if (welcomeScreen) welcomeScreen.classList.add('active');
+    } else if (currentScreen === 'promo') {
+      if (promoScreen) promoScreen.classList.add('active');
+      triggerPromoScene('all');
     } else {
-      quizScreen.classList.add('active');
+      if (quizScreen) quizScreen.classList.add('active');
     }
   }
 
@@ -161,11 +189,30 @@ function syncState(state) {
     if (gameModeBadge) gameModeBadge.textContent = state.game_mode === 'single' ? 'Single Player' : 'Team Mode';
   }
 
+  // 2b. Stage Blackout & Presenter Dock
+  if (state.stage_blackout !== undefined) {
+    toggleStageBlackout(state.stage_blackout);
+  }
+  if (state.stage_dock_visible !== undefined && promoControlsFooter) {
+    if (state.stage_dock_visible) {
+      promoControlsFooter.classList.remove('dock-hidden');
+    } else {
+      promoControlsFooter.classList.add('dock-hidden');
+    }
+  }
+
   // 3. Question & Content loading
   if (state.question) {
-    if (state.question.id !== currentQuestionId) {
+    const isNewQuestion = state.question.id !== currentQuestionId;
+    if (isNewQuestion) {
+      const prevQId = currentQuestionId;
       currentQuestionId = state.question.id;
       loadQuestionContent(state.question);
+      if (prevQId !== null && state.show_question) {
+        playLocalSound('question_appear');
+      }
+    } else {
+      updateQuestionContentInPlace(state.question);
     }
 
     // Toggle Visibility of Question
@@ -175,17 +222,26 @@ function syncState(state) {
       if (questionHeader) questionHeader.classList.add('blurred');
     }
 
-    // Toggle Visibility of Options
+    // Toggle Visibility of Options with Audio Trigger
+    const prevShowOptions = isOptionsVisible;
     if (state.show_options) {
       optionCards.forEach(card => card.classList.add('visible'));
+      isOptionsVisible = true;
+      if (!prevShowOptions) {
+        playLocalSound('options_reveal');
+      }
     } else {
       optionCards.forEach(card => card.classList.remove('visible'));
+      isOptionsVisible = false;
     }
 
-    // Toggle Answer Reveal
+    // Toggle Answer Reveal with Audio Trigger
+    const prevReveal = isAnswerRevealed;
     if (state.reveal_answer) {
+      isAnswerRevealed = true;
       revealCorrectAnswer(state.question.correct_answer);
     } else {
+      isAnswerRevealed = false;
       resetAnswerReveal();
     }
 
@@ -198,6 +254,8 @@ function syncState(state) {
     }
   } else {
     currentQuestionId = null;
+    isOptionsVisible = false;
+    isAnswerRevealed = false;
     clearQuestionContent();
   }
 
@@ -344,12 +402,13 @@ let timerMaxDuration = 30;
 // ─── Timer Sync Events ───
 socket.on('timer:tick', (data) => {
   updateTimerUI(data.remaining);
+  playLocalSound('timer_tick', '', { remaining: data.remaining, maxDuration: timerMaxDuration });
 });
 
 socket.on('timer:started', (data) => {
   timerMaxDuration = data.remaining || 30;
   updateTimerUI(data.remaining);
-  playLocalSound('timer');
+  playLocalSound('timer', '', { remaining: data.remaining, maxDuration: timerMaxDuration });
 });
 
 socket.on('timer:paused', (data) => {
@@ -561,6 +620,27 @@ function loadQuestionContent(q) {
     });
 }
 
+function updateQuestionContentInPlace(q) {
+  if (!q) return;
+  if (questionText && questionText.textContent !== (q.question_text || '')) {
+    questionText.textContent = q.question_text || '';
+  }
+
+  optionCards.forEach(card => {
+    const opt = card.dataset.key;
+    const optText = document.getElementById(`option${opt}Text`);
+    const val = q[`option_${opt.toLowerCase()}`] || '';
+    if (optText && optText.textContent !== val) {
+      optText.textContent = val;
+    }
+    card.style.display = val ? 'flex' : 'none';
+  });
+
+  if (q.explanation && explanationCard) {
+    explanationCard.textContent = q.explanation;
+  }
+}
+
 function clearQuestionContent() {
   questionText.textContent = '';
   questionImage.style.display = 'none';
@@ -648,21 +728,423 @@ function syncAudioStatus(status) {
   }
 }
 
-// ─── Sound System ───
+// ─── Udan Panam Web Audio Synthesizer Engine ───
+class UdanPanamSoundSynthesizer {
+  constructor() {
+    this.ctx = null;
+    this.ambientGain = null;
+    this.ambientOsc1 = null;
+    this.ambientOsc2 = null;
+    this.ambientFilter = null;
+    this.isSuspensePlaying = false;
+  }
+
+  getAudioContext() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+    return this.ctx;
+  }
+
+  // 1. Next Question Drop / Transition
+  playQuestionTransition() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Sub-bass pitch dive
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(180, now);
+    subOsc.frequency.exponentialRampToValueAtTime(42, now + 0.65);
+    subGain.gain.setValueAtTime(0.7, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+    subOsc.connect(subGain);
+    subGain.connect(ctx.destination);
+    subOsc.start(now);
+    subOsc.stop(now + 0.7);
+
+    // Cyber whoosh
+    const bufferSize = Math.floor(ctx.sampleRate * 0.5);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = 3;
+    filter.frequency.setValueAtTime(2400, now);
+    filter.frequency.exponentialRampToValueAtTime(320, now + 0.45);
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.35, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.5);
+
+    // Stinger high chime
+    [880, 1320].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + 0.08 * idx);
+      g.gain.setValueAtTime(0.25, now + 0.08 * idx);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.08 * idx + 0.4);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(now + 0.08 * idx);
+      osc.stop(now + 0.08 * idx + 0.4);
+    });
+  }
+
+  // 2. Revealing Options (Option A, B, C, D or all)
+  playOptionsReveal(optionKey = null) {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const notesMap = {
+      'A': 523.25, // C5
+      'B': 659.25, // E5
+      'C': 783.99, // G5
+      'D': 1046.50 // C6
+    };
+
+    if (optionKey && notesMap[optionKey.toUpperCase()]) {
+      this._playOptionNote(ctx, notesMap[optionKey.toUpperCase()], now);
+    } else {
+      // Cascade all 4 notes in rapid arpeggio
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        this._playOptionNote(ctx, freq, now + idx * 0.09);
+      });
+    }
+  }
+
+  _playOptionNote(ctx, freq, startTime) {
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'triangle';
+    osc2.type = 'sine';
+    osc1.frequency.setValueAtTime(freq, startTime);
+    osc2.frequency.setValueAtTime(freq * 2, startTime); // Octave overtone
+
+    gain.gain.setValueAtTime(0.3, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.28);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(startTime);
+    osc2.start(startTime);
+    osc1.stop(startTime + 0.3);
+    osc2.stop(startTime + 0.3);
+  }
+
+  // 3. Timer Ticking & Suspense Pulse
+  playTimerTick(remaining = 30) {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Crisp woodblock click
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    const clickFreq = remaining <= 5 ? 1760 : (remaining <= 10 ? 1320 : 960);
+    osc.frequency.setValueAtTime(clickFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(clickFreq * 0.5, now + 0.04);
+    g.gain.setValueAtTime(0.22, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
+
+    // Heartbeat sub pulse under 10 seconds
+    if (remaining <= 10 && remaining > 0) {
+      const sub = ctx.createOscillator();
+      const subG = ctx.createGain();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(58, now);
+      sub.frequency.exponentialRampToValueAtTime(38, now + 0.15);
+      subG.gain.setValueAtTime(0.4, now);
+      subG.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      sub.connect(subG);
+      subG.connect(ctx.destination);
+      sub.start(now);
+      sub.stop(now + 0.2);
+    }
+  }
+
+  // 4. Lock Answer ("Lock Cheyyatte?")
+  playAnswerLock() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Heavy mechanical latch click
+    const bufferSize = Math.floor(ctx.sampleRate * 0.12);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.setValueAtTime(2600, now);
+    bandpass.Q.value = 4;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    noise.connect(bandpass);
+    bandpass.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.12);
+
+    // Deep heavy punch thud
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(95, now + 0.02);
+    sub.frequency.exponentialRampToValueAtTime(32, now + 0.35);
+    subGain.gain.setValueAtTime(0.65, now + 0.02);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    sub.connect(subGain);
+    subGain.connect(ctx.destination);
+    sub.start(now + 0.02);
+    sub.stop(now + 0.45);
+  }
+
+  // 5. Correct Answer & Fanfare
+  playCorrectFanfare() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Triumphant Brass Fanfare: C4, G4, C5, E5, G5, C6
+    const notes = [261.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+    const times = [0, 0.1, 0.2, 0.3, 0.42, 0.58];
+    const lengths = [0.15, 0.15, 0.15, 0.18, 0.22, 0.9];
+
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2800, now + times[idx]);
+
+      osc.frequency.setValueAtTime(freq, now + times[idx]);
+      gain.gain.setValueAtTime(0.3, now + times[idx]);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + times[idx] + lengths[idx]);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + times[idx]);
+      osc.stop(now + times[idx] + lengths[idx] + 0.05);
+    });
+
+    // High sparkle / confetti shimmer
+    for (let i = 0; i < 6; i++) {
+      const shimmer = ctx.createOscillator();
+      const sGain = ctx.createGain();
+      shimmer.type = 'sine';
+      shimmer.frequency.setValueAtTime(1600 + i * 280, now + 0.6 + i * 0.06);
+      sGain.gain.setValueAtTime(0.12, now + 0.6 + i * 0.06);
+      sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6 + i * 0.06 + 0.25);
+      shimmer.connect(sGain);
+      sGain.connect(ctx.destination);
+      shimmer.start(now + 0.6 + i * 0.06);
+      shimmer.stop(now + 0.6 + i * 0.06 + 0.3);
+    }
+  }
+
+  // 6. Wrong Answer Drop / Loss
+  playWrongDrop() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(240, now);
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.6);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1400, now);
+    filter.frequency.exponentialRampToValueAtTime(180, now + 0.6);
+
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.75);
+  }
+
+  // 7. ATM Cash Dispenser & Payout
+  playAtmCashDispenser() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Currency counting rollers (rapid flutter pulses)
+    for (let i = 0; i < 9; i++) {
+      const t = now + i * 0.045;
+      const bufferSize = Math.floor(ctx.sampleRate * 0.025);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let j = 0; j < bufferSize; j++) data[j] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.setValueAtTime(1600, t);
+      bp.Q.value = 2;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.28, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+      noise.connect(bp);
+      bp.connect(g);
+      g.connect(ctx.destination);
+      noise.start(t);
+      noise.stop(t + 0.035);
+    }
+
+    // Cash Register "Ka-Ching!" Chimes
+    const bellTime = now + 0.42;
+    [2093.00, 4186.01].forEach(freq => {
+      const bell = ctx.createOscillator();
+      const bGain = ctx.createGain();
+      bell.type = 'sine';
+      bell.frequency.setValueAtTime(freq, bellTime);
+      bGain.gain.setValueAtTime(0.35, bellTime);
+      bGain.gain.exponentialRampToValueAtTime(0.001, bellTime + 0.8);
+      bell.connect(bGain);
+      bGain.connect(ctx.destination);
+      bell.start(bellTime);
+      bell.stop(bellTime + 0.85);
+    });
+  }
+
+  // 8. Lifeline Activation Sound
+  playLifelineChime() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const notes = [440, 659.25, 880, 1318.51];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+      g.gain.setValueAtTime(0.3, now + idx * 0.07);
+      g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.35);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(now + idx * 0.07);
+      osc.stop(now + idx * 0.07 + 0.4);
+    });
+  }
+
+  // 9. Expired Buzzer
+  playExpiredBuzzer() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(145, now);
+    g.gain.setValueAtTime(0.35, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.6);
+  }
+
+  // 10. Ambient Suspense Drone Loop
+  toggleSuspenseDrone(forceState) {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    if (this.isSuspensePlaying || forceState === false) {
+      if (this.ambientOsc1) {
+        try {
+          this.ambientOsc1.stop();
+          this.ambientOsc2.stop();
+        } catch(e) {}
+        this.ambientOsc1 = null;
+        this.ambientOsc2 = null;
+      }
+      this.isSuspensePlaying = false;
+      return;
+    }
+
+    const now = ctx.currentTime;
+    this.ambientOsc1 = ctx.createOscillator();
+    this.ambientOsc2 = ctx.createOscillator();
+    this.ambientFilter = ctx.createBiquadFilter();
+    this.ambientGain = ctx.createGain();
+
+    this.ambientOsc1.type = 'sawtooth';
+    this.ambientOsc2.type = 'sawtooth';
+    this.ambientOsc1.frequency.setValueAtTime(55, now); // A1
+    this.ambientOsc2.frequency.setValueAtTime(55.6, now); // slight detune beat
+
+    this.ambientFilter.type = 'lowpass';
+    this.ambientFilter.frequency.setValueAtTime(220, now);
+
+    this.ambientGain.gain.setValueAtTime(0.001, now);
+    this.ambientGain.gain.linearRampToValueAtTime(0.18, now + 1.5);
+
+    this.ambientOsc1.connect(this.ambientFilter);
+    this.ambientOsc2.connect(this.ambientFilter);
+    this.ambientFilter.connect(this.ambientGain);
+    this.ambientGain.connect(ctx.destination);
+
+    this.ambientOsc1.start(now);
+    this.ambientOsc2.start(now);
+    this.isSuspensePlaying = true;
+  }
+}
+
+const udanAudioSynth = new UdanPanamSoundSynthesizer();
+
+// ─── Sound System (Hybrid Synthesizer + Custom URL) ───
 const localAudioElements = {};
 
-function playLocalSound(category, customUrl = '') {
+function playLocalSound(category, customUrl = '', meta = {}) {
   // Check if sound effects enabled in theme
   if (lastStudioConfig && lastStudioConfig.animation_enabled === false) return;
 
-  // Check if we already have an element for this category
-  let audioEl = localAudioElements[category];
-  if (!audioEl) {
-    audioEl = new Audio();
-    localAudioElements[category] = audioEl;
-  }
-
-  // Set source URL
+  // Set source URL if configured in studio settings
   let soundUrl = customUrl;
   if (!soundUrl && lastStudioConfig) {
     if (category === 'correct') soundUrl = lastStudioConfig.correct_sound_url;
@@ -671,36 +1153,91 @@ function playLocalSound(category, customUrl = '') {
     else if (category === 'background') soundUrl = lastStudioConfig.bg_music_url;
   }
 
-  if (!soundUrl) {
-    // Fallback urls or templates
-    const fallbacks = {
-      correct: 'https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav',
-      wrong: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-84.wav',
-      timer: 'https://assets.mixkit.co/active_storage/sfx/2006/2006-84.wav',
-      expired: 'https://assets.mixkit.co/active_storage/sfx/2008/2008-84.wav',
-      reveal: 'https://assets.mixkit.co/active_storage/sfx/2010/2010-84.wav',
-      lifeline: 'https://assets.mixkit.co/active_storage/sfx/2002/2002-84.wav',
-      celebration: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-84.wav',
-      mocking_laughter: 'https://assets.mixkit.co/active_storage/sfx/1971/1971-84.wav',
-      mocking_booing: 'https://assets.mixkit.co/active_storage/sfx/2048/2048-84.wav',
-      mocking_trombone: 'https://assets.mixkit.co/active_storage/sfx/1803/1803-84.wav',
-      mocking_shock: 'https://assets.mixkit.co/active_storage/sfx/2591/2591-84.wav'
-    };
-    soundUrl = fallbacks[category];
+  // If a custom URL is available, play via HTML5 Audio element
+  if (soundUrl) {
+    let audioEl = localAudioElements[category];
+    if (!audioEl) {
+      audioEl = new Audio();
+      localAudioElements[category] = audioEl;
+    }
+    audioEl.src = soundUrl;
+    audioEl.loop = (category === 'background' || (category === 'celebration' && isCelebrating));
+    audioEl.play().catch(() => {
+      // Fallback to synth if external file fails
+      synthesizeLocalSound(category, meta);
+    });
+    return;
   }
 
-  if (soundUrl) {
-    audioEl.src = soundUrl;
-    if (category === 'background' || category === 'timer' || (category === 'celebration' && isCelebrating)) {
-      audioEl.loop = true;
-    } else {
-      audioEl.loop = false;
-    }
-    audioEl.play().catch(e => console.log('Audio playback blocked:', e));
+  // Otherwise, synthesize pure Udan Panam Web Audio
+  synthesizeLocalSound(category, meta);
+}
+
+function synthesizeLocalSound(category, meta = {}) {
+  switch (category) {
+    case 'transition':
+    case 'question_appear':
+    case 'next_question':
+      udanAudioSynth.playQuestionTransition();
+      break;
+
+    case 'options_reveal':
+    case 'option_reveal':
+      udanAudioSynth.playOptionsReveal(meta.optionKey || null);
+      break;
+
+    case 'timer':
+    case 'timer_tick':
+      udanAudioSynth.playTimerTick(meta.remaining !== undefined ? meta.remaining : 30);
+      break;
+
+    case 'lock':
+    case 'answer_lock':
+      udanAudioSynth.playAnswerLock();
+      break;
+
+    case 'correct':
+    case 'celebration':
+    case 'applause':
+    case 'win':
+      udanAudioSynth.playCorrectFanfare();
+      break;
+
+    case 'wrong':
+    case 'elimination':
+      udanAudioSynth.playWrongDrop();
+      break;
+
+    case 'atm_cash':
+    case 'cash_dispense':
+    case 'udan_panam_atm':
+    case 'money_payout':
+      udanAudioSynth.playAtmCashDispenser();
+      break;
+
+    case 'lifeline':
+      udanAudioSynth.playLifelineChime();
+      break;
+
+    case 'expired':
+      udanAudioSynth.playExpiredBuzzer();
+      break;
+
+    case 'reveal':
+    case 'suspense':
+      udanAudioSynth.toggleSuspenseDrone(true);
+      break;
+
+    default:
+      // Try fallback sample if available
+      break;
   }
 }
 
 function stopLocalSound(category) {
+  if (category === 'suspense' || category === 'reveal') {
+    udanAudioSynth.toggleSuspenseDrone(false);
+  }
   const audioEl = localAudioElements[category];
   if (audioEl) {
     audioEl.pause();
@@ -709,6 +1246,7 @@ function stopLocalSound(category) {
 }
 
 function stopAllLocalSounds() {
+  udanAudioSynth.toggleSuspenseDrone(false);
   Object.keys(localAudioElements).forEach(category => {
     stopLocalSound(category);
   });
@@ -849,3 +1387,521 @@ optionCards.forEach(card => {
       .catch(err => console.error('Error fetching state on card click:', err));
   });
 });
+
+/* ═══════════════════════════════════════════════════════
+   NEXT-LEVEL PROMO ANIMATION ENGINE (UDAN PANAM 3.0)
+   Cinematic Broadcast Choreography, 3D Tilt & Auto-Reel
+   ═══════════════════════════════════════════════════════ */
+
+let currentPromoScene = 'all';
+let isPromoReelRunning = false;
+let promoReelTimer = null;
+let promoProgressTimer = null;
+let promoReelSpeed = 5500;
+const promoScenesList = ['1', '2', '3', '4', 'all'];
+let currentSceneIndex = 4; // starts at 'all'
+
+const promoTimelineFill = document.getElementById('promoTimelineFill');
+const promoControlsFooter = document.getElementById('promoControlsFooter');
+const promoDockHideBtn = document.getElementById('promoDockHideBtn');
+
+// ── 1. Dynamic Content Synchronizer (Real-Time from DB / Admin) ──
+function updatePromoContentFromSettings(promo) {
+  if (!promo) return;
+  const eyebrow = document.getElementById('promoEyebrowBadge');
+  if (eyebrow && promo.eyebrow_badge) eyebrow.textContent = promo.eyebrow_badge;
+
+  const prod = document.getElementById('promoProducerTag');
+  if (prod && promo.producer_tag) {
+    prod.textContent = promo.producer_tag.replace(/^FROM THE PRODUCER\s*/i, '');
+  }
+
+  const tagline = document.getElementById('promoTagline');
+  if (tagline && promo.tagline) tagline.textContent = promo.tagline;
+
+  const hashtag = document.getElementById('promoHashtag');
+  if (hashtag && promo.hashtag) hashtag.textContent = promo.hashtag;
+
+  // Card 1: Classes & Eligibility
+  const c1Tag = document.getElementById('promoCard1Tag');
+  if (c1Tag && promo.card1_tag) c1Tag.textContent = promo.card1_tag;
+  const c1Title = document.getElementById('promoCard1Title');
+  if (c1Title && promo.card1_title) c1Title.textContent = promo.card1_title;
+  const c1Desc = document.getElementById('promoCard1Desc');
+  if (c1Desc && promo.card1_desc) c1Desc.textContent = promo.card1_desc;
+
+  // Card 2: Contestant Rule
+  const c2Tag = document.getElementById('promoCard2Tag');
+  if (c2Tag && promo.card2_tag) c2Tag.textContent = promo.card2_tag;
+  const c2Title = document.getElementById('promoCard2Title');
+  if (c2Title && promo.card2_title) c2Title.textContent = promo.card2_title;
+  const c2Desc = document.getElementById('promoCard2Desc');
+  if (c2Desc && promo.card2_desc) c2Desc.textContent = promo.card2_desc;
+
+  // Card 3: Stage Conductors
+  const c3Tag = document.getElementById('promoCard3Tag');
+  if (c3Tag && promo.card3_tag) c3Tag.textContent = promo.card3_tag;
+  const chair = document.getElementById('promoChairmanName');
+  if (chair && promo.card3_chairman) chair.textContent = promo.card3_chairman;
+  const conv = document.getElementById('promoConvenorName');
+  if (conv && promo.card3_convenor) conv.textContent = promo.card3_convenor;
+  const c3Desc = document.getElementById('promoCard3Desc');
+  if (c3Desc && promo.card3_desc) c3Desc.textContent = promo.card3_desc;
+
+  // Card 4: Mega Rewards
+  const c4Tag = document.getElementById('promoCard4Tag');
+  if (c4Tag && promo.card4_tag) c4Tag.textContent = promo.card4_tag;
+  const c4Title = document.getElementById('promoCard4Title');
+  if (c4Title && promo.card4_title) c4Title.textContent = promo.card4_title;
+  const c4Desc = document.getElementById('promoCard4Desc');
+  if (c4Desc && promo.card4_desc) c4Desc.textContent = promo.card4_desc;
+
+  if (promo.reel_speed) {
+    promoReelSpeed = parseInt(promo.reel_speed) || 5500;
+  }
+}
+
+// Fetch initial promo configuration on load
+fetch('/api/promo')
+  .then(res => res.ok ? res.json() : null)
+  .then(data => {
+    if (data) updatePromoContentFromSettings(data);
+  })
+  .catch(err => console.log('Promo settings load fallback:', err));
+
+// ── 2. Interactive 3D Perspective Tilt on Centerpiece ──
+if (promoTiltBox && promoHeroArea) {
+  promoHeroArea.addEventListener('mousemove', (e) => {
+    const rect = promoTiltBox.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const deltaX = (e.clientX - centerX) / (rect.width / 2);
+    const deltaY = (e.clientY - centerY) / (rect.height / 2);
+
+    const rotateX = -deltaY * 12; // subtle max 12 deg
+    const rotateY = deltaX * 12;
+
+    promoTiltBox.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
+  });
+
+  promoHeroArea.addEventListener('mouseleave', () => {
+    promoTiltBox.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+  });
+
+  // Mobile Gyroscope support if available
+  if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission !== 'function') {
+    window.addEventListener('deviceorientation', (e) => {
+      if (currentScreen !== 'promo' || !e.gamma || !e.beta) return;
+      const tiltX = Math.min(Math.max(e.beta - 45, -15), 15);
+      const tiltY = Math.min(Math.max(e.gamma, -15), 15);
+      promoTiltBox.style.transform = `perspective(1000px) rotateX(${(-tiltX * 0.5).toFixed(1)}deg) rotateY(${(tiltY * 0.5).toFixed(1)}deg)`;
+    });
+  }
+}
+
+// ── 3. Next-Level Cinematic Scene Trigger Function ──
+function triggerPromoScene(sceneId) {
+  currentPromoScene = sceneId;
+
+  // Update Tracker Buttons
+  document.querySelectorAll('.reel-dot-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.scene === sceneId);
+  });
+
+  const cards = document.querySelectorAll('.promo-card');
+  const heroArea = document.getElementById('promoHeroArea');
+  const promoGrid = document.getElementById('promoCardsGrid');
+
+  if (sceneId === 'all') {
+    // Show all cards in glorious balanced view
+    cards.forEach(card => {
+      card.classList.remove('scene-active', 'scene-dimmed');
+    });
+    if (heroArea) {
+      heroArea.style.transform = 'scale(1) translateY(0)';
+      heroArea.style.filter = 'none';
+    }
+    if (promoGrid) {
+      promoGrid.style.transform = 'scale(1)';
+    }
+    return;
+  }
+
+  // Handle Specific Scene Highlighting
+  cards.forEach(card => {
+    const cardScene = card.dataset.scene;
+    if (cardScene === sceneId) {
+      card.classList.add('scene-active');
+      card.classList.remove('scene-dimmed');
+    } else {
+      card.classList.remove('scene-active');
+      card.classList.add('scene-dimmed');
+    }
+  });
+
+  // Scene 1: Focus on 3D Title Logo Reveal
+  if (sceneId === '1') {
+    if (heroArea) {
+      heroArea.style.transform = 'scale(1.08) translateY(-6px)';
+      heroArea.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    }
+    cards.forEach(card => card.classList.add('scene-dimmed'));
+  } else {
+    if (heroArea) {
+      heroArea.style.transform = 'scale(1) translateY(0)';
+    }
+  }
+
+  // Scene 4: Climax Prize Celebration
+  if (sceneId === '4') {
+    triggerConfetti(7);
+    playPromoFanfare();
+  }
+}
+
+// ── 4. Cinematic Auto-Reel Sequencer with Progress Bar ──
+function startPromoReel() {
+  if (isPromoReelRunning) return;
+  isPromoReelRunning = true;
+  updatePromoReelUI(true);
+
+  function advanceReel() {
+    currentSceneIndex = (currentSceneIndex + 1) % promoScenesList.length;
+    const nextScene = promoScenesList[currentSceneIndex];
+    triggerPromoScene(nextScene);
+
+    // Timers: Scene 1 (4.5s), Scene 2-4 (5.5s), Overview 'all' (7s)
+    const duration = nextScene === 'all' ? 7000 : (promoReelSpeed || 5500);
+    animateTimelineProgress(duration);
+    promoReelTimer = setTimeout(advanceReel, duration);
+  }
+
+  // Start with scene 1 immediately
+  currentSceneIndex = 0;
+  triggerPromoScene(promoScenesList[0]);
+  const initialDuration = promoReelSpeed || 5500;
+  animateTimelineProgress(initialDuration);
+  promoReelTimer = setTimeout(advanceReel, initialDuration);
+}
+
+function animateTimelineProgress(durationMs) {
+  if (!promoTimelineFill) return;
+  if (promoProgressTimer) cancelAnimationFrame(promoProgressTimer);
+  const startTime = performance.now();
+
+  function step(now) {
+    if (!isPromoReelRunning) {
+      promoTimelineFill.style.width = '0%';
+      return;
+    }
+    const elapsed = now - startTime;
+    const progress = Math.min(100, (elapsed / durationMs) * 100);
+    promoTimelineFill.style.width = `${progress}%`;
+    if (elapsed < durationMs) {
+      promoProgressTimer = requestAnimationFrame(step);
+    }
+  }
+  promoProgressTimer = requestAnimationFrame(step);
+}
+
+function stopPromoReel() {
+  isPromoReelRunning = false;
+  if (promoReelTimer) {
+    clearTimeout(promoReelTimer);
+    promoReelTimer = null;
+  }
+  if (promoProgressTimer) {
+    cancelAnimationFrame(promoProgressTimer);
+    promoProgressTimer = null;
+  }
+  if (promoTimelineFill) promoTimelineFill.style.width = '0%';
+  updatePromoReelUI(false);
+}
+
+function togglePromoReel() {
+  if (isPromoReelRunning) {
+    stopPromoReel();
+  } else {
+    startPromoReel();
+  }
+}
+
+function updatePromoReelUI(isRunning) {
+  if (promoPlayReelLabel) {
+    promoPlayReelLabel.textContent = isRunning ? 'Pause Reel' : 'Play Reel';
+  }
+  if (promoPlayReelBtn) {
+    const icon = promoPlayReelBtn.querySelector('i');
+    if (icon) icon.className = isRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    promoPlayReelBtn.classList.toggle('active', isRunning);
+  }
+}
+
+// ── 5. Web Audio API Fanfare Synthesizer ──
+function playPromoFanfare() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    // Orchestral / Brass Fanfare Arpeggio: C4, G4, C5, E5, G5, C6
+    const notes = [261.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+    const times = [0, 0.12, 0.24, 0.36, 0.50, 0.70];
+    const durations = [0.2, 0.2, 0.2, 0.2, 0.35, 1.6];
+
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + times[i]);
+
+      // Warm brass low-pass filter
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1400, now + times[i]);
+      filter.frequency.exponentialRampToValueAtTime(3200, now + times[i] + 0.1);
+      filter.frequency.exponentialRampToValueAtTime(800, now + times[i] + durations[i]);
+
+      gain.gain.setValueAtTime(0.001, now + times[i]);
+      gain.gain.linearRampToValueAtTime(0.18, now + times[i] + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + times[i] + durations[i]);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + times[i]);
+      osc.stop(now + times[i] + durations[i]);
+    });
+  } catch (err) {
+    console.warn('AudioContext fanfare error:', err);
+  }
+}
+
+// ── 6. Minimalist Dock Management & Idle Auto-Hide ──
+let dockIdleTimer = null;
+
+function resetDockIdleTimer() {
+  if (promoControlsFooter) {
+    promoControlsFooter.classList.remove('dock-hidden');
+  }
+  clearTimeout(dockIdleTimer);
+  dockIdleTimer = setTimeout(() => {
+    if (currentScreen === 'promo' && promoControlsFooter) {
+      promoControlsFooter.classList.add('dock-hidden');
+    }
+  }, 4500);
+}
+
+document.addEventListener('mousemove', resetDockIdleTimer);
+document.addEventListener('click', resetDockIdleTimer);
+
+if (promoDockHideBtn) {
+  promoDockHideBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (promoControlsFooter) promoControlsFooter.classList.add('dock-hidden');
+  });
+}
+
+// ── 7. Promo Button Event Listeners ──
+if (promoPlayReelBtn) {
+  promoPlayReelBtn.addEventListener('click', togglePromoReel);
+}
+
+if (promoSoundBtn) {
+  promoSoundBtn.addEventListener('click', playPromoFanfare);
+}
+
+if (promoConfettiBtn) {
+  promoConfettiBtn.addEventListener('click', () => {
+    triggerConfetti(8);
+  });
+}
+
+if (promoStartQuizBtn) {
+  promoStartQuizBtn.addEventListener('click', () => {
+    socket.emit('state:update', { active_screen: 'quiz' });
+  });
+}
+
+// Scene Dot Tracker Clicks
+document.querySelectorAll('.reel-dot-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    stopPromoReel();
+    const scene = btn.dataset.scene;
+    triggerPromoScene(scene);
+  });
+});
+
+// Click card to highlight that card's scene
+document.querySelectorAll('.promo-card').forEach(card => {
+  card.addEventListener('click', () => {
+    stopPromoReel();
+    const scene = card.dataset.scene;
+    if (scene) triggerPromoScene(scene);
+  });
+});
+
+
+/* ═══════════════════════════════════════════════════════
+   SECOND SCREEN FEATURES & PRESENTER CONTROL DECK
+   ═══════════════════════════════════════════════════════ */
+
+// ── Stage Privacy Blackout Curtain ──
+let isStageBlackedOut = false;
+function toggleStageBlackout(forceState) {
+  isStageBlackedOut = forceState !== undefined ? forceState : !isStageBlackedOut;
+  if (stageBlackout) {
+    stageBlackout.style.display = isStageBlackedOut ? 'flex' : 'none';
+  }
+}
+
+// ── Broadcast Lower-Third Ticker ──
+function showStageTicker(text) {
+  const ticker = document.getElementById('stageTicker');
+  const tickerText = document.getElementById('stageTickerText');
+  if (ticker && tickerText) {
+    tickerText.textContent = text;
+    ticker.style.display = 'block';
+  }
+}
+
+function hideStageTicker() {
+  const ticker = document.getElementById('stageTicker');
+  if (ticker) ticker.style.display = 'none';
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SOCKET.IO LISTENERS FOR PROMO, CAST & SECOND SCREEN
+   ═══════════════════════════════════════════════════════ */
+
+socket.on('promo:sync', (promoData) => {
+  updatePromoContentFromSettings(promoData);
+});
+
+socket.on('promo:control', (data) => {
+  if (!data) return;
+  if (data.action === 'play') {
+    startPromoReel();
+  } else if (data.action === 'pause') {
+    stopPromoReel();
+  } else if (data.action === 'scene') {
+    stopPromoReel();
+    triggerPromoScene(data.scene || 'all');
+  } else if (data.action === 'restart') {
+    stopPromoReel();
+    startPromoReel();
+  }
+});
+
+socket.on('promo:sound', () => {
+  playPromoFanfare();
+});
+
+socket.on('stage:ticker', (data) => {
+  if (!data) return;
+  if (data.show) {
+    showStageTicker(data.text);
+  } else {
+    hideStageTicker();
+  }
+});
+
+socket.on('stage:blackout', (data) => {
+  if (data) {
+    toggleStageBlackout(data.blackout);
+  }
+});
+
+// Remote Cast Command Execution
+socket.on('cast:execute', (data) => {
+  if (!data) return;
+  if (data.command === 'fullscreen') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  } else if (data.command === 'reload') {
+    window.location.reload();
+  } else if (data.command === 'switch-screen') {
+    const target = data.params?.screen || 'promo';
+    socket.emit('state:update', { active_screen: target });
+  } else if (data.command === 'ping') {
+    triggerConfetti(5);
+  }
+});
+
+
+/* ═══════════════════════════════════════════════════════
+   STAGE PRESENTATION KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════════════════ */
+document.addEventListener('keydown', (e) => {
+  // Avoid capturing keystrokes in input elements
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+  const key = e.key.toLowerCase();
+
+  // Screen Switchers
+  if (key === 'p') {
+    socket.emit('state:update', { active_screen: 'promo' });
+  } else if (key === 'w') {
+    socket.emit('state:update', { active_screen: 'welcome' });
+  } else if (key === 'q') {
+    socket.emit('state:update', { active_screen: 'quiz' });
+  }
+  // Blackout
+  else if (key === 'b') {
+    toggleStageBlackout();
+    socket.emit('stage:blackout', { blackout: isStageBlackedOut });
+  }
+  // Fullscreen
+  else if (key === 'f') {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => console.error(err));
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  // Dock toggle
+  else if (key === 'h') {
+    if (promoControlsFooter) {
+      promoControlsFooter.classList.toggle('dock-hidden');
+    }
+  }
+  // Confetti
+  else if (key === 'c') {
+    triggerConfetti(8);
+  }
+  // Fanfare / Music
+  else if (key === 'm') {
+    playPromoFanfare();
+  }
+  // Space: Toggle Reel if on promo
+  else if (e.code === 'Space') {
+    e.preventDefault();
+    if (currentScreen === 'promo') {
+      togglePromoReel();
+    }
+  }
+  // Scene Shortcuts 0, 1, 2, 3, 4
+  else if (currentScreen === 'promo' && ['0', '1', '2', '3', '4'].includes(e.key)) {
+    const sc = e.key === '0' ? 'all' : e.key;
+    stopPromoReel();
+    triggerPromoScene(sc);
+  }
+  // Arrow Navigation for Promo
+  else if (currentScreen === 'promo') {
+    if (e.key === 'ArrowRight') {
+      stopPromoReel();
+      currentSceneIndex = (currentSceneIndex + 1) % promoScenesList.length;
+      triggerPromoScene(promoScenesList[currentSceneIndex]);
+    } else if (e.key === 'ArrowLeft') {
+      stopPromoReel();
+      currentSceneIndex = (currentSceneIndex - 1 + promoScenesList.length) % promoScenesList.length;
+      triggerPromoScene(promoScenesList[currentSceneIndex]);
+    }
+  }
+});
+
+
+

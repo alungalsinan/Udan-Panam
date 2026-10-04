@@ -10,10 +10,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>ഉഡൻ പണം — Live Quiz</title>
 
-  <!-- Fonts -->
+  <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&family=Inter:wght@400;600;700;800&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css" />
@@ -89,6 +90,210 @@
       <div class="particle"></div>
       <div class="particle"></div>
       <div class="particle"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SCREEN: Promo Animation                     -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section id="screenPromo" class="screen screen--promo" aria-label="Promo Presentation">
+    <!-- Animated Studio Sky Background & Volumetric Spotlights -->
+    <div class="promo-bg-canvas" aria-hidden="true">
+      <div class="promo-ambient-mesh"></div>
+      <div class="promo-beam promo-beam--left"></div>
+      <div class="promo-beam promo-beam--center"></div>
+      <div class="promo-beam promo-beam--right"></div>
+      <div class="promo-radial-glow"></div>
+      
+      <!-- Ambient Micro-Particles / Stardust -->
+      <div class="promo-stardust-layer">
+        <span class="p-star s1"></span>
+        <span class="p-star s2"></span>
+        <span class="p-star s3"></span>
+        <span class="p-star s4"></span>
+        <span class="p-star s5"></span>
+        <span class="p-star s6"></span>
+        <span class="p-star s7"></span>
+        <span class="p-star s8"></span>
+        <span class="p-star s9"></span>
+        <span class="p-star s10"></span>
+      </div>
+
+      <!-- Luxury 3D Minted Metallic Gold Rupee Coins -->
+      <div class="promo-floating-coins" aria-hidden="true">
+        <div class="promo-coin-3d coin-pos-1" data-depth="0.2">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-2" data-depth="0.4">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-3" data-depth="0.15">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-4" data-depth="0.35">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-5" data-depth="0.25">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+        <div class="promo-coin-3d coin-pos-6" data-depth="0.3">
+          <div class="coin-inner"><span class="coin-symbol">₹</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promo Stage Container -->
+    <div class="promo-stage-wrapper">
+      
+      <!-- Top Eyebrow Badges -->
+      <header class="promo-eyebrow animate-slide-down">
+        <div class="promo-badge-gold">
+          <span class="badge-shine"></span>
+          <i class="fa-solid fa-crown"></i>
+          <span id="promoEyebrowBadge">SRDB PRESENTS</span>
+        </div>
+        <div class="promo-producer-tag">
+          <i class="fa-solid fa-clapperboard"></i>
+          <span id="promoProducerWrapper">FROM THE PRODUCER <strong class="glow-producer" id="promoProducerTag">DC</strong></span>
+        </div>
+        <div class="promo-live-pill" title="Live Broadcast Feed Active">
+          <span class="promo-live-dot"></span>
+          <span>ON AIR</span>
+        </div>
+      </header>
+
+      <!-- Centerpiece 3D Visual & Logo Artwork -->
+      <div class="promo-hero-centerpiece" id="promoHeroArea">
+        <div class="promo-3d-tilt-box" id="promoTiltBox">
+          <div class="promo-art-glass-plate">
+            <div class="promo-art-glow"></div>
+            <img src="assets/promo-art.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
+            <div class="promo-specular-sweep"></div>
+          </div>
+        </div>
+
+        <!-- Broadcast Tagline & Hashtag -->
+        <div class="promo-sub-ribbon">
+          <span class="promo-tagline" id="promoTagline">THE ULTIMATE BATTLE OF MINDS • GRAND TELECAST</span>
+          <span class="promo-hashtag-text" id="promoHashtag"># udan panam</span>
+        </div>
+      </div>
+
+      <!-- Feature Cards Grid (Overview Mode & Interactive Reel Mode) -->
+      <div class="promo-cards-grid" id="promoCardsGrid">
+        
+        <!-- Card 1: Classes 1 to 10 -->
+        <div class="promo-card promo-card--classes" id="promoCard1" data-scene="2">
+          <div class="promo-card__halo"></div>
+          <div class="promo-card__icon-wrap">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard1Tag">ELIGIBILITY</span>
+            <h3 class="promo-card__title" id="promoCard1Title">FOR CLASSES 1 TO 10</h3>
+            <p class="promo-card__malayalam" id="promoCard1Desc">1 മുതൽ 10 വരെയുള്ള ക്ലാസ്സുകളിലെ മിടുക്കന്മാർക്കായി</p>
+          </div>
+          <div class="promo-card__corner-accent"></div>
+        </div>
+
+        <!-- Card 2: 1 Participant per class -->
+        <div class="promo-card promo-card--participants" id="promoCard2" data-scene="2">
+          <div class="promo-card__halo"></div>
+          <div class="promo-card__icon-wrap">
+            <i class="fa-solid fa-user-astronaut"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard2Tag">CONTESTANT RULE</span>
+            <h3 class="promo-card__title" id="promoCard2Title">ONE PARTICIPANT PER CLASS</h3>
+            <p class="promo-card__malayalam" id="promoCard2Desc">ഓരോ ക്ലാസ്സിൽ നിന്നും തിരഞ്ഞെടുക്കപ്പെടുന്ന ഒരു പ്രതിഭ വീതം!</p>
+          </div>
+          <div class="promo-card__corner-accent"></div>
+        </div>
+
+        <!-- Card 3: Conductors & Leadership -->
+        <div class="promo-card promo-card--conductors" id="promoCard3" data-scene="3">
+          <div class="promo-card__halo"></div>
+          <div class="promo-card__icon-wrap">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard3Tag">STAGE CONDUCTORS</span>
+            <div class="conductors-list">
+              <div class="conductor-item">
+                <span class="conductor-role">CHAIRMAN:</span>
+                <strong class="conductor-name" id="promoChairmanName">ADHIL S</strong>
+              </div>
+              <div class="conductor-sep">•</div>
+              <div class="conductor-item">
+                <span class="conductor-role">CONVENOR:</span>
+                <strong class="conductor-name" id="promoConvenorName">MUSTHAQEEM MUHAMMED</strong>
+              </div>
+            </div>
+            <p class="promo-card__malayalam" id="promoCard3Desc">നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് &amp; കൺവീനർ മുസ്തഖീം മുഹമ്മദ്</p>
+          </div>
+          <div class="promo-card__corner-accent"></div>
+        </div>
+
+        <!-- Card 4: Prizes & Rewards -->
+        <div class="promo-card promo-card--prizes" id="promoCard4" data-scene="4">
+          <div class="promo-card__halo"></div>
+          <div class="promo-card__icon-wrap prize-glow">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <div class="promo-card__body">
+            <span class="promo-card__tag" id="promoCard4Tag">MEGA REWARDS</span>
+            <h3 class="promo-card__title" id="promoCard4Title">PARTICIPATE &amp; WIN VALUABLE PRIZES!</h3>
+            <p class="promo-card__malayalam" id="promoCard4Desc">പങ്കെടുക്കൂ, ആകർഷകവും അമൂല്യവുമായ സമ്മാനങ്ങൾ നേടൂ!</p>
+          </div>
+          <div class="promo-card__corner-accent"></div>
+        </div>
+
+      </div>
+
+      <!-- Story Reel Navigation & Status Controls Dock -->
+      <footer class="promo-controls-footer" id="promoControlsFooter">
+        <!-- Reel Scene Timeline Progress Bar -->
+        <div class="promo-timeline-bar" aria-hidden="true">
+          <div class="promo-timeline-fill" id="promoTimelineFill"></div>
+        </div>
+
+        <div class="promo-dock-inner">
+          <div class="promo-reel-tracker" id="promoReelTracker" title="Cinematic Scene Sequence">
+            <button class="reel-dot-btn active" data-scene="all" title="Full Overview"><i class="fa-solid fa-table-cells-large"></i> All</button>
+            <button class="reel-dot-btn" data-scene="1" title="Scene 1: Title Reveal">1. Title</button>
+            <button class="reel-dot-btn" data-scene="2" title="Scene 2: Classes &amp; Participation">2. Rules</button>
+            <button class="reel-dot-btn" data-scene="3" title="Scene 3: Conductors">3. Conductors</button>
+            <button class="reel-dot-btn" data-scene="4" title="Scene 4: Mega Prizes">4. Prizes</button>
+          </div>
+
+          <div class="promo-actions-group">
+            <button id="promoPlayReelBtn" class="promo-action-btn primary" title="Auto-play TV Reel Animation (Spacebar)">
+              <i class="fa-solid fa-play"></i>
+              <span id="promoPlayReelLabel">Play Reel</span>
+            </button>
+            <button id="promoSoundBtn" class="promo-action-btn secondary" title="Play Broadcast Fanfare Sound">
+              <i class="fa-solid fa-volume-high"></i>
+              <span>Fanfare</span>
+            </button>
+            <button id="promoConfettiBtn" class="promo-action-btn gold" title="Celebration Confetti">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Celebrate</span>
+            </button>
+            <button id="promoStartQuizBtn" class="promo-action-btn accent" title="Switch to Live Quiz">
+              <i class="fa-solid fa-bolt"></i>
+              <span>Enter Quiz</span>
+            </button>
+            <button id="promoDockHideBtn" class="promo-action-btn ghost icon-only" title="Hide Controls for Clean Broadcast View (Press H)">
+              <i class="fa-solid fa-eye-slash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="promo-dock-hint">
+          <span>Press <strong>H</strong> to hide dock • <strong>F</strong> for Fullscreen • <strong>1-4</strong> for Scenes</span>
+        </div>
+      </footer>
+
     </div>
   </section>
 
@@ -243,6 +448,33 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Broadcast Lower-Third Ticker (Second Screen) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <aside id="stageTicker" class="stage-broadcast-ticker" style="display:none;" aria-live="polite">
+    <div class="ticker-badge">
+      <span class="ticker-pulse-dot"></span>
+      <span class="ticker-badge-text">LIVE NOTICE</span>
+    </div>
+    <div class="ticker-content-track">
+      <div id="stageTickerText" class="ticker-inner-text">Welcome to Udan Panam 3.0 • SRDB Presents • From Producer DC</div>
+    </div>
+    <button id="stageTickerCloseBtn" class="ticker-close-btn" title="Dismiss Notice">&times;</button>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Stage Display Blackout Curtain               -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="stageBlackout" class="stage-blackout-curtain" style="display:none;">
+    <div class="blackout-box">
+      <span class="blackout-icon"><i class="fa-solid fa-tv"></i></span>
+      <h3 class="blackout-title">STAGE SCREEN STANDBY</h3>
+      <p class="blackout-desc">Broadcast will resume shortly</p>
+    </div>
+  </div>
+
+
 
   <!-- ═══════════════════════════════════════════ -->
   <!-- Socket.IO + App Script                      -->

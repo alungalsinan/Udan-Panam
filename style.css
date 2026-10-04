@@ -947,3 +947,895 @@ body.no-animations *::after {
   .explanation-container { max-width: 1100px; }
   .option-card { padding: 1.4rem 2rem; }
 }
+
+/* ═══════════════════════════════════════════════════════
+   PROMO ANIMATION SCREEN (UDAN PANAM 3.0 STUDIO DESIGN)
+   Inspired by Broadcast Artwork: Sky Blue & 3D Gold
+   ═══════════════════════════════════════════════════════ */
+
+.screen--promo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 32%, #053b75 0%, #03244d 32%, #011633 68%, #010b1a 100%);
+  color: #ffffff;
+  padding: 1.2rem 2rem 4rem 2rem;
+  box-sizing: border-box;
+}
+
+/* ── 1. Animated Studio Backdrop & Volumetric Lighting ── */
+.promo-bg-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.promo-ambient-mesh {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 18% 25%, rgba(0, 229, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 82% 28%, rgba(255, 215, 0, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 85%, rgba(0, 119, 182, 0.18) 0%, transparent 50%);
+  filter: blur(40px);
+}
+
+.promo-radial-glow {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1000px;
+  height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(0, 212, 255, 0.12) 35%, rgba(1, 79, 134, 0.05) 65%, transparent 80%);
+  filter: blur(70px);
+  animation: promoGlowBreathing 8s ease-in-out infinite alternate;
+}
+
+.promo-beam {
+  position: absolute;
+  top: -240px;
+  height: 1300px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(0, 229, 255, 0.1) 45%, transparent 100%);
+  filter: blur(50px);
+  transform-origin: top center;
+  pointer-events: none;
+}
+.promo-beam--left {
+  left: 12%;
+  width: 280px;
+  transform: rotate(24deg);
+  animation: promoBeamSweepL 12s ease-in-out infinite alternate;
+}
+.promo-beam--center {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  opacity: 0.55;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(0, 180, 255, 0.08) 55%, transparent 100%);
+}
+.promo-beam--right {
+  right: 12%;
+  width: 280px;
+  transform: rotate(-24deg);
+  animation: promoBeamSweepR 12s ease-in-out infinite alternate;
+}
+
+@keyframes promoBeamSweepL {
+  0% { transform: rotate(18deg) scaleX(0.92); opacity: 0.7; }
+  100% { transform: rotate(30deg) scaleX(1.08); opacity: 1; }
+}
+@keyframes promoBeamSweepR {
+  0% { transform: rotate(-18deg) scaleX(0.92); opacity: 0.7; }
+  100% { transform: rotate(-30deg) scaleX(1.08); opacity: 1; }
+}
+@keyframes promoGlowBreathing {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.65; }
+  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.95; }
+}
+
+/* ── 2. Ambient Floating Stardust Micro-Particles ── */
+.promo-stardust-layer .p-star {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: #ffffff;
+  box-shadow: 0 0 10px #ffffff, 0 0 20px rgba(0, 229, 255, 0.8);
+  animation: stardustTwinkle 4s ease-in-out infinite alternate;
+}
+.s1 { width: 4px; height: 4px; top: 14%; left: 16%; animation-delay: 0.2s; }
+.s2 { width: 3px; height: 3px; top: 22%; left: 38%; animation-delay: 1.4s; }
+.s3 { width: 5px; height: 5px; top: 18%; right: 22%; animation-delay: 0.7s; box-shadow: 0 0 12px #ffd700, 0 0 24px #ffb703; }
+.s4 { width: 3px; height: 3px; top: 44%; left: 14%; animation-delay: 2.1s; }
+.s5 { width: 4px; height: 4px; top: 38%; right: 15%; animation-delay: 1.8s; }
+.s6 { width: 3px; height: 3px; bottom: 32%; left: 24%; animation-delay: 0.9s; }
+.s7 { width: 4px; height: 4px; bottom: 26%; right: 30%; animation-delay: 1.1s; }
+.s8 { width: 3px; height: 3px; top: 62%; left: 48%; animation-delay: 2.5s; }
+.s9 { width: 5px; height: 5px; top: 12%; right: 42%; animation-delay: 0.5s; }
+.s10 { width: 3px; height: 3px; bottom: 18%; left: 8%; animation-delay: 3.0s; }
+
+@keyframes stardustTwinkle {
+  0% { opacity: 0.15; transform: scale(0.6) translateY(0); }
+  50% { opacity: 0.95; transform: scale(1.3) translateY(-8px); }
+  100% { opacity: 0.25; transform: scale(0.7) translateY(-15px); }
+}
+
+/* ── 3. High-Fidelity 3D Minted Metallic Gold Rupee Coins ── */
+.promo-floating-coins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.promo-coin-3d {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 32% 28%, #fff8db 0%, #ffdf6d 26%, #f5a623 58%, #8a4800 100%);
+  box-shadow: 
+    0 16px 38px rgba(0, 0, 0, 0.55),
+    0 0 25px rgba(255, 215, 0, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9),
+    inset 0 -3px 6px rgba(90, 40, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transform-style: preserve-3d;
+  animation: coinFloatingPhysics 10s ease-in-out infinite;
+}
+
+.promo-coin-3d::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 0 6px rgba(130, 60, 0, 0.5);
+  pointer-events: none;
+}
+
+.promo-coin-3d .coin-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.promo-coin-3d .coin-symbol {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  color: #5c2f00;
+  text-shadow: 
+    0 1px 1px rgba(255, 255, 255, 0.8),
+    0 -1px 1px rgba(0, 0, 0, 0.6);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+/* Staggered Spatial Positioning of 3D Coins */
+.coin-pos-1 {
+  width: 58px; height: 58px; font-size: 28px;
+  top: 17%; left: 7%;
+  animation-duration: 9s;
+}
+.coin-pos-2 {
+  width: 76px; height: 76px; font-size: 38px;
+  top: 24%; right: 8%;
+  animation-duration: 11s;
+  animation-delay: -2.5s;
+}
+.coin-pos-3 {
+  width: 46px; height: 46px; font-size: 22px;
+  bottom: 24%; left: 10%;
+  animation-duration: 8.5s;
+  animation-delay: -4s;
+}
+.coin-pos-4 {
+  width: 64px; height: 64px; font-size: 32px;
+  bottom: 20%; right: 9%;
+  animation-duration: 10.5s;
+  animation-delay: -1.5s;
+}
+.coin-pos-5 {
+  width: 38px; height: 38px; font-size: 19px;
+  top: 48%; left: 3%;
+  animation-duration: 12s;
+  animation-delay: -6s;
+  opacity: 0.75;
+}
+.coin-pos-6 {
+  width: 42px; height: 42px; font-size: 20px;
+  top: 50%; right: 4%;
+  animation-duration: 13s;
+  animation-delay: -3s;
+  opacity: 0.8;
+}
+
+@keyframes coinFloatingPhysics {
+  0%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  25% {
+    transform: translateY(-16px) rotateX(8deg) rotateY(14deg) rotateZ(3deg);
+  }
+  50% {
+    transform: translateY(-28px) rotateX(-5deg) rotateY(20deg) rotateZ(-4deg);
+  }
+  75% {
+    transform: translateY(-12px) rotateX(10deg) rotateY(6deg) rotateZ(2deg);
+  }
+}
+
+/* ── 4. Main Stage Layout & Eyebrow ── */
+.promo-stage-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.promo-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.promo-badge-gold {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 1.25rem;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.22) 0%, rgba(255, 179, 0, 0.12) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  border-radius: 50px;
+  color: #ffd700;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: clamp(0.72rem, 1.1vw, 0.88rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.22);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.badge-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: skewX(-25deg);
+  animation: shineSweep 4.5s infinite;
+}
+
+.promo-producer-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.15rem;
+  background: rgba(3, 24, 48, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50px;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.72rem, 1.05vw, 0.86rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
+}
+.glow-producer {
+  color: #00e5ff;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+}
+
+.promo-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.9rem;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 50px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #ff6b6b;
+  letter-spacing: 0.12em;
+  backdrop-filter: blur(10px);
+}
+.promo-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4757;
+  box-shadow: 0 0 8px #ff4757;
+  animation: livePulse 1.8s ease-in-out infinite alternate;
+}
+@keyframes livePulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+/* ── 5. Hero Artwork Centerpiece & Frosted Glass Plinth ── */
+.promo-hero-centerpiece {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.1rem 0 0.9rem 0;
+  perspective: 1100px;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.promo-3d-tilt-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  animation: heroFloatBreathing 6s ease-in-out infinite;
+}
+
+@keyframes heroFloatBreathing {
+  0%, 100% { transform: translateY(0) rotateX(0deg); }
+  50% { transform: translateY(-8px) rotateX(1.8deg); }
+}
+
+.promo-art-glass-plate {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.4rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 168, 232, 0.04) 50%, rgba(2, 22, 48, 0.2) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 18px 45px rgba(0, 15, 35, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.promo-art-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.2) 0%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.promo-art-img {
+  max-width: min(82vw, 640px);
+  max-height: clamp(180px, 31vh, 320px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 30px rgba(0, 20, 45, 0.6)) drop-shadow(0 0 30px rgba(0, 229, 255, 0.28));
+  transition: transform 0.35s ease, filter 0.35s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.promo-3d-tilt-box:hover .promo-art-img {
+  filter: drop-shadow(0 20px 40px rgba(0, 20, 45, 0.75)) drop-shadow(0 0 45px rgba(255, 215, 0, 0.4));
+}
+
+.promo-specular-sweep {
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.35) 50%, transparent 80%);
+  transform: skewX(-25deg);
+  animation: specularSweepKeyframe 6.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+@keyframes specularSweepKeyframe {
+  0%, 65% { left: -120%; }
+  100% { left: 220%; }
+}
+
+.promo-sub-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  margin-top: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.promo-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(0.7rem, 0.95vw, 0.82rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+}
+
+.promo-hashtag-text {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.74rem, 1.05vw, 0.92rem);
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: #00e5ff;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+  text-transform: lowercase;
+}
+
+/* ── 6. Broadcast Glassmorphic Cards Grid ── */
+.promo-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 1220px;
+  margin: 0.4rem 0 1rem 0;
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.promo-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(5, 30, 60, 0.58) 0%, rgba(2, 18, 38, 0.72) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  padding: 1.1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 12px 30px rgba(0, 15, 35, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  transition: all 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  cursor: pointer;
+}
+
+.promo-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 
+    0 18px 40px rgba(0, 0, 0, 0.5),
+    0 0 25px rgba(0, 229, 255, 0.25);
+  background: linear-gradient(145deg, rgba(8, 42, 82, 0.72) 0%, rgba(3, 22, 48, 0.85) 100%);
+}
+
+.promo-card__icon-wrap {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  color: #00e5ff;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.25) 0%, rgba(0, 229, 255, 0.05) 75%);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  margin-bottom: 0.65rem;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.3);
+  transition: all 0.4s ease;
+}
+
+.promo-card--prizes .promo-card__icon-wrap {
+  color: #ffd700;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.05) 75%);
+  border-color: rgba(255, 215, 0, 0.65);
+  box-shadow: 0 0 22px rgba(255, 215, 0, 0.45);
+  animation: prizeGlowPulse 2.4s infinite alternate;
+}
+@keyframes prizeGlowPulse {
+  0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.35); }
+  100% { transform: scale(1.08); box-shadow: 0 0 32px rgba(255, 215, 0, 0.8); }
+}
+
+.promo-card__tag {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #00e5ff;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+.promo-card--prizes .promo-card__tag { color: #ffd700; }
+
+.promo-card__title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(0.82rem, 1.1vw, 1rem);
+  font-weight: 800;
+  margin: 0 0 0.35rem 0;
+  color: #ffffff;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.promo-card__malayalam {
+  font-family: 'Anek Malayalam', sans-serif;
+  font-size: clamp(0.72rem, 0.95vw, 0.88rem);
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.conductors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.25rem 0;
+}
+.conductor-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+}
+.conductor-role {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.conductor-name {
+  color: #ffd700;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* ── 7. Dynamic Scene State Choreography ── */
+.promo-card.scene-active {
+  transform: translateY(-8px) scale(1.05);
+  border-color: #ffd700;
+  box-shadow: 
+    0 24px 50px rgba(0, 0, 0, 0.65),
+    0 0 40px rgba(255, 215, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: linear-gradient(145deg, rgba(10, 52, 98, 0.88) 0%, rgba(4, 25, 52, 0.95) 100%);
+  z-index: 5;
+}
+
+.promo-card.scene-dimmed {
+  opacity: 0.3;
+  filter: blur(1.5px) grayscale(0.4);
+  transform: scale(0.95);
+  pointer-events: auto;
+}
+
+/* ── 8. Sleek Minimal Control Dock & Timeline ── */
+.promo-controls-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1100px;
+  gap: 0.4rem;
+  padding-top: 0.3rem;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  z-index: 10;
+}
+
+.promo-controls-footer.dock-hidden {
+  opacity: 0;
+  transform: translateY(30px);
+  pointer-events: none;
+}
+
+.promo-timeline-bar {
+  width: 100%;
+  max-width: 480px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.2rem;
+}
+.promo-timeline-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00e5ff, #ffd700);
+  border-radius: 4px;
+  transition: width 0.1s linear;
+}
+
+.promo-dock-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  background: rgba(2, 18, 38, 0.65);
+  padding: 0.4rem 0.8rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 10, 25, 0.4);
+}
+
+.promo-reel-tracker {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(0, 15, 32, 0.5);
+  padding: 0.25rem 0.5rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reel-dot-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.74rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.reel-dot-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+.reel-dot-btn.active {
+  background: linear-gradient(135deg, #00e5ff 0%, #0096c7 100%);
+  color: #031527;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(0, 229, 255, 0.45);
+}
+
+.promo-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.promo-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1.05rem;
+  border-radius: 50px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+.promo-action-btn:hover {
+  transform: translateY(-2px);
+}
+.promo-action-btn:active {
+  transform: translateY(1px);
+}
+
+.promo-action-btn.primary {
+  background: linear-gradient(135deg, #00e5ff 0%, #0096c7 100%);
+  color: #02162a;
+  box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
+}
+.promo-action-btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(0, 229, 255, 0.6);
+}
+
+.promo-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.promo-action-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.promo-action-btn.gold {
+  background: linear-gradient(135deg, #ffd700 0%, #ff9800 100%);
+  color: #3b2000;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.35);
+}
+.promo-action-btn.gold:hover {
+  box-shadow: 0 6px 22px rgba(255, 215, 0, 0.6);
+}
+
+.promo-action-btn.accent {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+}
+.promo-action-btn.accent:hover {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.55);
+}
+
+.promo-action-btn.ghost.icon-only {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.45rem 0.65rem;
+}
+.promo-action-btn.ghost.icon-only:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.promo-dock-hint {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.05em;
+}
+.promo-dock-hint strong {
+  color: #00e5ff;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SECOND SCREEN FEATURES: TICKER, BLACKOUT & PRESENTER DECK
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Broadcast Lower-Third Ticker ── */
+.stage-broadcast-ticker {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  background: linear-gradient(90deg, #021a32 0%, #032d56 50%, #021a32 100%);
+  border-top: 2px solid #ffd700;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  z-index: 500;
+  padding: 0 1rem;
+  overflow: hidden;
+}
+
+.ticker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f43f5e;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  padding: 0.25rem 0.7rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+}
+
+.ticker-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: pulseDot 1s infinite alternate;
+}
+
+@keyframes pulseDot {
+  0% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+.ticker-content-track {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0 1rem;
+}
+
+.ticker-inner-text {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  animation: marqueeTicker 24s linear infinite;
+}
+
+@keyframes marqueeTicker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.ticker-close-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.ticker-close-btn:hover { color: #ffffff; }
+
+/* ── Stage Blackout Curtain ── */
+.stage-blackout-curtain {
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+}
+
+.blackout-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+}
+
+.blackout-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.8rem;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.blackout-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  margin: 0 0 0.3rem 0;
+}
+
+.blackout-desc {
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .promo-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+}
+@media (max-width: 580px) {
+  .promo-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .promo-controls-footer {
+    justify-content: center;
+  }
+}
+

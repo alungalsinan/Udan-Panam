@@ -218,8 +218,35 @@ function initDashboard() {
     syncLiveControls(state);
   });
 
+  socket.on('question:updated', (updatedQ) => {
+    if (!updatedQ) return;
+    const idx = currentQuestions.findIndex(q => q.id === updatedQ.id);
+    if (idx !== -1) {
+      currentQuestions[idx] = { ...currentQuestions[idx], ...updatedQ };
+      if (idx === currentQuestionIndex) {
+        updateLiveQuestionDisplay();
+      }
+      renderLiveQuestionsList();
+    }
+  });
+
   socket.on('timer:tick', (data) => {
-    document.getElementById('live-timer-text').textContent = data.remaining;
+    const liveTimer = document.getElementById('live-timer-text');
+    if (liveTimer) liveTimer.textContent = data.remaining;
+    updateFlowTimerUI(data.remaining, true);
+  });
+
+  socket.on('timer:started', (data) => {
+    updateFlowTimerUI(data?.remaining || 30, true);
+  });
+
+  socket.on('timer:paused', (data) => {
+    updateFlowTimerUI(data?.remaining, false);
+  });
+
+  socket.on('timer:stopped', () => {
+    const dur = parseInt(document.getElementById('flow-timer-duration-input')?.value) || 30;
+    updateFlowTimerUI(dur, false);
   });
 
   socket.on('celebration:start', (data) => {
@@ -244,6 +271,32 @@ function initDashboard() {
       celebStatusText.textContent = 'IDLE';
       celebStatusText.classList.remove('active');
     }
+  });
+
+  socket.on('stage:blackout', (data) => {
+    const blackoutBtn = document.getElementById('admin-stage-blackout-btn');
+    if (blackoutBtn && data) {
+      blackoutBtn.classList.toggle('btn-danger', !!data.blackout);
+      blackoutBtn.classList.toggle('btn-outline', !data.blackout);
+    }
+  });
+
+  socket.on('promo:control', (data) => {
+    if (!data) return;
+    if (data.action === 'scene') {
+      document.querySelectorAll('[data-promo-scene]').forEach(b => {
+        b.classList.toggle('active', b.dataset.promoScene === data.scene);
+      });
+      document.querySelectorAll('[data-director-scene]').forEach(card => {
+        card.classList.toggle('active', card.dataset.directorScene === data.scene);
+      });
+      const sceneBadge = document.getElementById('status-active-scene');
+      if (sceneBadge) sceneBadge.textContent = String(data.scene || 'overview').toUpperCase();
+    }
+  });
+
+  socket.on('cast:list', (displays) => {
+    updateConnectedDisplaysTable(displays);
   });
 
   // Tab Setup
@@ -303,6 +356,7 @@ function initDashboard() {
   setupStudioListeners();
   setupSoundsListeners();
   setupSettingsListeners();
+  setupPromoCastListeners();
   setupKeyboardShortcuts();
 }
 
@@ -322,6 +376,7 @@ function switchTab(tabName) {
   // Page title mapping
   const titles = {
     live: 'Live Control Room',
+    'promo-cast': 'Promo & Casting Studio',
     questions: 'Question Bank Manager',
     contestants: 'Contestant Roster',
     sessions: 'Game Sessions Manager',
@@ -334,6 +389,7 @@ function switchTab(tabName) {
   pageTitle.textContent = titles[tabName] || 'Admin Control Room';
 
   // Load specific data on tab switch
+  if (tabName === 'promo-cast') loadPromoCastTab();
   if (tabName === 'questions') loadQuestionsTable();
   if (tabName === 'contestants') { loadContestantsList(); loadSessionsDropdowns(); }
   if (tabName === 'sessions') loadSessionsGrid();
@@ -343,6 +399,16 @@ function switchTab(tabName) {
   if (tabName === 'preview') {
     const iframe = document.getElementById('preview-iframe');
     iframe.src = '/';
+  }
+
+  // 🔒 Persisted Screen Control Dock Visibility
+  const dock = document.getElementById('admin-screen-control-dock');
+  if (dock) {
+    if (['live', 'questions', 'preview'].includes(tabName)) {
+      dock.style.display = 'block';
+    } else {
+      dock.style.display = 'none';
+    }
   }
 }
 
@@ -409,16 +475,327 @@ async function loadQuestionsForLevel(level) {
 function updateLiveQuestionDisplay() {
   const progressDiv = document.getElementById('live-question-progress');
   const textDiv = document.getElementById('live-question-text');
+  const levelBadge = document.getElementById('live-question-level-badge');
+  const statusBadge = document.getElementById('live-question-status-badge');
+  const optionsPreview = document.getElementById('live-question-options-preview');
+  const quickEditBtn = document.getElementById('live-quick-edit-btn');
+  const quickEditPanel = document.getElementById('live-quick-edit-panel');
 
   if (currentQuestionIndex >= 0 && currentQuestionIndex < currentQuestions.length) {
     const q = currentQuestions[currentQuestionIndex];
-    progressDiv.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length} (L${q.level})`;
-    textDiv.textContent = q.question_text;
+    if (progressDiv) progressDiv.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
+    if (textDiv) textDiv.textContent = q.question_text;
+    if (levelBadge) {
+      levelBadge.textContent = `Round ${q.level} • ${q.level === 1 ? 'Text' : q.level === 2 ? 'Image' : 'Audio'}`;
+    }
+    if (statusBadge) {
+      statusBadge.textContent = q.presented ? 'Used on Stage' : 'Ready to Air';
+      statusBadge.className = `badge ${q.presented ? 'badge-warning' : 'badge-success'}`;
+    }
+    if (quickEditBtn) quickEditBtn.style.display = 'inline-flex';
+
+    // Control Dock Meta Elements
+    const dockQNum = document.getElementById('dock-q-num');
+    const dockQRound = document.getElementById('dock-q-round');
+    const dockQPreview = document.getElementById('dock-q-preview');
+    const dockBadge = document.getElementById('dock-active-q-badge');
+
+    if (dockQNum) dockQNum.textContent = `Q${currentQuestionIndex + 1}`;
+    if (dockQRound) dockQRound.textContent = `Round ${q.level}`;
+    if (dockQPreview) {
+      dockQPreview.textContent = q.question_text;
+      dockQPreview.title = q.question_text;
+    }
+    if (dockBadge) dockBadge.classList.add('has-question');
+
+    // If quick edit panel is open, sync form fields
+    if (quickEditPanel && quickEditPanel.style.display !== 'none') {
+      const qInput = document.getElementById('live-edit-qtext');
+      if (qInput && document.activeElement !== qInput) qInput.value = q.question_text || '';
+      const aInput = document.getElementById('live-edit-optA');
+      if (aInput && document.activeElement !== aInput) aInput.value = q.option_a || '';
+      const bInput = document.getElementById('live-edit-optB');
+      if (bInput && document.activeElement !== bInput) bInput.value = q.option_b || '';
+      const cInput = document.getElementById('live-edit-optC');
+      if (cInput && document.activeElement !== cInput) cInput.value = q.option_c || '';
+      const dInput = document.getElementById('live-edit-optD');
+      if (dInput && document.activeElement !== dInput) dInput.value = q.option_d || '';
+      const expInput = document.getElementById('live-edit-explanation');
+      if (expInput && document.activeElement !== expInput) expInput.value = q.explanation || '';
+      
+      const correctRadio = document.querySelector(`input[name="live-edit-correct-radio"][value="${q.correct_answer}"]`);
+      if (correctRadio) correctRadio.checked = true;
+    }
+
+    if (optionsPreview) {
+      optionsPreview.innerHTML = `
+        <div class="live-correct-selector-bar">
+          <div class="selector-title">
+            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+            <span>Right Option:</span>
+          </div>
+          <div class="correct-btn-group">
+            <button class="btn-opt-select ${q.correct_answer === 'A' ? 'active' : ''}" onclick="setLiveCorrectAnswer('A')" title="Set A as Right Option">
+              A ${q.correct_answer === 'A' ? '<i class="fa-solid fa-check"></i>' : ''}
+            </button>
+            <button class="btn-opt-select ${q.correct_answer === 'B' ? 'active' : ''}" onclick="setLiveCorrectAnswer('B')" title="Set B as Right Option">
+              B ${q.correct_answer === 'B' ? '<i class="fa-solid fa-check"></i>' : ''}
+            </button>
+            <button class="btn-opt-select ${q.correct_answer === 'C' ? 'active' : ''}" onclick="setLiveCorrectAnswer('C')" title="Set C as Right Option">
+              C ${q.correct_answer === 'C' ? '<i class="fa-solid fa-check"></i>' : ''}
+            </button>
+            <button class="btn-opt-select ${q.correct_answer === 'D' ? 'active' : ''}" onclick="setLiveCorrectAnswer('D')" title="Set D as Right Option">
+              D ${q.correct_answer === 'D' ? '<i class="fa-solid fa-check"></i>' : ''}
+            </button>
+          </div>
+        </div>
+
+        <div class="teleprompter-options-grid">
+          ${['A', 'B', 'C', 'D'].map(opt => {
+            const isCorrect = q.correct_answer === opt;
+            const val = q['option_' + opt.toLowerCase()] || '';
+            return `
+              <div class="option-pill ${isCorrect ? 'is-correct' : ''}" id="live-opt-pill-${opt}">
+                <span class="opt-label" onclick="setLiveCorrectAnswer('${opt}')" title="Click to set ${opt} as Right Option">${opt}</span>
+                <span class="opt-text" id="live-opt-text-${opt}" title="Double-click to edit text" ondblclick="startInlineOptionEdit('${opt}')">${escapeHTML(val)}</span>
+                <div class="opt-pill-actions">
+                  <button class="pill-btn-set-correct ${isCorrect ? 'is-active' : ''}" onclick="setLiveCorrectAnswer('${opt}')" title="Set as Right Option">
+                    <i class="fa-solid ${isCorrect ? 'fa-circle-check' : 'fa-circle'}"></i> ${isCorrect ? 'Right' : 'Set Right'}
+                  </button>
+                  <button class="pill-btn-inline-edit" onclick="startInlineOptionEdit('${opt}')" title="Edit option ${opt} text">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
   } else {
-    progressDiv.textContent = 'No Question Active';
-    textDiv.textContent = 'Use Next/Prev to punch a question onto the screen.';
+    if (progressDiv) progressDiv.textContent = 'No Question Active';
+    if (textDiv) textDiv.textContent = 'Select a question from the list below or punch Next to start.';
+    if (levelBadge) levelBadge.textContent = 'Standby';
+    if (statusBadge) {
+      statusBadge.textContent = 'Idle';
+      statusBadge.className = 'badge badge-outline';
+    }
+    if (quickEditBtn) quickEditBtn.style.display = 'none';
+    if (quickEditPanel) quickEditPanel.style.display = 'none';
+    if (optionsPreview) optionsPreview.innerHTML = '';
+
+    const dockQNum = document.getElementById('dock-q-num');
+    const dockQRound = document.getElementById('dock-q-round');
+    const dockQPreview = document.getElementById('dock-q-preview');
+    const dockBadge = document.getElementById('dock-active-q-badge');
+    if (dockQNum) dockQNum.textContent = 'Q—';
+    if (dockQRound) dockQRound.textContent = 'Standby';
+    if (dockQPreview) {
+      dockQPreview.textContent = 'Select a question from the list to start.';
+      dockQPreview.title = 'Active Question on Stage';
+    }
+    if (dockBadge) dockBadge.classList.remove('has-question');
   }
 }
+
+// ─── Live Right Option & Question Management Handlers ───
+
+async function setLiveCorrectAnswer(optLetter) {
+  if (currentQuestionIndex < 0 || currentQuestionIndex >= currentQuestions.length) return;
+  const q = currentQuestions[currentQuestionIndex];
+  if (!q) return;
+
+  const upper = String(optLetter).toUpperCase();
+  if (q.correct_answer === upper) return;
+
+  q.correct_answer = upper;
+
+  // Real-time Socket Broadcast
+  socket.emit('question:set-correct', { question_id: q.id, correct_answer: upper });
+
+  // Persistence REST API (PATCH)
+  fetch(`/api/questions/${q.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
+    body: JSON.stringify({ correct_answer: upper })
+  }).catch(err => console.error('Error updating right option via API:', err));
+
+  updateLiveQuestionDisplay();
+  showNotification(`Right Option switched to (${upper}) live on stage!`);
+}
+
+function startInlineOptionEdit(optLetter) {
+  if (currentQuestionIndex < 0 || currentQuestionIndex >= currentQuestions.length) return;
+  const q = currentQuestions[currentQuestionIndex];
+  if (!q) return;
+
+  const upper = String(optLetter).toUpperCase();
+  const optKey = 'option_' + upper.toLowerCase();
+  const pill = document.getElementById(`live-opt-pill-${upper}`);
+  if (!pill) return;
+
+  const currentVal = q[optKey] || '';
+  pill.innerHTML = `
+    <div class="inline-opt-edit-wrap">
+      <span class="opt-label">${upper}</span>
+      <input type="text" class="inline-opt-input" id="inline-opt-input-${upper}" value="${escapeHTML(currentVal)}">
+      <button class="btn btn-xs btn-primary" onclick="saveInlineOptionEdit('${upper}')" title="Save"><i class="fa-solid fa-check"></i></button>
+      <button class="btn btn-xs btn-ghost" onclick="updateLiveQuestionDisplay()" title="Cancel"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  `;
+
+  const input = document.getElementById(`inline-opt-input-${upper}`);
+  if (input) {
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveInlineOptionEdit(upper);
+      } else if (e.key === 'Escape') {
+        updateLiveQuestionDisplay();
+      }
+    });
+  }
+}
+
+async function saveInlineOptionEdit(optLetter) {
+  if (currentQuestionIndex < 0 || currentQuestionIndex >= currentQuestions.length) return;
+  const q = currentQuestions[currentQuestionIndex];
+  if (!q) return;
+
+  const upper = String(optLetter).toUpperCase();
+  const input = document.getElementById(`inline-opt-input-${upper}`);
+  if (!input) return;
+
+  const newVal = input.value.trim();
+  const optKey = 'option_' + upper.toLowerCase();
+  q[optKey] = newVal;
+
+  // Socket broadcast
+  socket.emit('question:quick-edit', {
+    id: q.id,
+    [optKey]: newVal
+  });
+
+  // REST API persistence
+  try {
+    await fetch(`/api/questions/${q.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
+      body: JSON.stringify({ [optKey]: newVal })
+    });
+    showNotification(`Option ${upper} updated live on stage!`);
+  } catch (err) {
+    console.error('Error saving inline option edit:', err);
+  }
+
+  updateLiveQuestionDisplay();
+}
+
+function toggleLiveQuestionEditor(forceState) {
+  const panel = document.getElementById('live-quick-edit-panel');
+  const btn = document.getElementById('live-quick-edit-btn');
+  if (!panel) return;
+
+  const isCurrentlyOpen = panel.style.display !== 'none';
+  const shouldOpen = forceState !== undefined ? forceState : !isCurrentlyOpen;
+
+  if (shouldOpen) {
+    if (currentQuestionIndex < 0 || currentQuestionIndex >= currentQuestions.length) {
+      showNotification('No active question to edit', 'error');
+      return;
+    }
+    const q = currentQuestions[currentQuestionIndex];
+
+    document.getElementById('live-edit-qtext').value = q.question_text || '';
+    document.getElementById('live-edit-optA').value = q.option_a || '';
+    document.getElementById('live-edit-optB').value = q.option_b || '';
+    document.getElementById('live-edit-optC').value = q.option_c || '';
+    document.getElementById('live-edit-optD').value = q.option_d || '';
+    document.getElementById('live-edit-explanation').value = q.explanation || '';
+
+    const correctRadio = document.querySelector(`input[name="live-edit-correct-radio"][value="${q.correct_answer}"]`);
+    if (correctRadio) correctRadio.checked = true;
+
+    panel.style.display = 'block';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-eye"></i> View Live';
+    
+    // Focus question textarea
+    setTimeout(() => {
+      document.getElementById('live-edit-qtext')?.focus();
+    }, 50);
+  } else {
+    panel.style.display = 'none';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Quick Edit';
+  }
+}
+
+async function saveLiveQuestionQuickEdit() {
+  if (currentQuestionIndex < 0 || currentQuestionIndex >= currentQuestions.length) return;
+  const q = currentQuestions[currentQuestionIndex];
+  if (!q) return;
+
+  const qText = document.getElementById('live-edit-qtext').value.trim();
+  const optA = document.getElementById('live-edit-optA').value.trim();
+  const optB = document.getElementById('live-edit-optB').value.trim();
+  const optC = document.getElementById('live-edit-optC').value.trim();
+  const optD = document.getElementById('live-edit-optD').value.trim();
+  const explanation = document.getElementById('live-edit-explanation').value.trim();
+  const selectedCorrect = document.querySelector('input[name="live-edit-correct-radio"]:checked')?.value || q.correct_answer || 'A';
+
+  if (!qText || !optA || !optB || !optC || !optD) {
+    showNotification('Question text and all 4 options are required', 'error');
+    return;
+  }
+
+  q.question_text = qText;
+  q.option_a = optA;
+  q.option_b = optB;
+  q.option_c = optC;
+  q.option_d = optD;
+  q.correct_answer = selectedCorrect;
+  q.explanation = explanation;
+
+  const payload = {
+    id: q.id,
+    question_text: qText,
+    option_a: optA,
+    option_b: optB,
+    option_c: optC,
+    option_d: optD,
+    correct_answer: selectedCorrect,
+    explanation: explanation
+  };
+
+  // Socket broadcast
+  socket.emit('question:quick-edit', payload);
+
+  // REST API persistence
+  try {
+    const res = await fetch(`/api/questions/${q.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': currentToken },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      showNotification('Question & Options updated and broadcast to Stage!');
+      toggleLiveQuestionEditor(false);
+      updateLiveQuestionDisplay();
+      renderLiveQuestionsList();
+    } else {
+      showNotification('Error saving question edit', 'error');
+    }
+  } catch (err) {
+    console.error('Error saving question quick edit:', err);
+    showNotification('Failed to save question edit', 'error');
+  }
+}
+
+// Expose functions globally for inline onclick handlers
+window.setLiveCorrectAnswer = setLiveCorrectAnswer;
+window.startInlineOptionEdit = startInlineOptionEdit;
+window.saveInlineOptionEdit = saveInlineOptionEdit;
+window.toggleLiveQuestionEditor = toggleLiveQuestionEditor;
 
 function renderLiveQuestionsList() {
   const container = document.getElementById('live-questions-list');
@@ -454,12 +831,104 @@ function renderLiveQuestionsList() {
 
 function setupLiveControlListeners() {
   // Screen Switched
-  document.getElementById('screen-welcome-btn').addEventListener('click', () => {
-    socket.emit('state:update', { active_screen: 'welcome' });
+  const welcomeBtn = document.getElementById('screen-welcome-btn');
+  if (welcomeBtn) {
+    welcomeBtn.addEventListener('click', () => {
+      socket.emit('state:update', { active_screen: 'welcome' });
+    });
+  }
+  const promoBtn = document.getElementById('screen-promo-btn');
+  if (promoBtn) {
+    promoBtn.addEventListener('click', () => {
+      socket.emit('state:update', { active_screen: 'promo' });
+    });
+  }
+  const quizBtn = document.getElementById('screen-quiz-btn');
+  if (quizBtn) {
+    quizBtn.addEventListener('click', () => {
+      socket.emit('state:update', { active_screen: 'quiz' });
+    });
+  }
+
+  // ── Second Screen & Promo Director Controls ──
+  const launchStageBtn = document.getElementById('admin-launch-stage-btn');
+  if (launchStageBtn) {
+    launchStageBtn.addEventListener('click', () => {
+      const stageWin = window.open('/', 'UdanPanamStage', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no');
+      if (stageWin) stageWin.focus();
+      showNotification('Second Screen (Stage Display) window opened');
+    });
+  }
+
+  let adminIsBlackout = false;
+  const blackoutBtn = document.getElementById('admin-stage-blackout-btn');
+  if (blackoutBtn) {
+    blackoutBtn.addEventListener('click', () => {
+      adminIsBlackout = !adminIsBlackout;
+      socket.emit('stage:blackout', { blackout: adminIsBlackout });
+      blackoutBtn.classList.toggle('btn-danger', adminIsBlackout);
+      blackoutBtn.classList.toggle('btn-outline', !adminIsBlackout);
+      showNotification(adminIsBlackout ? 'Stage Screen Blacked Out' : 'Stage Screen Restored');
+    });
+  }
+
+  // Promo Director Scene Buttons
+  document.querySelectorAll('[data-promo-scene]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-promo-scene]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const scene = btn.dataset.promoScene;
+      socket.emit('state:update', { active_screen: 'promo' });
+      socket.emit('promo:control', { action: 'scene', scene });
+      showNotification(`Promo Scene ${scene} triggered on stage`);
+    });
   });
-  document.getElementById('screen-quiz-btn').addEventListener('click', () => {
-    socket.emit('state:update', { active_screen: 'quiz' });
-  });
+
+  // Promo Reel Toggle
+  let adminPromoReelRunning = false;
+  const reelToggleBtn = document.getElementById('admin-promo-reel-toggle');
+  const reelToggleText = document.getElementById('admin-promo-reel-text');
+  if (reelToggleBtn) {
+    reelToggleBtn.addEventListener('click', () => {
+      adminPromoReelRunning = !adminPromoReelRunning;
+      socket.emit('state:update', { active_screen: 'promo' });
+      socket.emit('promo:control', { action: adminPromoReelRunning ? 'play' : 'pause' });
+      if (reelToggleText) reelToggleText.textContent = adminPromoReelRunning ? 'Pause Reel' : 'Play Reel';
+      const icon = reelToggleBtn.querySelector('i');
+      if (icon) icon.className = adminPromoReelRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+      reelToggleBtn.classList.toggle('btn-warning', adminPromoReelRunning);
+      reelToggleBtn.classList.toggle('btn-success', !adminPromoReelRunning);
+    });
+  }
+
+  // Promo Fanfare Sound
+  const fanfareBtn = document.getElementById('admin-promo-fanfare-btn');
+  if (fanfareBtn) {
+    fanfareBtn.addEventListener('click', () => {
+      socket.emit('promo:sound');
+      showNotification('Promo Fanfare SFX sent to stage');
+    });
+  }
+
+  // Broadcast Ticker
+  const tickerInput = document.getElementById('admin-ticker-input');
+  const tickerSend = document.getElementById('admin-ticker-send-btn');
+  const tickerClear = document.getElementById('admin-ticker-clear-btn');
+  if (tickerSend && tickerInput) {
+    tickerSend.addEventListener('click', () => {
+      const txt = tickerInput.value.trim();
+      if (txt) {
+        socket.emit('stage:ticker', { show: true, text: txt });
+        showNotification('Stage Notice Ticker broadcasted');
+      }
+    });
+  }
+  if (tickerClear) {
+    tickerClear.addEventListener('click', () => {
+      socket.emit('stage:ticker', { show: false });
+      showNotification('Stage Notice Ticker cleared');
+    });
+  }
 
   // Level selector
   const levels = [1, 2, 3];
@@ -508,6 +977,22 @@ function setupLiveControlListeners() {
     }
   });
 
+  // Live Quick Edit Question & Options Controls
+  const liveQuickEditBtn = document.getElementById('live-quick-edit-btn');
+  if (liveQuickEditBtn) {
+    liveQuickEditBtn.addEventListener('click', () => toggleLiveQuestionEditor());
+  }
+
+  const liveEditSaveBtn = document.getElementById('live-edit-save-btn');
+  if (liveEditSaveBtn) {
+    liveEditSaveBtn.addEventListener('click', saveLiveQuestionQuickEdit);
+  }
+
+  const liveEditCancelBtn = document.getElementById('live-edit-cancel-btn');
+  if (liveEditCancelBtn) {
+    liveEditCancelBtn.addEventListener('click', () => toggleLiveQuestionEditor(false));
+  }
+
   // Toggles
   setupLiveToggle('toggle-question-btn', 'show_question');
   setupLiveToggle('toggle-options-btn', 'show_options');
@@ -541,6 +1026,82 @@ function setupLiveControlListeners() {
     const dur = parseInt(document.getElementById('timer-duration-input').value) || 30;
     socket.emit('timer:set', { duration: dur });
   });
+
+  // ─── Special Screen Control Bar (Teleprompter Question Deck) ───
+  const flowTimerToggleBtn = document.getElementById('flow-timer-toggle-btn');
+  if (flowTimerToggleBtn) {
+    flowTimerToggleBtn.addEventListener('click', () => {
+      fetch('/api/presentation/state')
+        .then(r => r.json())
+        .then(state => {
+          if (state && state.timer_running) {
+            socket.emit('timer:pause');
+          } else {
+            const dur = parseInt(document.getElementById('flow-timer-duration-input')?.value) || 30;
+            socket.emit('timer:start', { duration: dur });
+          }
+        })
+        .catch(() => {
+          const dur = parseInt(document.getElementById('flow-timer-duration-input')?.value) || 30;
+          socket.emit('timer:start', { duration: dur });
+        });
+    });
+  }
+
+  const flowTimerResetBtn = document.getElementById('flow-timer-reset-btn');
+  if (flowTimerResetBtn) {
+    flowTimerResetBtn.addEventListener('click', () => {
+      socket.emit('timer:stop');
+    });
+  }
+
+  const flowPresets = document.querySelectorAll('#flow-timer-presets .preset-chip');
+  flowPresets.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const sec = parseInt(chip.dataset.seconds) || 30;
+      const flowInput = document.getElementById('flow-timer-duration-input');
+      const sideInput = document.getElementById('timer-duration-input');
+      if (flowInput) flowInput.value = sec;
+      if (sideInput) sideInput.value = sec;
+      flowPresets.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      socket.emit('timer:set', { duration: sec });
+    });
+  });
+
+  const flowMinus5 = document.getElementById('flow-timer-minus-5');
+  if (flowMinus5) {
+    flowMinus5.addEventListener('click', () => {
+      socket.emit('timer:adjust', { amount: -5 });
+    });
+  }
+
+  const flowPlus5 = document.getElementById('flow-timer-plus-5');
+  if (flowPlus5) {
+    flowPlus5.addEventListener('click', () => {
+      socket.emit('timer:adjust', { amount: 5 });
+    });
+  }
+
+  const flowSetBtn = document.getElementById('flow-timer-set-btn');
+  if (flowSetBtn) {
+    flowSetBtn.addEventListener('click', () => {
+      const sec = parseInt(document.getElementById('flow-timer-duration-input')?.value) || 30;
+      const sideInput = document.getElementById('timer-duration-input');
+      if (sideInput) sideInput.value = sec;
+      socket.emit('timer:set', { duration: sec });
+    });
+  }
+
+  const flowTimerDurationInput = document.getElementById('flow-timer-duration-input');
+  if (flowTimerDurationInput) {
+    flowTimerDurationInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        flowSetBtn?.click();
+      }
+    });
+  }
 
   // Lifelines
   document.getElementById('lifeline-fifty-btn').addEventListener('click', () => {
@@ -578,6 +1139,16 @@ function setupLiveControlListeners() {
     });
   }
 
+  // Broadcast Sound Cues (Udan Panam Audio Engine)
+  document.querySelectorAll('.broadcast-sound-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.soundCategory;
+      const soundObj = soundEffectsCache.find(s => s.category === category);
+      const url = soundObj && soundObj.enabled ? soundObj.url : '';
+      socket.emit('sound:play', { category, url });
+    });
+  });
+
   // Mocking Sounds triggers
   document.querySelectorAll('.mock-sound-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -594,6 +1165,14 @@ function setupLiveControlListeners() {
   if (suspenseBtn) {
     suspenseBtn.addEventListener('click', () => {
       socket.emit('sound:play', { category: 'reveal' });
+    });
+  }
+
+  // Master Stop Sound
+  const stopAllBtn = document.getElementById('sound-stop-all-btn');
+  if (stopAllBtn) {
+    stopAllBtn.addEventListener('click', () => {
+      socket.emit('sound:stop');
     });
   }
 }
@@ -652,6 +1231,18 @@ async function dispatchQuestionById(q) {
     currentQuestionIndex = idx;
     updateLiveQuestionDisplay();
     renderLiveQuestionsList();
+  } else {
+    const dockQNum = document.getElementById('dock-q-num');
+    const dockQRound = document.getElementById('dock-q-round');
+    const dockQPreview = document.getElementById('dock-q-preview');
+    const dockBadge = document.getElementById('dock-active-q-badge');
+    if (dockQNum) dockQNum.textContent = `Q#${q.id}`;
+    if (dockQRound) dockQRound.textContent = `Round ${q.level || 1}`;
+    if (dockQPreview) {
+      dockQPreview.textContent = q.question_text;
+      dockQPreview.title = q.question_text;
+    }
+    if (dockBadge) dockBadge.classList.add('has-question');
   }
   
   showNotification(`Question #${q.id} dispatched to presentation screen.`);
@@ -686,11 +1277,109 @@ async function markLifelineUsedOnActiveContestant(lifeline) {
 function syncLiveControls(state) {
   // Sync Screen Buttons
   const welcomeBtn = document.getElementById('screen-welcome-btn');
+  const promoBtn = document.getElementById('screen-promo-btn');
   const quizBtn = document.getElementById('screen-quiz-btn');
-  if (state.active_screen === 'welcome') {
-    welcomeBtn.classList.add('active'); quizBtn.classList.remove('active');
-  } else {
-    welcomeBtn.classList.remove('active'); quizBtn.classList.add('active');
+  const stageBadge = document.getElementById('admin-stage-screen-badge');
+
+  if (welcomeBtn) welcomeBtn.classList.toggle('active', state.active_screen === 'welcome');
+  if (promoBtn) promoBtn.classList.toggle('active', state.active_screen === 'promo');
+  if (quizBtn) quizBtn.classList.toggle('active', state.active_screen === 'quiz');
+
+  if (stageBadge) {
+    const sName = (state.active_screen || 'welcome').toUpperCase();
+    stageBadge.textContent = `STAGE: ${sName}`;
+    stageBadge.className = state.active_screen === 'promo' ? 'badge badge-warning' : (state.active_screen === 'quiz' ? 'badge badge-success' : 'badge badge-primary');
+  }
+
+  // Quick Monitor in Live Game Control tab
+  const quickStageName = document.getElementById('quick-stage-screen-name');
+  if (quickStageName) quickStageName.textContent = (state.active_screen || 'welcome').toUpperCase();
+
+  const isIndependent = state.cast_sync_mode === 'independent';
+  const quickCastName = document.getElementById('quick-cast-screen-name');
+  if (quickCastName) {
+    const castSc = (isIndependent ? (state.cast_screen || 'promo') : (state.active_screen || 'promo')).toUpperCase();
+    quickCastName.textContent = isIndependent ? castSc : `MIRROR (${castSc})`;
+  }
+
+  document.querySelectorAll('.quick-screen-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.quickScreen === state.active_screen);
+  });
+
+  const quickBlackoutBtn = document.getElementById('quick-stage-blackout-btn');
+  if (quickBlackoutBtn) {
+    quickBlackoutBtn.classList.toggle('btn-danger', !!state.stage_blackout);
+    quickBlackoutBtn.classList.toggle('btn-outline', !state.stage_blackout);
+  }
+
+  // Dual Screen Matrix Sync
+  const stageRouteText = document.getElementById('stage-current-route-text');
+  if (stageRouteText) stageRouteText.textContent = (state.active_screen || 'promo').toUpperCase();
+  document.querySelectorAll('.stage-route-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.stageRoute === state.active_screen);
+  });
+
+  const castRouteText = document.getElementById('cast-current-route-text');
+  if (castRouteText) {
+    const curCast = (isIndependent ? (state.cast_screen || 'promo') : (state.active_screen || 'promo')).toUpperCase();
+    castRouteText.textContent = isIndependent ? curCast : `${curCast} (MIRROR)`;
+  }
+  document.querySelectorAll('.cast-route-btn').forEach(btn => {
+    const targetCast = isIndependent ? (state.cast_screen || 'promo') : (state.active_screen || 'promo');
+    btn.classList.toggle('active', btn.dataset.castRoute === targetCast);
+  });
+
+  const syncModeBadge = document.getElementById('sync-mode-status-badge');
+  if (syncModeBadge) {
+    syncModeBadge.textContent = isIndependent ? 'INDEPENDENT SPLIT' : 'LINKED MIRROR';
+    syncModeBadge.className = isIndependent ? 'sync-mode-badge badge badge-warning' : 'sync-mode-badge badge badge-info';
+  }
+  const syncModeBtn = document.getElementById('toggle-cast-sync-mode-btn');
+  const syncBtnText = document.getElementById('sync-mode-btn-text');
+  const syncHint = document.getElementById('sync-mode-hint');
+  if (syncModeBtn) {
+    syncModeBtn.classList.toggle('split-active', isIndependent);
+    syncModeBtn.classList.toggle('mirror-active', !isIndependent);
+    if (syncBtnText) {
+      syncBtnText.textContent = isIndependent ? 'Split (Independent Routing)' : 'Linked (Cast Follows Stage)';
+    }
+    if (syncHint) {
+      syncHint.textContent = isIndependent ? 'Cast is routed independently.' : 'Cast mirrors stage automatically.';
+    }
+  }
+
+  const matrixCastBadge = document.getElementById('matrix-cast-badge');
+  if (matrixCastBadge) {
+    matrixCastBadge.textContent = isIndependent ? 'INDEPENDENT' : 'MIRRORED';
+    matrixCastBadge.className = isIndependent ? 'badge badge-warning' : 'badge badge-info';
+  }
+
+  const stageBlackoutBtn = document.getElementById('stage-blackout-toggle-btn');
+  if (stageBlackoutBtn) {
+    stageBlackoutBtn.classList.toggle('btn-danger', !!state.stage_blackout);
+    stageBlackoutBtn.classList.toggle('btn-outline', !state.stage_blackout);
+  }
+
+  const castBlackoutBtn = document.getElementById('cast-blackout-toggle-btn');
+  if (castBlackoutBtn) {
+    castBlackoutBtn.classList.toggle('btn-danger', !!state.cast_blackout);
+    castBlackoutBtn.classList.toggle('btn-outline', !state.cast_blackout);
+  }
+
+  const castWatermarkBtn = document.getElementById('cast-watermark-toggle-btn');
+  if (castWatermarkBtn) {
+    const showWatermark = state.cast_watermark_visible !== false;
+    castWatermarkBtn.classList.toggle('btn-primary', showWatermark);
+    castWatermarkBtn.classList.toggle('btn-outline', !showWatermark);
+    castWatermarkBtn.innerHTML = showWatermark ? '<i class="fa-solid fa-shield"></i> Bug: On' : '<i class="fa-solid fa-shield-halved"></i> Bug: Off';
+  }
+
+  const castAudioBtn = document.getElementById('cast-audio-toggle-btn');
+  if (castAudioBtn) {
+    const soundOn = !!state.cast_sound_enabled;
+    castAudioBtn.classList.toggle('btn-warning', soundOn);
+    castAudioBtn.classList.toggle('btn-outline', !soundOn);
+    castAudioBtn.innerHTML = soundOn ? '<i class="fa-solid fa-volume-high"></i> Audio: On' : '<i class="fa-solid fa-volume-xmark"></i> Muted';
   }
 
   // Sync Level Buttons
@@ -722,17 +1411,72 @@ function syncLiveControls(state) {
     const idx = currentQuestions.findIndex(q => q.id === state.current_question_id);
     if (idx !== -1) {
       currentQuestionIndex = idx;
-      // Mark presented locally
-      currentQuestions[idx].presented = true;
+      if (state.question) {
+        currentQuestions[idx] = { ...currentQuestions[idx], ...state.question, presented: true };
+      } else {
+        currentQuestions[idx].presented = true;
+      }
       updateLiveQuestionDisplay();
     }
   }
   renderLiveQuestionsList();
 
   if (state.timer_remaining !== undefined) {
-    document.getElementById('live-timer-text').textContent = state.timer_remaining;
-    document.getElementById('timer-duration-input').value = state.timer_remaining;
+    const liveTimer = document.getElementById('live-timer-text');
+    if (liveTimer) liveTimer.textContent = state.timer_remaining;
+    const durInput = document.getElementById('timer-duration-input');
+    if (durInput && document.activeElement !== durInput) durInput.value = state.timer_remaining;
+    updateFlowTimerUI(state.timer_remaining, state.timer_running);
   }
+}
+
+function updateFlowTimerUI(remaining, isRunning) {
+  const display = document.getElementById('flow-timer-display');
+  const badge = document.getElementById('flow-timer-status-badge');
+  const btn = document.getElementById('flow-timer-toggle-btn');
+  const icon = document.getElementById('flow-timer-icon');
+  const text = document.getElementById('flow-timer-btn-text');
+  const flowInput = document.getElementById('flow-timer-duration-input');
+
+  const sec = remaining !== undefined ? parseInt(remaining) : 30;
+
+  if (display) display.textContent = `${sec}s`;
+
+  if (badge) {
+    if (isRunning) {
+      badge.classList.add('running');
+      if (sec <= 5) badge.classList.add('danger');
+      else badge.classList.remove('danger');
+    } else {
+      badge.classList.remove('running', 'danger');
+    }
+  }
+
+  if (btn && icon && text) {
+    if (isRunning) {
+      btn.classList.add('active');
+      icon.className = 'fa-solid fa-pause';
+      text.textContent = 'Pause Timer';
+    } else {
+      btn.classList.remove('active');
+      icon.className = 'fa-solid fa-play';
+      text.textContent = 'Turn On Timer';
+    }
+  }
+
+  if (flowInput && document.activeElement !== flowInput) {
+    flowInput.value = sec;
+  }
+
+  // Highlight active preset chip if matches
+  const presets = document.querySelectorAll('#flow-timer-presets .preset-chip');
+  presets.forEach(p => {
+    if (parseInt(p.dataset.seconds) === sec) {
+      p.classList.add('active');
+    } else {
+      p.classList.remove('active');
+    }
+  });
 }
 
 function toggleButtonState(btnId, isActive) {
@@ -2132,3 +2876,411 @@ function escapeHTML(str) {
     }[tag] || tag)
   );
 }
+
+/* ═══════════════════════════════════════════════════════
+   PROMO & CASTING MANAGEMENT STUDIO LOGIC
+   ═══════════════════════════════════════════════════════ */
+
+let isPromoReelPlaying = false;
+let currentDirectorScene = 'all';
+const directorScenesOrder = ['1', '2', '3', '4', 'all'];
+
+function loadPromoCastTab() {
+  fetch('/api/promo')
+    .then(r => r.ok ? r.json() : null)
+    .then(promo => {
+      if (!promo) return;
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val !== undefined && val !== null) el.value = val;
+      };
+      setVal('pedit-eyebrow', promo.eyebrow_badge || 'SRDB PRESENTS');
+      setVal('pedit-producer', promo.producer_tag || 'FROM THE PRODUCER DC');
+      setVal('pedit-tagline', promo.tagline || 'THE ULTIMATE BATTLE OF MINDS • GRAND TELECAST');
+      setVal('pedit-hashtag', promo.hashtag || '# udan panam');
+
+      setVal('pedit-card1-tag', promo.card1_tag || 'ELIGIBILITY');
+      setVal('pedit-card1-title', promo.card1_title || 'FOR CLASSES 1 TO 10');
+      setVal('pedit-card1-desc', promo.card1_desc || '1 മുതൽ 10 വരെയുള്ള ക്ലാസ്സുകളിലെ മിടുക്കന്മാർക്കായി');
+
+      setVal('pedit-card2-tag', promo.card2_tag || 'CONTESTANT RULE');
+      setVal('pedit-card2-title', promo.card2_title || 'ONE PARTICIPANT PER CLASS');
+      setVal('pedit-card2-desc', promo.card2_desc || 'ഓരോ ക്ലാസ്സിൽ നിന്നും തിരഞ്ഞെടുക്കപ്പെടുന്ന ഒരു പ്രതിഭ വീതം!');
+
+      setVal('pedit-card3-tag', promo.card3_tag || 'STAGE CONDUCTORS');
+      setVal('pedit-card3-chairman', promo.card3_chairman || 'ADHIL S');
+      setVal('pedit-card3-convenor', promo.card3_convenor || 'MUSTHAQEEM MUHAMMED');
+      setVal('pedit-card3-desc', promo.card3_desc || 'നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് & കൺവീനർ മുസ്തഖീം മുഹമ്മദ്');
+
+      setVal('pedit-card4-tag', promo.card4_tag || 'MEGA REWARDS');
+      setVal('pedit-card4-title', promo.card4_title || 'PARTICIPATE & WIN VALUABLE PRIZES!');
+      setVal('pedit-card4-desc', promo.card4_desc || 'പങ്കെടുക്കൂ, ആകർഷകവും അമൂല്യവുമായ സമ്മാനങ്ങൾ നേടൂ!');
+
+      const spSelect = document.getElementById('admin-reel-speed-select');
+      if (spSelect && promo.reel_speed) spSelect.value = String(promo.reel_speed);
+    })
+    .catch(err => console.error('Error loading promo settings:', err));
+
+  // Request latest connected display list
+  socket.emit('cast:get-list');
+}
+
+function updateConnectedDisplaysTable(displays = []) {
+  const tbody = document.getElementById('connected-displays-table-body');
+  const countBadge = document.getElementById('status-displays-count');
+  if (countBadge) countBadge.textContent = displays.length;
+
+  if (!tbody) return;
+  if (!displays || displays.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted" style="padding:1.5rem;">No external displays or casting screens currently detected. Open a casting screen to pair.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = displays.map((disp, i) => {
+    const isCast = disp.type === 'cast';
+    const typeBadge = isCast 
+      ? `<span class="badge badge-info"><i class="fa-solid fa-tv"></i> Cast Display</span>` 
+      : `<span class="badge badge-primary"><i class="fa-solid fa-desktop"></i> Stage Display</span>`;
+    
+    return `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${escapeHTML(disp.name)}</strong></td>
+        <td>${typeBadge}</td>
+        <td><code>${escapeHTML(disp.resolution || 'Auto')}</code></td>
+        <td><code>${escapeHTML(disp.ip || 'Localhost')}</code></td>
+        <td><span class="status-dot green"></span> <small class="text-success font-weight-bold">ONLINE</small></td>
+        <td>
+          <div style="display:flex; gap:4px;">
+            <button class="btn btn-xs btn-outline" onclick="pingDisplay('${disp.socketId}')" title="Ping with Confetti">
+              <i class="fa-solid fa-bell"></i> Ping
+            </button>
+            <button class="btn btn-xs btn-outline" onclick="fullscreenDisplay('${disp.socketId}')" title="Force Fullscreen">
+              <i class="fa-solid fa-expand"></i>
+            </button>
+            <button class="btn btn-xs btn-outline danger" onclick="reloadDisplay('${disp.socketId}')" title="Reload Display">
+              <i class="fa-solid fa-rotate-right"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.pingDisplay = function(socketId) {
+  socket.emit('cast:command', { target: socketId, command: 'ping' });
+  showNotification('Sent ping signal to display');
+};
+
+window.fullscreenDisplay = function(socketId) {
+  socket.emit('cast:command', { target: socketId, command: 'fullscreen' });
+  showNotification('Requested fullscreen on display');
+};
+
+window.reloadDisplay = function(socketId) {
+  socket.emit('cast:command', { target: socketId, command: 'reload' });
+  showNotification('Triggered remote reload on display');
+};
+
+function setupPromoCastListeners() {
+  // ── 1. Studio Header Sub-Navigation Pills ──
+  document.querySelectorAll('.promo-nav-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.promo-nav-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const targetSub = pill.dataset.promoSub;
+      const el = document.getElementById(`subview-${targetSub}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ── 2. Screen 1 (Stage) Route Buttons ──
+  document.querySelectorAll('.stage-route-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.stageRoute;
+      socket.emit('state:update', { active_screen: target });
+      showNotification(`Stage Screen 1 routed to ${target.toUpperCase()}`);
+    });
+  });
+
+  // ── 3. Screen 2 (Cast) Route Buttons ──
+  document.querySelectorAll('.cast-route-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.castRoute;
+      socket.emit('state:update', { cast_sync_mode: 'independent', cast_screen: target });
+      showNotification(`Cast Screen 2 routed to ${target.toUpperCase()} (Independent Split)`);
+    });
+  });
+
+  // ── 4. Sync & Routing Bridge Mode Toggle ──
+  const syncModeToggleBtn = document.getElementById('toggle-cast-sync-mode-btn');
+  if (syncModeToggleBtn) {
+    syncModeToggleBtn.addEventListener('click', () => {
+      const isCurrentlyIndependent = syncModeToggleBtn.classList.contains('split-active');
+      const newMode = isCurrentlyIndependent ? 'mirror' : 'independent';
+      socket.emit('state:update', { cast_sync_mode: newMode });
+      showNotification(newMode === 'independent' ? 'Switched to Independent Dual-Screen Mode' : 'Switched to Linked Mirror Mode');
+    });
+  }
+
+  // Clone Stage to Cast & Swap Screens
+  const cloneBtn = document.getElementById('matrix-clone-stage-to-cast-btn');
+  if (cloneBtn) {
+    cloneBtn.addEventListener('click', () => {
+      const stageScreen = document.getElementById('stage-current-route-text')?.textContent?.toLowerCase() || 'promo';
+      socket.emit('state:update', { cast_sync_mode: 'independent', cast_screen: stageScreen });
+      showNotification(`Cloned Stage screen (${stageScreen.toUpperCase()}) to Cast`);
+    });
+  }
+
+  const swapBtn = document.getElementById('matrix-swap-screens-btn');
+  if (swapBtn) {
+    swapBtn.addEventListener('click', () => {
+      const stageSc = document.getElementById('stage-current-route-text')?.textContent?.toLowerCase() || 'promo';
+      const castSc = document.getElementById('cast-current-route-text')?.textContent?.replace(/\s*\(.*\)/, '').trim().toLowerCase() || 'promo';
+      socket.emit('state:update', { active_screen: castSc, cast_screen: stageSc, cast_sync_mode: 'independent' });
+      showNotification(`Swapped screens: Stage → ${castSc.toUpperCase()}, Cast → ${stageSc.toUpperCase()}`);
+    });
+  }
+
+  // ── 5. Stage Presenter Dock Buttons ──
+  const dockAutoBtn = document.getElementById('stage-dock-autohide-btn');
+  const dockAlwaysBtn = document.getElementById('stage-dock-always-btn');
+  const dockHideBtn = document.getElementById('stage-dock-hide-btn');
+
+  function setDockActiveBtn(activeBtn) {
+    [dockAutoBtn, dockAlwaysBtn, dockHideBtn].forEach(b => b?.classList.remove('active'));
+    activeBtn?.classList.add('active');
+  }
+
+  if (dockAutoBtn) {
+    dockAutoBtn.addEventListener('click', () => {
+      setDockActiveBtn(dockAutoBtn);
+      socket.emit('stage:dock', { visible: true, mode: 'autohide' });
+      showNotification('Stage presenter dock set to Auto-Hide (4.5s idle)');
+    });
+  }
+  if (dockAlwaysBtn) {
+    dockAlwaysBtn.addEventListener('click', () => {
+      setDockActiveBtn(dockAlwaysBtn);
+      socket.emit('stage:dock', { visible: true, mode: 'always' });
+      showNotification('Stage presenter dock locked permanently visible');
+    });
+  }
+  if (dockHideBtn) {
+    dockHideBtn.addEventListener('click', () => {
+      setDockActiveBtn(dockHideBtn);
+      socket.emit('stage:dock', { visible: false, mode: 'hidden' });
+      showNotification('Stage presenter dock hidden');
+    });
+  }
+
+  // ── 6. Stage & Cast Blackout Controls ──
+  let isStageBlackout = false;
+  let isCastBlackout = false;
+
+  function toggleStageBlackoutAction() {
+    isStageBlackout = !isStageBlackout;
+    socket.emit('stage:blackout', { blackout: isStageBlackout });
+    showNotification(isStageBlackout ? 'Stage Blackout Curtain Activated' : 'Stage Blackout Curtain Lifted');
+  }
+
+  document.getElementById('stage-blackout-toggle-btn')?.addEventListener('click', toggleStageBlackoutAction);
+  document.getElementById('quick-stage-blackout-btn')?.addEventListener('click', toggleStageBlackoutAction);
+
+  document.getElementById('cast-blackout-toggle-btn')?.addEventListener('click', () => {
+    isCastBlackout = !isCastBlackout;
+    socket.emit('cast:blackout', { blackout: isCastBlackout });
+    showNotification(isCastBlackout ? 'Cast Blackout Curtain Activated' : 'Cast Blackout Curtain Lifted');
+  });
+
+  // ── 7. Cast Watermark Bug & Audio Mute ──
+  document.getElementById('cast-watermark-toggle-btn')?.addEventListener('click', () => {
+    const isWatermarkOn = document.getElementById('cast-watermark-toggle-btn')?.classList.contains('btn-primary');
+    socket.emit('state:update', { cast_watermark_visible: !isWatermarkOn });
+    showNotification(!isWatermarkOn ? 'Cast On-Air Bug Activated' : 'Cast On-Air Bug Hidden');
+  });
+
+  document.getElementById('cast-audio-toggle-btn')?.addEventListener('click', () => {
+    const isAudioOn = document.getElementById('cast-audio-toggle-btn')?.classList.contains('btn-warning');
+    socket.emit('state:update', { cast_sound_enabled: !isAudioOn });
+    showNotification(!isAudioOn ? 'Cast Audio Enabled (Unmuted)' : 'Cast Audio Muted');
+  });
+
+  // ── 8. Broadcast Lower-Third News Ticker ──
+  const castTickerInput = document.getElementById('cast-ticker-input');
+  document.getElementById('cast-ticker-send-btn')?.addEventListener('click', () => {
+    const txt = castTickerInput?.value?.trim();
+    if (txt) {
+      socket.emit('stage:ticker', { show: true, text: txt });
+      showNotification('Broadcasted lower-third ticker to Cast display');
+    }
+  });
+  document.getElementById('cast-ticker-clear-btn')?.addEventListener('click', () => {
+    socket.emit('stage:ticker', { show: false });
+    showNotification('Cleared lower-third ticker');
+  });
+
+  // Stage Fanfare SFX Blast
+  document.getElementById('stage-fanfare-blast-btn')?.addEventListener('click', () => {
+    socket.emit('promo:sound');
+    showNotification('Broadcast fanfare sound triggered');
+  });
+
+  // ── 9. Quick Screen Buttons in Live Control ──
+  document.querySelectorAll('.quick-screen-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      socket.emit('state:update', { active_screen: btn.dataset.quickScreen });
+      showNotification(`Stage Screen routed to ${btn.dataset.quickScreen.toUpperCase()}`);
+    });
+  });
+
+  document.getElementById('jump-to-promo-cast-btn')?.addEventListener('click', () => {
+    switchTab('promo-cast');
+  });
+
+  // ── 10. Display Window Launchers ──
+  document.getElementById('stage-open-window-btn')?.addEventListener('click', () => {
+    const stageWin = window.open('/', 'UdanPanamStage', 'width=1920,height=1080');
+    if (stageWin) stageWin.focus();
+    showNotification('Stage Presentation window opened');
+  });
+
+  document.getElementById('cast-open-window-btn')?.addEventListener('click', () => {
+    const castWin = window.open('/cast', 'UdanPanamCast', 'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no');
+    if (castWin) castWin.focus();
+    showNotification('Dedicated Casting Display window opened');
+  });
+
+  document.getElementById('cast-copy-url-btn')?.addEventListener('click', () => {
+    const url = `${window.location.origin}/cast`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        showNotification('Casting URL copied to clipboard: ' + url);
+      });
+    } else {
+      prompt('Copy casting URL:', url);
+    }
+  });
+
+  document.getElementById('cast-remote-fullscreen-btn')?.addEventListener('click', () => {
+    socket.emit('cast:command', { target: 'all', command: 'fullscreen' });
+    showNotification('Triggered remote fullscreen on all cast displays');
+  });
+
+  document.getElementById('cast-remote-reload-btn')?.addEventListener('click', () => {
+    if (confirm('Reload all connected cast displays?')) {
+      socket.emit('cast:command', { target: 'all', command: 'reload' });
+      showNotification('Triggered remote reload on all cast displays');
+    }
+  });
+
+  // ── 11. Scene Director Cards ──
+  document.querySelectorAll('[data-director-scene]').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('[data-director-scene]').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      const sc = card.dataset.directorScene;
+      currentDirectorScene = sc;
+      socket.emit('state:update', { active_screen: 'promo' });
+      socket.emit('promo:control', { action: 'scene', scene: sc });
+      showNotification(`Promo Scene ${sc.toUpperCase()} triggered on displays`);
+    });
+  });
+
+  // ── 12. Cinematic Reel Master Controller ──
+  const reelToggleBtn = document.getElementById('admin-reel-toggle-btn');
+  const reelLabel = document.getElementById('admin-reel-btn-label');
+  if (reelToggleBtn) {
+    reelToggleBtn.addEventListener('click', () => {
+      isPromoReelPlaying = !isPromoReelPlaying;
+      socket.emit('state:update', { active_screen: 'promo' });
+      socket.emit('promo:control', { action: isPromoReelPlaying ? 'play' : 'pause' });
+
+      if (reelLabel) reelLabel.textContent = isPromoReelPlaying ? 'Pause Reel' : 'Play Cinematic Reel';
+      const icon = reelToggleBtn.querySelector('i');
+      if (icon) icon.className = isPromoReelPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+      reelToggleBtn.classList.toggle('btn-warning', isPromoReelPlaying);
+      reelToggleBtn.classList.toggle('btn-success', !isPromoReelPlaying);
+      showNotification(isPromoReelPlaying ? 'Cinematic Auto-Reel Started' : 'Cinematic Auto-Reel Paused');
+    });
+  }
+
+  // Prev / Next Scene buttons
+  document.getElementById('admin-reel-prev-btn')?.addEventListener('click', () => {
+    let idx = directorScenesOrder.indexOf(currentDirectorScene);
+    idx = (idx - 1 + directorScenesOrder.length) % directorScenesOrder.length;
+    const nextSc = directorScenesOrder[idx];
+    document.querySelector(`[data-director-scene="${nextSc}"]`)?.click();
+  });
+
+  document.getElementById('admin-reel-next-btn')?.addEventListener('click', () => {
+    let idx = directorScenesOrder.indexOf(currentDirectorScene);
+    idx = (idx + 1) % directorScenesOrder.length;
+    const nextSc = directorScenesOrder[idx];
+    document.querySelector(`[data-director-scene="${nextSc}"]`)?.click();
+  });
+
+  document.getElementById('admin-reel-restart-btn')?.addEventListener('click', () => {
+    socket.emit('promo:control', { action: 'restart' });
+    document.querySelector('[data-director-scene="1"]')?.click();
+    showNotification('Promo Reel restarted from Scene 1');
+  });
+
+  // Reel Speed select
+  document.getElementById('admin-reel-speed-select')?.addEventListener('change', (e) => {
+    const sp = parseInt(e.target.value) || 5500;
+    socket.emit('promo:save-content', { reel_speed: sp });
+    showNotification(`Reel dwell duration set to ${(sp / 1000).toFixed(1)}s`);
+  });
+
+  // ── 13. Cast Displays Master Actions ──
+  document.getElementById('admin-refresh-displays-btn')?.addEventListener('click', () => {
+    socket.emit('cast:get-list');
+    showNotification('Refreshing displays registry...');
+  });
+
+  document.getElementById('admin-broadcast-fullscreen-btn')?.addEventListener('click', () => {
+    socket.emit('cast:command', { target: 'all', command: 'fullscreen' });
+    showNotification('Broadcasted fullscreen command to all displays');
+  });
+
+  document.getElementById('admin-broadcast-reload-btn')?.addEventListener('click', () => {
+    if (confirm('Reload all connected cast and presentation displays?')) {
+      socket.emit('cast:command', { target: 'all', command: 'reload' });
+      showNotification('Broadcasted reload command to all displays');
+    }
+  });
+
+  // ── 14. Save Promo Content Form ──
+  document.getElementById('admin-save-promo-content-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const getVal = id => document.getElementById(id)?.value?.trim() || '';
+    const payload = {
+      eyebrow_badge: getVal('pedit-eyebrow'),
+      producer_tag: getVal('pedit-producer'),
+      tagline: getVal('pedit-tagline'),
+      hashtag: getVal('pedit-hashtag'),
+      card1_tag: getVal('pedit-card1-tag'),
+      card1_title: getVal('pedit-card1-title'),
+      card1_desc: getVal('pedit-card1-desc'),
+      card2_tag: getVal('pedit-card2-tag'),
+      card2_title: getVal('pedit-card2-title'),
+      card2_desc: getVal('pedit-card2-desc'),
+      card3_tag: getVal('pedit-card3-tag'),
+      card3_chairman: getVal('pedit-card3-chairman'),
+      card3_convenor: getVal('pedit-card3-convenor'),
+      card3_desc: getVal('pedit-card3-desc'),
+      card4_tag: getVal('pedit-card4-tag'),
+      card4_title: getVal('pedit-card4-title'),
+      card4_desc: getVal('pedit-card4-desc')
+    };
+
+    socket.emit('promo:save-content', payload);
+    showNotification('Promo Content saved and broadcast to all displays!');
+  });
+}
+

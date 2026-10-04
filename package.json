@@ -4,9 +4,9 @@
   "description": "Interactive live quiz show platform inspired by Udan Panam",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "init-db": "node init-db.js",
+    "start": "node --liftoff-only server.js",
+    "dev": "node --liftoff-only --watch server.js",
+    "init-db": "node --liftoff-only init-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["quiz", "game-show", "live-event"],
@@ -14,6 +14,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@electric-sql/pglite": "^0.2.14",
     "@neondatabase/serverless": "^1.1.0",
     "bcrypt": "^5.1.1",
     "compression": "^1.7.5",

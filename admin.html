@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Udan Panam — Admin Dashboard</title>
+  <title>Udan Panam — Broadcast Control Room</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Anek+Malayalam:wght@500;700&display=swap" rel="stylesheet" />
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <!-- Stylesheet -->
@@ -18,336 +18,734 @@
   <!-- ─── Login Overlay ─── -->
   <div id="login-overlay" class="login-overlay active">
     <div class="login-card">
-      <div class="login-header">
-        <div class="login-logo">🎛️</div>
-        <h2>Udan Panam Control Room</h2>
-        <p>Please enter your access password to continue</p>
+      <div class="login-brand-icon">
+        <i class="fa-solid fa-tower-broadcast"></i>
       </div>
+      <h2>Udan Panam Control Room</h2>
+      <p class="login-subtext">Live Quiz Broadcast & Stage Management Console</p>
       <form id="login-form">
         <div class="form-group">
-          <input type="password" id="login-password" placeholder="Access Password" required />
+          <div class="input-icon-wrapper">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="login-password" placeholder="Access Password (default: 1234)" required />
+          </div>
         </div>
         <div id="login-error" class="login-error"></div>
-        <button type="submit" class="primary-btn full-width">Unlock Dashboard</button>
+        <button type="submit" class="btn btn-primary full-width">
+          <span>Unlock Console</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
       </form>
     </div>
   </div>
 
   <!-- ─── Main Admin Layout ─── -->
   <div id="admin-layout" class="admin-layout" style="display: none;">
-    <!-- Sidebar -->
+    
+    <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <span class="brand-icon"><i class="fa-solid fa-coins"></i></span>
-        <span class="brand-text">Udan Panam v2.0</span>
+        <div class="brand-badge">
+          <i class="fa-solid fa-coins"></i>
+        </div>
+        <div class="brand-info">
+          <span class="brand-title">Udan Panam</span>
+          <span class="brand-version">v2.0 Broadcast</span>
+        </div>
       </div>
+
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-tab="live"><span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span><span class="nav-text">Live Control</span></a>
-        <a href="#" class="nav-item" data-tab="questions"><span class="nav-icon"><i class="fa-solid fa-clipboard-question"></i></span><span class="nav-text">Questions</span></a>
-        <a href="#" class="nav-item" data-tab="contestants"><span class="nav-icon"><i class="fa-solid fa-users"></i></span><span class="nav-text">Contestants</span></a>
-        <a href="#" class="nav-item" data-tab="sessions"><span class="nav-icon"><i class="fa-solid fa-trophy"></i></span><span class="nav-text">Sessions</span></a>
-        <a href="#" class="nav-item" data-tab="studio"><span class="nav-icon"><i class="fa-solid fa-palette"></i></span><span class="nav-text">Studio</span></a>
-        <a href="#" class="nav-item" data-tab="sounds"><span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span><span class="nav-text">Sound Board</span></a>
-        <a href="#" class="nav-item" data-tab="analytics"><span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span><span class="nav-text">Analytics</span></a>
-        <a href="#" class="nav-item" data-tab="preview"><span class="nav-icon"><i class="fa-solid fa-eye"></i></span><span class="nav-text">Preview</span></a>
-        <a href="#" class="nav-item" data-tab="settings"><span class="nav-icon"><i class="fa-solid fa-gears"></i></span><span class="nav-text">Settings</span></a>
+        <div class="nav-section-label">BROADCAST</div>
+        <a href="#" class="nav-item active" data-tab="live">
+          <span class="nav-icon"><i class="fa-solid fa-tower-broadcast"></i></span>
+          <span class="nav-text">Live Control</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="promo-cast">
+          <span class="nav-icon"><i class="fa-solid fa-clapperboard"></i></span>
+          <span class="nav-text">Promo & Casting</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="preview">
+          <span class="nav-icon"><i class="fa-solid fa-desktop"></i></span>
+          <span class="nav-text">Stage Preview</span>
+        </a>
+
+        <div class="nav-section-label">MANAGEMENT</div>
+        <a href="#" class="nav-item" data-tab="questions">
+          <span class="nav-icon"><i class="fa-solid fa-clipboard-question"></i></span>
+          <span class="nav-text">Questions</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="contestants">
+          <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+          <span class="nav-text">Contestants</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="sessions">
+          <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+          <span class="nav-text">Game Sessions</span>
+        </a>
+
+        <div class="nav-section-label">STUDIO & AUDIO</div>
+        <a href="#" class="nav-item" data-tab="studio">
+          <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+          <span class="nav-text">Visual Studio</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="sounds">
+          <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+          <span class="nav-text">Sound Deck</span>
+        </a>
+
+        <div class="nav-section-label">SYSTEM</div>
+        <a href="#" class="nav-item" data-tab="analytics">
+          <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+          <span class="nav-text">Analytics</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="settings">
+          <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+          <span class="nav-text">Settings</span>
+        </a>
       </nav>
+
       <div class="sidebar-footer">
-        <button id="logout-btn" class="ghost-btn full-width"><span class="nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="nav-text">Logout</span></button>
+        <button id="logout-btn" class="btn btn-ghost full-width logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="nav-text">Logout</span>
+        </button>
       </div>
     </aside>
 
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Header -->
+      
+      <!-- Top Application Header -->
       <header class="main-header">
         <div class="header-left">
-          <button id="sidebar-toggle" class="icon-btn"><i class="fa-solid fa-bars"></i></button>
-          <h1 id="page-title">Live Control Room</h1>
-        </div>
-        <div class="header-right">
-          <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Light/Dark Theme"><i class="fa-solid fa-circle-half-stroke"></i></button>
-          <div class="live-indicator">
-            <span class="pulse-dot"></span>
-            <span>LIVE BROADCAST</span>
+          <button id="sidebar-toggle" class="icon-btn" title="Toggle Sidebar">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="header-titles">
+            <h1 id="page-title">Live Broadcast Control</h1>
+            <span class="header-subtitle">Real-time Stage Control & Teleprompter</span>
           </div>
-          <div id="connection-status" class="connection-pill green">Connected</div>
+        </div>
+
+        <div class="header-right">
+          <!-- Direct Links to Displays -->
+          <a href="/" target="_blank" class="stage-link-btn" title="Open Stage Display in new window">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>Stage Screen</span>
+          </a>
+          <a href="/cast" target="_blank" class="stage-link-btn cast-link-btn" title="Open Dedicated Clean Casting Screen">
+            <i class="fa-solid fa-tv"></i>
+            <span>Cast Display</span>
+          </a>
+
+          <!-- Live Broadcast Pulse Indicator -->
+          <div class="broadcast-badge">
+            <span class="pulse-indicator"></span>
+            <span class="broadcast-label">ON AIR</span>
+          </div>
+
+          <!-- Socket Connection Status -->
+          <div id="connection-status" class="connection-badge green">
+            <span class="status-dot"></span>
+            <span class="status-text">Connected</span>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button id="theme-toggle-btn" class="icon-btn" title="Toggle Light/Dark Theme">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+          </button>
         </div>
       </header>
 
-      <!-- Scrollable Tab Content Wrapper -->
+      <!-- Scrollable Tab Content Container -->
       <div class="content-body">
 
-        <!-- 🎮 Live Control Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🎮 TAB 1: LIVE BROADCAST CONTROL            -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-live" class="tab-section active">
-          <div class="grid-layout cols-3">
-            <!-- Col 1: Screen & Level Switches -->
-            <div class="card bg-glass">
-              <h3>Presentation Controls</h3>
-              <div class="form-group margin-top">
-                <label>Screen Select</label>
-                <div class="segmented-control">
-                  <button id="screen-welcome-btn" class="active">Welcome Screen</button>
-                  <button id="screen-quiz-btn">Quiz Screen</button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Level Filter</label>
-                <div class="segmented-control">
-                  <button id="level-1-btn" class="active">L1: Text</button>
-                  <button id="level-2-btn">L2: Image</button>
-                  <button id="level-3-btn">L3: Audio</button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Game Mode</label>
-                <div class="segmented-control">
-                  <button id="mode-single-btn" class="active">Single Player</button>
-                  <button id="mode-team-btn">Team Mode</button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Active Contestant</label>
-                <select id="live-contestant-select" class="form-control">
-                  <option value="">No Active Contestant</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Active Game Session</label>
-                <select id="live-session-select" class="form-control">
-                  <option value="">No Active Session</option>
-                </select>
+          
+          <!-- Master Control HUD Bar -->
+          <div class="master-hud-bar">
+            <!-- Screen Mode Switch -->
+            <div class="hud-group">
+              <span class="hud-label"><i class="fa-solid fa-desktop"></i> Stage Screen</span>
+              <div class="segmented-control">
+                <button id="screen-welcome-btn" class="active">Welcome</button>
+                <button id="screen-promo-btn"><i class="fa-solid fa-film"></i> Promo Show</button>
+                <button id="screen-quiz-btn">Live Quiz</button>
               </div>
             </div>
 
-            <!-- Col 2: Question Controller -->
-            <div class="card bg-glass">
-              <h3>Question Dispatch</h3>
-              <div class="current-question-preview margin-top">
-                <div id="live-question-progress" class="question-number">No Question Active</div>
-                <div id="live-question-text" class="question-text">Use Next/Prev to punch a question onto the screen.</div>
-              </div>
-              <div class="grid-layout cols-2 gap-small margin-top">
-                <button id="prev-question-btn" class="ghost-btn"><i class="fa-solid fa-chevron-left"></i> Previous</button>
-                <button id="next-question-btn" class="primary-btn">Next Question <i class="fa-solid fa-chevron-right"></i></button>
-              </div>
-              <div class="form-group margin-top">
-                <label>Level Questions Quick Select</label>
-                <div id="live-questions-list" class="live-questions-list neumorphic-inset">
-                  <!-- Generated dynamically in JS -->
-                </div>
-              </div>
-              <hr class="divider" />
-              <div class="form-group">
-                <label>Visibility Controls</label>
-                <div class="grid-layout cols-2 gap-small">
-                  <button id="toggle-question-btn" class="toggle-btn active"><i class="fa-solid fa-eye"></i> Show Question</button>
-                  <button id="toggle-options-btn" class="toggle-btn"><i class="fa-solid fa-list-ul"></i> Show Options</button>
-                  <button id="reveal-answer-btn" class="toggle-btn danger-color"><i class="fa-solid fa-key"></i> Reveal Answer</button>
-                  <button id="toggle-explanation-btn" class="toggle-btn"><i class="fa-solid fa-circle-info"></i> Explanation</button>
-                </div>
+            <!-- Level Selector -->
+            <div class="hud-group">
+              <span class="hud-label"><i class="fa-solid fa-layer-group"></i> Active Round</span>
+              <div class="segmented-control">
+                <button id="level-1-btn" class="active">L1: Text</button>
+                <button id="level-2-btn">L2: Image</button>
+                <button id="level-3-btn">L3: Audio</button>
               </div>
             </div>
 
-            <!-- Col 3: Timer & Lifelines & Media -->
-            <div class="card bg-glass">
-              <h3>Timer & Lifelines</h3>
-              <div class="timer-control-panel margin-top">
-                <div class="timer-display-circle">
-                  <span id="live-timer-text">30</span>s
-                </div>
-                <!-- Quick Adjustment Buttons -->
-                <div class="grid-layout cols-4 gap-small margin-top">
-                  <button id="timer-minus-10" class="danger-btn">-10s</button>
-                  <button id="timer-minus-5" class="warning-btn">-5s</button>
-                  <button id="timer-plus-5" class="warning-btn">+5s</button>
-                  <button id="timer-plus-10" class="success-btn">+10s</button>
-                </div>
-                <!-- Set Starting Duration -->
-                <div class="timer-set-duration margin-top" style="margin-bottom: 0.5rem;">
-                  <label for="timer-duration-input" style="font-size: 0.75rem; color: var(--admin-text-muted); display: block; text-align: left;">Set Duration:</label>
-                  <div style="display: flex; gap: 0.5rem; margin-top: 0.2rem;">
-                    <input type="number" id="timer-duration-input" value="30" class="form-control" style="flex: 1; padding: 0.4rem 0.6rem; font-size: 0.85rem;" />
-                    <button id="timer-set-btn" class="primary-btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Set</button>
-                  </div>
-                </div>
-                <div class="grid-layout cols-3 gap-small margin-top">
-                  <button id="timer-start-btn" class="success-btn"><i class="fa-solid fa-play"></i> Start</button>
-                  <button id="timer-pause-btn" class="warning-btn"><i class="fa-solid fa-pause"></i> Pause</button>
-                  <button id="timer-stop-btn" class="ghost-btn"><i class="fa-solid fa-rotate-left"></i> Reset</button>
-                </div>
+            <!-- Game Mode Switch -->
+            <div class="hud-group">
+              <span class="hud-label"><i class="fa-solid fa-gamepad"></i> Game Mode</span>
+              <div class="segmented-control">
+                <button id="mode-single-btn" class="active">Single</button>
+                <button id="mode-team-btn">Team</button>
               </div>
-              <hr class="divider" />
-              <div class="form-group">
-                <label>Contestant Lifelines</label>
-                <div class="grid-layout cols-2 gap-small">
-                  <button id="lifeline-fifty-btn" class="ghost-btn"><i class="fa-solid fa-scale-balanced"></i> 50 : 50</button>
-                  <button id="lifeline-poll-btn" class="ghost-btn"><i class="fa-solid fa-chart-bar"></i> Audience Poll</button>
-                </div>
-              </div>
-              <hr class="divider" />
-              <div class="form-group">
-                <label>Media Controls</label>
-                <div class="grid-layout cols-3 gap-small">
-                  <button id="audio-play-btn" class="ghost-btn"><i class="fa-solid fa-play"></i> Play</button>
-                  <button id="audio-pause-btn" class="ghost-btn"><i class="fa-solid fa-pause"></i> Pause</button>
-                  <button id="audio-stop-btn" class="ghost-btn"><i class="fa-solid fa-stop"></i> Stop</button>
-                </div>
-              </div>
-              <hr class="divider" />
-              <div class="form-group">
-                <label>Celebration Manager</label>
-                <div class="celebration-panel neumorphic-inset">
-                  <div class="grid-layout cols-2 gap-small">
-                    <div>
-                      <label style="font-size: 0.7rem; margin-bottom: 0.2rem;">Timer Status</label>
-                      <div id="celebration-status-text" class="celebration-status-text">IDLE</div>
-                    </div>
-                    <div>
-                      <label style="font-size: 0.7rem; margin-bottom: 0.2rem;">Duration</label>
-                      <select id="celebration-duration-select" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
-                        <option value="5">5s</option>
-                        <option value="10" selected>10s</option>
-                        <option value="20">20s</option>
-                        <option value="30">30s</option>
-                        <option value="0">Continuous</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="grid-layout cols-2 gap-small margin-top">
-                    <button id="celebration-start-btn" class="success-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Start</button>
-                    <button id="celebration-stop-btn" class="danger-btn"><i class="fa-solid fa-stop"></i> Stop</button>
-                  </div>
-                </div>
-              </div>
-              <hr class="divider" />
-              <div class="form-group">
-                <label>Mocking Sound Effects</label>
-                <div class="grid-layout cols-2 gap-small">
-                  <button class="mock-sound-btn ghost-btn" data-sound="laughter"><i class="fa-solid fa-face-laugh-beam"></i> Laughter</button>
-                  <button class="mock-sound-btn ghost-btn" data-sound="booing"><i class="fa-solid fa-thumbs-down"></i> Booing</button>
-                  <button class="mock-sound-btn ghost-btn" data-sound="trombone"><i class="fa-solid fa-face-frown"></i> Sad Trombone</button>
-                  <button class="mock-sound-btn ghost-btn" data-sound="shock"><i class="fa-solid fa-face-surprise"></i> Gasps/Shock</button>
-                </div>
-              </div>
-              <hr class="divider" />
-              <div class="grid-layout cols-1 gap-small">
-                <button id="sound-suspense-btn" class="warning-btn full-width"><i class="fa-solid fa-volume-high"></i> Play Ambient Suspense</button>
-              </div>
+            </div>
+
+            <!-- Session & Contestant Dropdowns -->
+            <div class="hud-group flex-1">
+              <span class="hud-label"><i class="fa-solid fa-user-tag"></i> Active Contestant</span>
+              <select id="live-contestant-select" class="form-control hud-select">
+                <option value="">No Active Contestant</option>
+              </select>
+            </div>
+
+            <div class="hud-group flex-1">
+              <span class="hud-label"><i class="fa-solid fa-calendar-days"></i> Active Session</span>
+              <select id="live-session-select" class="form-control hud-select">
+                <option value="">No Active Session</option>
+              </select>
             </div>
           </div>
+
+          <!-- Main Live Grid: 2 Columns (7 / 5 split) -->
+          <div class="live-grid-layout">
+            
+            <!-- LEFT COLUMN: Live Teleprompter & Question Dispatch -->
+            <div class="live-col-main">
+              
+              <!-- Active Question Teleprompter Card -->
+              <div class="card teleprompter-card">
+                <div class="card-header-clean">
+                  <div class="question-meta-tags">
+                    <span id="live-question-progress" class="badge badge-primary">No Question Active</span>
+                    <span id="live-question-level-badge" class="badge badge-outline">Round 1</span>
+                    <span id="live-question-status-badge" class="badge badge-success">Ready</span>
+                  </div>
+                  <div class="question-nav-controls">
+                    <button id="live-quick-edit-btn" class="btn btn-sm btn-outline btn-live-edit" title="Edit Question & Options Live">
+                      <i class="fa-solid fa-pen-to-square"></i> Quick Edit
+                    </button>
+                    <button id="prev-question-btn" class="btn btn-sm btn-ghost" title="Previous Question (Left Arrow)">
+                      <i class="fa-solid fa-chevron-left"></i> Prev
+                    </button>
+                    <button id="next-question-btn" class="btn btn-sm btn-primary" title="Next Question (Right Arrow / Space)">
+                      Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Big High-Contrast Teleprompter Question Text -->
+                <div class="teleprompter-body" id="live-teleprompter-view">
+                  <h2 id="live-question-text" class="teleprompter-text">
+                    Select a question from the list below or punch Next to start.
+                  </h2>
+                  <div id="live-question-options-preview" class="teleprompter-options-preview"></div>
+                </div>
+
+                <!-- In-Card Live Quick Editor (Toggled via Quick Edit button) -->
+                <div id="live-quick-edit-panel" class="live-quick-edit-panel" style="display: none;">
+                  <div class="quick-edit-header">
+                    <div class="quick-edit-title">
+                      <i class="fa-solid fa-pen-to-square text-cyan"></i>
+                      <span>Quick Edit Question & Options</span>
+                    </div>
+                    <span class="card-hint">Changes save to DB & sync to Stage immediately</span>
+                  </div>
+                  <div class="form-group margin-bottom-sm">
+                    <label class="form-label text-xs">Question Text (Malayalam / English)</label>
+                    <textarea id="live-edit-qtext" class="form-control hud-input font-ml" rows="2" placeholder="Enter question text..."></textarea>
+                  </div>
+                  <div class="form-group margin-bottom-sm">
+                    <label class="form-label text-xs">Options & Right Option (Select radio button for the correct answer)</label>
+                    <div class="live-edit-options-grid">
+                      <div class="live-edit-opt-row" id="edit-row-A">
+                        <label class="live-edit-radio-label" title="Set A as Right Option">
+                          <input type="radio" name="live-edit-correct-radio" value="A" id="live-radio-A">
+                          <span class="opt-badge-letter">A</span>
+                          <span class="radio-correct-label">Correct</span>
+                        </label>
+                        <input type="text" id="live-edit-optA" class="form-control hud-input font-ml" placeholder="Option A text">
+                      </div>
+                      <div class="live-edit-opt-row" id="edit-row-B">
+                        <label class="live-edit-radio-label" title="Set B as Right Option">
+                          <input type="radio" name="live-edit-correct-radio" value="B" id="live-radio-B">
+                          <span class="opt-badge-letter">B</span>
+                          <span class="radio-correct-label">Correct</span>
+                        </label>
+                        <input type="text" id="live-edit-optB" class="form-control hud-input font-ml" placeholder="Option B text">
+                      </div>
+                      <div class="live-edit-opt-row" id="edit-row-C">
+                        <label class="live-edit-radio-label" title="Set C as Right Option">
+                          <input type="radio" name="live-edit-correct-radio" value="C" id="live-radio-C">
+                          <span class="opt-badge-letter">C</span>
+                          <span class="radio-correct-label">Correct</span>
+                        </label>
+                        <input type="text" id="live-edit-optC" class="form-control hud-input font-ml" placeholder="Option C text">
+                      </div>
+                      <div class="live-edit-opt-row" id="edit-row-D">
+                        <label class="live-edit-radio-label" title="Set D as Right Option">
+                          <input type="radio" name="live-edit-correct-radio" value="D" id="live-radio-D">
+                          <span class="opt-badge-letter">D</span>
+                          <span class="radio-correct-label">Correct</span>
+                        </label>
+                        <input type="text" id="live-edit-optD" class="form-control hud-input font-ml" placeholder="Option D text">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group margin-bottom-sm">
+                    <label class="form-label text-xs">Explanation / Note (Optional)</label>
+                    <input type="text" id="live-edit-explanation" class="form-control hud-input font-ml" placeholder="Optional explanation or context...">
+                  </div>
+                  <div class="live-edit-actions">
+                    <button id="live-edit-save-btn" class="btn btn-sm btn-primary">
+                      <i class="fa-solid fa-cloud-arrow-up"></i> Save & Broadcast to Stage
+                    </button>
+                    <button id="live-edit-cancel-btn" class="btn btn-sm btn-ghost">
+                      <i class="fa-solid fa-xmark"></i> Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question Quick Selector Grid -->
+              <div class="card margin-top">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-grip"></i> Round Questions Quick Jump</h3>
+                  <span class="card-hint">Click number to load question</span>
+                </div>
+                <div id="live-questions-list" class="quick-question-grid">
+                  <!-- Dynamically populated numbered buttons in admin.js -->
+                </div>
+              </div>
+
+              <!-- Media Deck (Audio/Video for L2 & L3 questions) -->
+              <div class="card margin-top">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-music"></i> Media Question Player</h3>
+                  <span class="card-hint">For Audio / Video questions</span>
+                </div>
+                <div class="media-deck-controls">
+                  <button id="audio-play-btn" class="btn btn-outline">
+                    <i class="fa-solid fa-play"></i> Play Media
+                  </button>
+                  <button id="audio-pause-btn" class="btn btn-outline">
+                    <i class="fa-solid fa-pause"></i> Pause
+                  </button>
+                  <button id="audio-stop-btn" class="btn btn-outline text-danger">
+                    <i class="fa-solid fa-stop"></i> Stop Media
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Timer, Lifelines, Sounds & Reactions -->
+            <div class="live-col-sidebar">
+              
+              <!-- Broadcast Stage Countdown Timer Deck -->
+              <div class="card timer-deck-card">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-stopwatch"></i> Stage Timer</h3>
+                  <div class="timer-duration-quick-set">
+                    <input type="number" id="timer-duration-input" value="30" min="5" max="300" class="timer-input-mini" />
+                    <button id="timer-set-btn" class="btn btn-xs btn-ghost">Set</button>
+                  </div>
+                </div>
+
+                <!-- Digital Circular Timer Display -->
+                <div class="timer-dial-wrapper">
+                  <div class="timer-dial">
+                    <span id="live-timer-text" class="timer-dial-number">30</span>
+                    <span class="timer-dial-unit">SECONDS</span>
+                  </div>
+                </div>
+
+                <!-- Quick Increment/Decrement Chips -->
+                <div class="timer-quick-adjust-chips">
+                  <button id="timer-minus-10" class="chip-btn danger">-10s</button>
+                  <button id="timer-minus-5" class="chip-btn warning">-5s</button>
+                  <button id="timer-plus-5" class="chip-btn warning">+5s</button>
+                  <button id="timer-plus-10" class="chip-btn success">+10s</button>
+                </div>
+
+                <!-- Primary Timer Actions -->
+                <div class="timer-main-actions">
+                  <button id="timer-start-btn" class="btn btn-success btn-lg flex-1">
+                    <i class="fa-solid fa-play"></i> Start Timer
+                  </button>
+                  <button id="timer-pause-btn" class="btn btn-warning btn-lg flex-1">
+                    <i class="fa-solid fa-pause"></i> Pause
+                  </button>
+                  <button id="timer-stop-btn" class="btn btn-ghost btn-lg" title="Reset Timer">
+                    <i class="fa-solid fa-rotate-left"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Contestant Lifelines Deck -->
+              <div class="card margin-top">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-life-ring"></i> Contestant Lifelines</h3>
+                  <span class="card-hint">One-click trigger</span>
+                </div>
+                <div class="lifelines-grid">
+                  <button id="lifeline-fifty-btn" class="lifeline-card-btn">
+                    <div class="lifeline-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="lifeline-info">
+                      <span class="lifeline-title">50 : 50</span>
+                      <span class="lifeline-sub">Eliminate 2 wrong answers</span>
+                    </div>
+                  </button>
+                  <button id="lifeline-poll-btn" class="lifeline-card-btn">
+                    <div class="lifeline-icon"><i class="fa-solid fa-chart-column"></i></div>
+                    <div class="lifeline-info">
+                      <span class="lifeline-title">Audience Poll</span>
+                      <span class="lifeline-sub">Display audience vote breakdown</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Celebration & Ambient Suspense FX -->
+              <div class="card margin-top">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Stage Effects & Suspense</h3>
+                </div>
+                
+                <!-- Confetti & Celebration -->
+                <div class="fx-panel-box">
+                  <div class="fx-header">
+                    <span>Celebration Confetti:</span>
+                    <span id="celebration-status-text" class="status-pill status-idle">IDLE</span>
+                  </div>
+                  <div class="fx-controls-row">
+                    <select id="celebration-duration-select" class="form-control fx-select">
+                      <option value="5">5 seconds</option>
+                      <option value="10" selected>10 seconds</option>
+                      <option value="20">20 seconds</option>
+                      <option value="30">30 seconds</option>
+                      <option value="0">Continuous</option>
+                    </select>
+                    <button id="celebration-start-btn" class="btn btn-sm btn-success">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Trigger
+                    </button>
+                    <button id="celebration-stop-btn" class="btn btn-sm btn-danger">
+                      <i class="fa-solid fa-stop"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Ambient Suspense Loop & Master Audio Controls -->
+                <div style="display:flex; gap:6px; margin-top:12px;">
+                  <button id="sound-suspense-btn" class="btn btn-warning flex-1">
+                    <i class="fa-solid fa-wave-square"></i> Suspense BGM
+                  </button>
+                  <button id="sound-stop-all-btn" class="btn btn-danger" title="Stop All Playing Audio on Stage">
+                    <i class="fa-solid fa-volume-xmark"></i> Stop All
+                  </button>
+                </div>
+              </div>
+
+              <!-- Udan Panam Broadcast Sound Deck -->
+              <div class="card margin-top">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-sliders"></i> Udan Panam Sound Cues</h3>
+                </div>
+                <div class="sound-reaction-grid">
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="transition" title="Next Question Arrival Chime">
+                    <i class="fa-solid fa-forward-step text-primary"></i>
+                    <span>Next Q Drop</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="options_reveal" title="4-Note Option Reveal Chime">
+                    <i class="fa-solid fa-list-check text-warning"></i>
+                    <span>Reveal Options</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="lock" title="Lock Answer Latch">
+                    <i class="fa-solid fa-lock text-info"></i>
+                    <span>Lock Answer</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="timer" title="Tension Heartbeat & Tick">
+                    <i class="fa-solid fa-stopwatch text-warning"></i>
+                    <span>Timer Pulse</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="correct" title="Victory Brass Fanfare">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <span>Correct Fanfare</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="wrong" title="Dramatic Loss Slide">
+                    <i class="fa-solid fa-circle-xmark text-danger"></i>
+                    <span>Wrong Drop</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="atm_cash" title="ATM Cash Dispenser Flutter & Bell">
+                    <i class="fa-solid fa-money-bill-wave text-success"></i>
+                    <span>ATM Cash 💸</span>
+                  </button>
+                  <button class="broadcast-sound-btn btn btn-ghost" data-sound-category="lifeline" title="Lifeline Hologram Ping">
+                    <i class="fa-solid fa-wand-magic-sparkles text-primary"></i>
+                    <span>Lifeline Ping</span>
+                  </button>
+                </div>
+
+                <div class="card-header-clean margin-top-xs" style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border-subtle);">
+                  <span style="font-size:0.75rem; font-weight:700; color:var(--admin-text-muted); text-transform:uppercase;">Audience Reactions</span>
+                </div>
+                <div class="sound-reaction-grid">
+                  <button class="mock-sound-btn btn btn-ghost" data-sound="laughter">
+                    <i class="fa-solid fa-face-laugh-squint text-warning"></i>
+                    <span>Laughter</span>
+                  </button>
+                  <button class="mock-sound-btn btn btn-ghost" data-sound="booing">
+                    <i class="fa-solid fa-thumbs-down text-danger"></i>
+                    <span>Booing</span>
+                  </button>
+                  <button class="mock-sound-btn btn btn-ghost" data-sound="trombone">
+                    <i class="fa-solid fa-face-frown text-primary"></i>
+                    <span>Sad Trombone</span>
+                  </button>
+                  <button class="mock-sound-btn btn btn-ghost" data-sound="shock">
+                    <i class="fa-solid fa-face-surprise text-success"></i>
+                    <span>Gasps / Shock</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 📡 STAGE & CAST SCREEN OUTPUT MONITOR -->
+              <div class="card margin-top stage-director-card">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-satellite-dish"></i> Screen Output Quick Monitor</h3>
+                  <span id="admin-stage-screen-badge" class="badge badge-primary">STAGE: WELCOME</span>
+                </div>
+
+                <!-- Display Feeds Quick Status Pills -->
+                <div class="output-monitor-pills margin-top-xs" style="display:flex; gap:8px;">
+                  <div class="monitor-pill flex-1" style="background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.25); border-radius:10px; padding:8px 12px;">
+                    <div style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;"><i class="fa-solid fa-desktop"></i> Screen 1 (Stage)</div>
+                    <div style="font-weight:800; font-size:14px; color:#00e5ff; margin-top:2px;" id="quick-stage-screen-name">WELCOME</div>
+                  </div>
+                  <div class="monitor-pill flex-1" style="background:rgba(255,215,0,0.06); border:1px solid rgba(255,215,0,0.25); border-radius:10px; padding:8px 12px;">
+                    <div style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;"><i class="fa-solid fa-tv"></i> Screen 2 (Cast)</div>
+                    <div style="font-weight:800; font-size:14px; color:#ffd700; margin-top:2px;" id="quick-cast-screen-name">MIRROR (WELCOME)</div>
+                  </div>
+                </div>
+
+                <!-- Fast Screen Switcher for Main Stage -->
+                <div class="margin-top-sm">
+                  <label class="director-label" style="font-size:11px; font-weight:700; color:var(--text-secondary); margin-bottom:6px; display:block;"><i class="fa-solid fa-route"></i> Switch Stage Screen</label>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn btn-xs btn-outline quick-screen-btn" data-quick-screen="promo">Promo</button>
+                    <button class="btn btn-xs btn-outline quick-screen-btn" data-quick-screen="welcome">Welcome</button>
+                    <button class="btn btn-xs btn-outline quick-screen-btn" data-quick-screen="quiz">Quiz</button>
+                    <button id="quick-stage-blackout-btn" class="btn btn-xs btn-outline danger" title="Toggle Stage Blackout Curtain">
+                      <i class="fa-solid fa-moon"></i> Blackout
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Studio Deep Jump Button -->
+                <div class="margin-top-sm">
+                  <button id="jump-to-promo-cast-btn" class="btn btn-sm btn-primary full-width" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Open Dual Screen & Promo Studio</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
         </section>
 
-        <!-- 📋 Questions CRUD Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 📋 TAB 2: QUESTIONS MANAGEMENT               -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-questions" class="tab-section">
-          <div class="card bg-glass">
-            <div class="table-header">
-              <div class="table-actions-left">
-                <input type="text" id="question-search-input" placeholder="Search questions..." class="form-control search-input" />
+          <div class="card">
+            
+            <!-- Professional Organized Action Toolbar -->
+            <div class="table-toolbar">
+              <!-- Filters & Search -->
+              <div class="toolbar-left">
+                <div class="search-box">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="question-search-input" placeholder="Search questions, options, tags..." class="form-control" />
+                </div>
+
                 <select id="question-level-filter" class="form-control filter-select">
-                  <option value="">All Levels</option>
-                  <option value="1">Level 1 (Text)</option>
-                  <option value="2">Level 2 (Image)</option>
-                  <option value="3">Level 3 (Audio)</option>
+                  <option value="">All Rounds / Levels</option>
+                  <option value="1">Level 1: Text</option>
+                  <option value="2">Level 2: Image</option>
+                  <option value="3">Level 3: Audio</option>
                 </select>
+
                 <select id="question-presented-filter" class="form-control filter-select">
                   <option value="">All Statuses</option>
-                  <option value="false">Unpresented (Unused)</option>
+                  <option value="false">Unpresented (Fresh)</option>
                   <option value="true">Presented (Used)</option>
                 </select>
               </div>
-              <div class="table-actions-right">
-                <button id="add-question-btn" class="success-btn">+ Add New</button>
-                <button id="import-btn" class="ghost-btn">Import Questions</button>
-                <button id="export-btn" class="ghost-btn">Export JSON</button>
-                <button id="export-excel-btn" class="ghost-btn">Export Excel</button>
-                <button id="template-btn" class="ghost-btn">JSON Template</button>
-                <button id="excel-template-btn" class="ghost-btn">Excel Template</button>
-                <button id="reset-presented-btn" class="warning-btn">Reset Used Status</button>
-                <button id="clear-all-questions-btn" class="danger-btn">Clear All</button>
+
+              <!-- Classified Action Groupings -->
+              <div class="toolbar-right">
+                <button id="add-question-btn" class="btn btn-primary">
+                  <i class="fa-solid fa-plus"></i> New Question
+                </button>
+
+                <!-- Data Import / Export Buttons -->
+                <div class="btn-group">
+                  <button id="import-btn" class="btn btn-outline" title="Import JSON or Excel questions">
+                    <i class="fa-solid fa-file-import"></i> Import
+                  </button>
+                  <button id="export-btn" class="btn btn-outline" title="Export as JSON">
+                    <i class="fa-solid fa-file-code"></i> JSON
+                  </button>
+                  <button id="export-excel-btn" class="btn btn-outline" title="Export as Excel">
+                    <i class="fa-solid fa-file-excel"></i> Excel
+                  </button>
+                </div>
+
+                <!-- Template Download Dropdown/Group -->
+                <div class="btn-group">
+                  <button id="template-btn" class="btn btn-ghost btn-sm" title="Download sample JSON template">
+                    JSON Template
+                  </button>
+                  <button id="excel-template-btn" class="btn btn-ghost btn-sm" title="Download sample Excel template">
+                    Excel Template
+                  </button>
+                </div>
+
+                <!-- Destructive/Batch Actions -->
+                <div class="btn-group">
+                  <button id="reset-presented-btn" class="btn btn-warning btn-sm" title="Mark all questions as unpresented">
+                    Reset Used
+                  </button>
+                  <button id="clear-all-questions-btn" class="btn btn-danger btn-sm" title="Delete all questions">
+                    Clear All
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="table-wrapper">
-              <table id="questions-table">
+
+            <!-- Questions Table -->
+            <div class="table-responsive">
+              <table id="questions-table" class="data-table">
                 <thead>
                   <tr>
-                    <th>Sort</th>
-                    <th>ID</th>
-                    <th>Level</th>
+                    <th width="60">Sort</th>
+                    <th width="60">ID</th>
+                    <th width="100">Level</th>
                     <th>Question Text</th>
-                    <th>Category</th>
-                    <th>Points</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th width="140">Category</th>
+                    <th width="80">Points</th>
+                    <th width="100">Status</th>
+                    <th width="120" class="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="questions-table-body">
-                  <!-- JS generated rows -->
+                  <!-- Generated dynamically in admin.js -->
                 </tbody>
               </table>
             </div>
-            <div class="pagination" id="questions-pagination">
-              <!-- JS generated controls -->
+
+            <!-- Table Pagination -->
+            <div class="pagination-bar" id="questions-pagination">
+              <!-- Generated dynamically in admin.js -->
             </div>
+
           </div>
         </section>
 
-        <!-- 👥 Contestants Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 👥 TAB 3: CONTESTANTS MANAGEMENT            -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-contestants" class="tab-section">
-          <div class="grid-layout cols-3">
-            <div class="card bg-glass col-span-1">
-              <h3>Add Contestant</h3>
+          <div class="split-layout">
+            
+            <!-- Left: Add Contestant Form -->
+            <div class="card split-sidebar">
+              <h3 class="card-title"><i class="fa-solid fa-user-plus"></i> Register Contestant</h3>
+              <p class="card-description">Create contestant profiles and assign them to an active game session.</p>
+              
               <form id="add-contestant-form" class="margin-top">
                 <div class="form-group">
-                  <label>Name</label>
-                  <input type="text" id="contestant-name-input" placeholder="Contestant Name" class="form-control" required />
+                  <label>Contestant Name</label>
+                  <input type="text" id="contestant-name-input" placeholder="Full Name or Team Name" class="form-control" required />
                 </div>
+
                 <div class="form-group">
-                  <label>Avatar Color</label>
-                  <div class="color-picker-group">
+                  <label>Avatar / Stage Color</label>
+                  <div class="color-picker-box">
                     <input type="color" id="contestant-color-picker" value="#00e5ff" />
                     <input type="text" id="contestant-color-text" value="#00e5ff" class="form-control" />
                   </div>
                 </div>
+
                 <div class="form-group">
-                  <label>Select Session</label>
+                  <label>Assign to Game Session</label>
                   <select id="contestant-session-select" class="form-control" required>
                     <option value="">Select a Game Session</option>
                   </select>
                 </div>
-                <button type="submit" class="success-btn full-width margin-top">Create Contestant</button>
+
+                <button type="submit" class="btn btn-primary full-width margin-top">
+                  <i class="fa-solid fa-plus"></i> Add Contestant
+                </button>
               </form>
             </div>
-            <div class="col-span-2">
-              <div class="grid-layout cols-2 gap-medium" id="contestants-grid">
-                <!-- JS generated contestant cards -->
+
+            <!-- Right: Contestants Grid Cards -->
+            <div class="split-content">
+              <div class="card">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-users"></i> Registered Contestants</h3>
+                  <span class="card-hint">Adjust scores and manage status</span>
+                </div>
+                <div class="contestants-cards-grid" id="contestants-grid">
+                  <!-- Dynamically populated in admin.js -->
+                </div>
               </div>
             </div>
+
           </div>
         </section>
 
-        <!-- 🏆 Game Sessions Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🏆 TAB 4: GAME SESSIONS                      -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-sessions" class="tab-section">
-          <div class="grid-layout cols-3">
-            <div class="card bg-glass col-span-1">
-              <h3>Create Game Session</h3>
+          <div class="split-layout">
+            
+            <!-- Left: Create Session Form -->
+            <div class="card split-sidebar">
+              <h3 class="card-title"><i class="fa-solid fa-calendar-plus"></i> Create Game Session</h3>
+              <p class="card-description">Configure rounds, default timers, and scoring rules for a match.</p>
+
               <form id="create-session-form" class="margin-top">
                 <div class="form-group">
-                  <label>Session Name</label>
-                  <input type="text" id="session-name-input" placeholder="e.g. College Union Quiz Round 1" class="form-control" required />
+                  <label>Session Title</label>
+                  <input type="text" id="session-name-input" placeholder="e.g. College Union Quiz - Final" class="form-control" required />
                 </div>
+
                 <div class="form-group">
                   <label>Scoring Mode</label>
                   <select id="session-scoring-select" class="form-control">
-                    <option value="fixed">Fixed Points (10 pts)</option>
-                    <option value="speed_bonus">Speed Bonus (Fast Response)</option>
-                    <option value="streak">Streak multiplier</option>
+                    <option value="fixed">Fixed Points (10 pts per question)</option>
+                    <option value="speed_bonus">Speed Bonus (Fast answer bonus)</option>
+                    <option value="streak">Streak Multiplier</option>
                   </select>
                 </div>
+
                 <div class="form-group">
                   <label>Default Timer (seconds)</label>
                   <input type="number" id="session-timer-input" value="30" class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label>Game Mode</label>
                   <select id="session-mode-select" class="form-control">
@@ -355,246 +753,779 @@
                     <option value="team">Team Mode (Group score)</option>
                   </select>
                 </div>
+
                 <div class="form-group">
-                  <label>Notes</label>
-                  <textarea id="session-notes-input" placeholder="Optional notes..." class="form-control"></textarea>
+                  <label>Session Notes</label>
+                  <textarea id="session-notes-input" placeholder="Optional notes about audience or prizes..." class="form-control" rows="3"></textarea>
                 </div>
-                <button type="submit" class="success-btn full-width margin-top">Create Session</button>
+
+                <button type="submit" class="btn btn-primary full-width margin-top">
+                  <i class="fa-solid fa-plus"></i> Create Session
+                </button>
               </form>
             </div>
-            <div class="col-span-2">
-              <div class="grid-layout cols-2 gap-medium" id="sessions-grid">
-                <!-- JS generated session cards -->
+
+            <!-- Right: Sessions Grid -->
+            <div class="split-content">
+              <div class="card">
+                <div class="card-header-clean">
+                  <h3 class="card-title"><i class="fa-solid fa-trophy"></i> Active & Past Sessions</h3>
+                  <span class="card-hint">Switch active session or update status</span>
+                </div>
+                <div class="sessions-cards-grid" id="sessions-grid">
+                  <!-- Dynamically populated in admin.js -->
+                </div>
               </div>
             </div>
+
           </div>
         </section>
 
-        <!-- 🎨 Studio Theming Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🎨 TAB 5: VISUAL STUDIO & THEMING           -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-studio" class="tab-section">
-          <div class="card bg-glass">
-            <h3>Visual Theme Editor</h3>
-            <form id="studio-settings-form" class="margin-top grid-layout cols-2">
+          <div class="card">
+            <div class="card-header-clean">
               <div>
+                <h3 class="card-title"><i class="fa-solid fa-palette"></i> Stage Visual Studio & Branding</h3>
+                <p class="card-description">Customize broadcast colors, fonts, logo, and transition animations in real time.</p>
+              </div>
+            </div>
+
+            <form id="studio-settings-form" class="studio-form-grid margin-top">
+              
+              <!-- Column 1: Palette & Glow Colors -->
+              <div class="form-column">
+                <h4 class="form-section-title"><i class="fa-solid fa-swatchbook"></i> Color Theme</h4>
+
                 <div class="form-group">
                   <label>Theme Preset</label>
                   <select id="theme-preset-select" class="form-control">
-                    <option value="emerald-gold" selected>Emerald Gold (Deep Green/Gold)</option>
-                    <option value="ruby-rose">Ruby Rose (Deep Red/Rose)</option>
-                    <option value="sapphire-glow">Sapphire Glow (Dark Blue/Cyan)</option>
-                    <option value="amethyst-spark">Amethyst Spark (Deep Purple/Pink)</option>
-                    <option value="neon-night">Neon Night (Dark Cyan/Gold)</option>
-                    <option value="sunset-blaze">Sunset Blaze (Dark Red/Gold)</option>
-                    <option value="ocean-deep">Ocean Deep (Dark Blue/Teal)</option>
-                    <option value="retro-arcade">Retro Arcade (Purple/Green)</option>
-                    <option value="cyberpunk">Cyberpunk (Neon Pink/Cyan)</option>
-                    <option value="forest-mint">Forest Mint (Emerald/Green)</option>
-                    <option value="royal-gold">Royal Gold (Purple/Gold)</option>
+                    <option value="emerald-gold" selected>Emerald Gold (Deep Green / Gold)</option>
+                    <option value="ruby-rose">Ruby Rose (Deep Red / Rose)</option>
+                    <option value="sapphire-glow">Sapphire Glow (Dark Blue / Cyan)</option>
+                    <option value="amethyst-spark">Amethyst Spark (Deep Purple / Pink)</option>
+                    <option value="neon-night">Neon Night (Dark Cyan / Gold)</option>
+                    <option value="sunset-blaze">Sunset Blaze (Dark Red / Gold)</option>
+                    <option value="ocean-deep">Ocean Deep (Dark Blue / Teal)</option>
+                    <option value="retro-arcade">Retro Arcade (Purple / Green)</option>
+                    <option value="cyberpunk">Cyberpunk (Neon Pink / Cyan)</option>
+                    <option value="royal-gold">Royal Gold (Purple / Gold)</option>
                     <option value="pure-dark">Pure Dark (High-Contrast Black)</option>
-                    <option value="minimal-white">Minimal White (Light Gray/Black)</option>
-                    <option value="pure-light">Pure Light (High-Contrast White)</option>
                     <option value="custom">Custom Configuration</option>
                   </select>
                 </div>
+
                 <div class="form-group">
                   <label>Primary Glow Color</label>
-                  <div class="color-picker-group">
-                    <input type="color" id="theme-primary-picker" value="#00e5ff" />
-                    <input type="text" id="theme-primary-text" value="#00e5ff" class="form-control" />
+                  <div class="color-picker-box">
+                    <input type="color" id="theme-primary-picker" value="#10b981" />
+                    <input type="text" id="theme-primary-text" value="#10b981" class="form-control" />
                   </div>
                 </div>
+
                 <div class="form-group">
-                  <label>Secondary Glow Color</label>
-                  <div class="color-picker-group">
-                    <input type="color" id="theme-secondary-picker" value="#ffd700" />
-                    <input type="text" id="theme-secondary-text" value="#ffd700" class="form-control" />
+                  <label>Secondary Accent Color</label>
+                  <div class="color-picker-box">
+                    <input type="color" id="theme-secondary-picker" value="#fbbf24" />
+                    <input type="text" id="theme-secondary-text" value="#fbbf24" class="form-control" />
                   </div>
                 </div>
+
                 <div class="form-group">
-                  <label>Background Dark Color</label>
-                  <div class="color-picker-group">
-                    <input type="color" id="theme-bg-picker" value="#070B19" />
-                    <input type="text" id="theme-bg-text" value="#070B19" class="form-control" />
+                  <label>Background Dark Tone</label>
+                  <div class="color-picker-box">
+                    <input type="color" id="theme-bg-picker" value="#022c22" />
+                    <input type="text" id="theme-bg-text" value="#022c22" class="form-control" />
                   </div>
                 </div>
+
                 <div class="form-group">
-                  <label>Card Background Color</label>
-                  <input type="text" id="theme-card-text" value="rgba(16, 24, 45, 0.8)" class="form-control" />
+                  <label>Card Background Glass CSS</label>
+                  <input type="text" id="theme-card-text" value="rgba(6, 78, 59, 0.85)" class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label>Text Primary Color</label>
-                  <div class="color-picker-group">
+                  <div class="color-picker-box">
                     <input type="color" id="theme-text-primary-picker" value="#ffffff" />
                     <input type="text" id="theme-text-primary-text" value="#ffffff" class="form-control" />
                   </div>
                 </div>
+
                 <div class="form-group">
-                  <label>Text Secondary Color</label>
+                  <label>Text Secondary CSS</label>
                   <input type="text" id="theme-text-secondary-text" value="rgba(255, 255, 255, 0.7)" class="form-control" />
                 </div>
               </div>
 
-              <div>
+              <!-- Column 2: Branding & Stage Media -->
+              <div class="form-column">
+                <h4 class="form-section-title"><i class="fa-solid fa-photo-film"></i> Stage Titles & Branding</h4>
+
                 <div class="form-group">
                   <label>Welcome Screen Title</label>
-                  <input type="text" id="theme-welcome-title" placeholder="Welcome" class="form-control" />
+                  <input type="text" id="theme-welcome-title" placeholder="ഉഡൻ പണം" class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label>Welcome Screen Subtitle</label>
-                  <input type="text" id="theme-welcome-subtitle" placeholder="Subtitle" class="form-control" />
+                  <input type="text" id="theme-welcome-subtitle" placeholder="The Ultimate Battle of Minds" class="form-control" />
                 </div>
+
                 <div class="form-group">
-                  <label>Font Family</label>
+                  <label>Primary Typography</label>
                   <select id="theme-font-select" class="form-control">
-                    <option value="'Anek Malayalam', sans-serif">Anek Malayalam</option>
+                    <option value="'Anek Malayalam', sans-serif">Anek Malayalam (Recommended)</option>
                     <option value="'Inter', sans-serif">Inter</option>
                     <option value="'Outfit', sans-serif">Outfit</option>
                     <option value="'Roboto', sans-serif">Roboto</option>
                   </select>
                 </div>
+
                 <div class="form-group">
                   <label>Logo Image URL</label>
                   <input type="text" id="theme-logo-url" placeholder="https://..." class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label>Background Video URL</label>
                   <input type="text" id="theme-bg-video-url" placeholder="https://..." class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label>Background Image URL</label>
                   <input type="text" id="theme-bg-image-url" placeholder="https://..." class="form-control" />
                 </div>
               </div>
 
-              <div class="col-span-2 grid-layout cols-3 margin-top">
-                <div class="form-group">
-                  <label>Transition Effect</label>
-                  <div class="radio-group">
-                    <label><input type="radio" name="transition-style" value="fade" checked /> Fade</label>
-                    <label><input type="radio" name="transition-style" value="slide" /> Slide</label>
-                    <label><input type="radio" name="transition-style" value="zoom" /> Zoom</label>
-                    <label><input type="radio" name="transition-style" value="flip" /> Flip</label>
+              <!-- Column 3: Transition & Motion Rules -->
+              <div class="form-column full-span">
+                <h4 class="form-section-title"><i class="fa-solid fa-film"></i> Stage Transitions & Animations</h4>
+
+                <div class="transitions-grid">
+                  <div class="form-group">
+                    <label>Transition Effect</label>
+                    <div class="segmented-control">
+                      <label class="radio-label"><input type="radio" name="transition-style" value="fade" checked /> Fade</label>
+                      <label class="radio-label"><input type="radio" name="transition-style" value="slide" /> Slide</label>
+                      <label class="radio-label"><input type="radio" name="transition-style" value="zoom" /> Zoom</label>
+                      <label class="radio-label"><input type="radio" name="transition-style" value="flip" /> Flip</label>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Option Reveal Mode</label>
+                    <div class="segmented-control">
+                      <label class="radio-label"><input type="radio" name="reveal-style" value="all" /> All at Once</label>
+                      <label class="radio-label"><input type="radio" name="reveal-style" value="staggered" checked /> Staggered</label>
+                      <label class="radio-label"><input type="radio" name="reveal-style" value="onebyone" /> One by One</label>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Stage Switches</label>
+                    <div class="toggle-group-clean">
+                      <label class="switch-item">
+                        <input type="checkbox" id="theme-animations-toggle" checked />
+                        <span>Particle Animations Active</span>
+                      </label>
+                      <label class="switch-item">
+                        <input type="checkbox" id="theme-lang-toggle" />
+                        <span>Malayalam UI Labels</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label>Option Reveal Mode</label>
-                  <div class="radio-group">
-                    <label><input type="radio" name="reveal-style" value="all" /> All At Once</label>
-                    <label><input type="radio" name="reveal-style" value="staggered" checked /> Staggered</label>
-                    <label><input type="radio" name="reveal-style" value="onebyone" /> One by One</label>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Control Toggles</label>
-                  <div class="toggle-container">
-                    <label class="switch-label">
-                      <input type="checkbox" id="theme-animations-toggle" checked />
-                      <span class="switch-slider"></span>
-                      Animations Active
-                    </label>
-                  </div>
-                  <div class="toggle-container margin-top">
-                    <label class="switch-label">
-                      <input type="checkbox" id="theme-lang-toggle" />
-                      <span class="switch-slider"></span>
-                      Malayalam UI labels
-                    </label>
-                  </div>
-                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg full-width margin-top">
+                  <i class="fa-solid fa-check"></i> Save & Apply Studio Settings
+                </button>
               </div>
 
-              <button type="submit" class="success-btn col-span-2 margin-top">Save & Apply Settings</button>
             </form>
           </div>
         </section>
 
-        <!-- 🔊 Sound Board Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🔊 TAB 6: SOUND DECK & BGM                  -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-sounds" class="tab-section">
-          <div class="card bg-glass">
-            <h3>Sound Effects Configuration</h3>
-            <div class="grid-layout cols-2 gap-medium margin-top" id="sounds-list-container">
-              <!-- JS generated sound effects configurations -->
+          <div class="card">
+            <div class="card-header-clean">
+              <div>
+                <h3 class="card-title"><i class="fa-solid fa-sliders"></i> Sound Deck & Audio FX</h3>
+                <p class="card-description">Configure audio URLs, preview playback, and assign audio cues.</p>
+              </div>
             </div>
-            <hr class="divider" />
-            <h3>Background Music Controls</h3>
-            <div class="form-group margin-top grid-layout cols-3">
-              <input type="text" id="bg-music-url-input" placeholder="Background Music URL" class="form-control" />
-              <button id="bg-music-test-btn" class="ghost-btn"><i class="fa-solid fa-play"></i> Play Music</button>
-              <button id="bg-music-save-btn" class="success-btn">Save URL</button>
+
+            <!-- Background Music URL Setting -->
+            <div class="bg-music-box margin-top">
+              <label class="form-label-bold"><i class="fa-solid fa-music"></i> Stage Background Music (Ambient Loop)</label>
+              <div class="bg-music-input-row">
+                <input type="text" id="bg-music-url-input" placeholder="Enter BGM audio stream or file URL (https://...)" class="form-control" />
+                <button id="bg-music-test-btn" class="btn btn-outline">
+                  <i class="fa-solid fa-play"></i> Test Play
+                </button>
+                <button id="bg-music-save-btn" class="btn btn-primary">
+                  <i class="fa-solid fa-floppy-disk"></i> Save URL
+                </button>
+              </div>
+            </div>
+
+            <!-- Sound Effects Grid -->
+            <h4 class="form-section-title margin-top"><i class="fa-solid fa-volume-high"></i> Registered Sound Effects</h4>
+            <div class="sounds-cards-grid margin-top" id="sounds-list-container">
+              <!-- Dynamically populated in admin.js -->
             </div>
           </div>
         </section>
 
-        <!-- 📊 Analytics Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 📊 TAB 7: ANALYTICS & INSIGHTS              -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-analytics" class="tab-section">
-          <div class="grid-layout cols-5 margin-bottom">
-            <div class="card bg-glass stat-card">
-              <span class="stat-icon"><i class="fa-solid fa-trophy"></i></span>
-              <div class="stat-num" id="stat-sessions">0</div>
-              <div class="stat-label">Total Sessions</div>
+          
+          <!-- Key Performance Indicators KPI -->
+          <div class="kpi-grid">
+            <div class="card kpi-card">
+              <div class="kpi-icon"><i class="fa-solid fa-trophy"></i></div>
+              <div class="kpi-content">
+                <span class="kpi-num" id="stat-sessions">0</span>
+                <span class="kpi-label">Total Sessions</span>
+              </div>
             </div>
-            <div class="card bg-glass stat-card">
-              <span class="stat-icon"><i class="fa-solid fa-clipboard-question"></i></span>
-              <div class="stat-num" id="stat-questions">0</div>
-              <div class="stat-label">Total Questions</div>
+
+            <div class="card kpi-card">
+              <div class="kpi-icon"><i class="fa-solid fa-clipboard-question"></i></div>
+              <div class="kpi-content">
+                <span class="kpi-num" id="stat-questions">0</span>
+                <span class="kpi-label">Total Questions</span>
+              </div>
             </div>
-            <div class="card bg-glass stat-card">
-              <span class="stat-icon"><i class="fa-solid fa-check-to-slot"></i></span>
-              <div class="stat-num" id="stat-answers">0</div>
-              <div class="stat-label">Answers Logged</div>
+
+            <div class="card kpi-card">
+              <div class="kpi-icon"><i class="fa-solid fa-check-to-slot"></i></div>
+              <div class="kpi-content">
+                <span class="kpi-num" id="stat-answers">0</span>
+                <span class="kpi-label">Answers Logged</span>
+              </div>
             </div>
-            <div class="card bg-glass stat-card">
-              <span class="stat-icon"><i class="fa-solid fa-bullseye"></i></span>
-              <div class="stat-num" id="stat-accuracy">0%</div>
-              <div class="stat-label">Overall Accuracy</div>
+
+            <div class="card kpi-card">
+              <div class="kpi-icon"><i class="fa-solid fa-bullseye"></i></div>
+              <div class="kpi-content">
+                <span class="kpi-num" id="stat-accuracy">0%</span>
+                <span class="kpi-label">Overall Accuracy</span>
+              </div>
             </div>
-            <div class="card bg-glass stat-card">
-              <span class="stat-icon"><i class="fa-solid fa-users"></i></span>
-              <div class="stat-num" id="stat-contestants">0</div>
-              <div class="stat-label">Total Contestants</div>
+
+            <div class="card kpi-card">
+              <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="kpi-content">
+                <span class="kpi-num" id="stat-contestants">0</span>
+                <span class="kpi-label">Total Contestants</span>
+              </div>
             </div>
           </div>
-          <div class="card bg-glass">
-            <h3>Question Difficulty Analytics</h3>
-            <div class="table-wrapper margin-top">
-              <table>
+
+          <!-- Question Difficulty Analysis Table -->
+          <div class="card margin-top">
+            <div class="card-header-clean">
+              <h3 class="card-title"><i class="fa-solid fa-chart-line"></i> Question Difficulty Analysis</h3>
+              <span class="card-hint">Based on contestant response accuracy and speed</span>
+            </div>
+            <div class="table-responsive margin-top">
+              <table class="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th width="60">ID</th>
                     <th>Question Text</th>
-                    <th>Level</th>
-                    <th>Times Asked</th>
-                    <th>Accuracy</th>
-                    <th>Avg Time (ms)</th>
+                    <th width="100">Level</th>
+                    <th width="120">Times Asked</th>
+                    <th width="120">Accuracy</th>
+                    <th width="140">Avg Time (ms)</th>
                   </tr>
                 </thead>
                 <tbody id="difficulty-table-body">
-                  <!-- JS generated analytics rows -->
+                  <!-- Dynamically populated in admin.js -->
                 </tbody>
               </table>
             </div>
           </div>
+
         </section>
 
-        <!-- 👁 Preview Tab -->
-        <section id="tab-preview" class="tab-section">
-          <div class="card bg-glass">
-            <div class="table-header">
-              <h3>Live Screen Broadcast Simulator</h3>
-              <button id="preview-refresh-btn" class="ghost-btn"><i class="fa-solid fa-rotate"></i> Refresh Feed</button>
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🎬 TAB: DUAL SCREEN & PROMO STUDIO           -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section id="tab-promo-cast" class="tab-section">
+          
+          <!-- Studio Header Sub-Navigation Pills -->
+          <div class="promo-sub-nav">
+            <button class="promo-nav-pill active" data-promo-sub="matrix">
+              <i class="fa-solid fa-table-columns"></i> Dual Screen Matrix
+            </button>
+            <button class="promo-nav-pill" data-promo-sub="scenes">
+              <i class="fa-solid fa-clapperboard"></i> 3D Scene Director
+            </button>
+            <button class="promo-nav-pill" data-promo-sub="content">
+              <i class="fa-solid fa-pen-to-square"></i> Branding & Content
+            </button>
+            <button class="promo-nav-pill" data-promo-sub="displays">
+              <i class="fa-solid fa-network-wired"></i> Connected Screens (<span id="promo-sub-count">0</span>)
+            </button>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════ -->
+          <!-- SUB-VIEW 1: DUAL-SCREEN BROADCAST MATRIX      -->
+          <!-- ═══════════════════════════════════════════════ -->
+          <div id="subview-matrix" class="promo-subview-panel">
+            <div class="dual-matrix-container">
+              
+              <!-- SCREEN 1: PRIMARY STAGE DISPLAY (/) -->
+              <div class="matrix-channel-card matrix-channel-card--stage">
+                <div class="channel-card-header">
+                  <div class="channel-title-wrap">
+                    <h3><i class="fa-solid fa-desktop text-primary"></i> Screen 1: Primary Stage</h3>
+                    <p>Main Stage LED Wall / Contestant & Presenter Screen (<code>/</code>)</p>
+                  </div>
+                  <span id="matrix-stage-badge" class="badge badge-primary">ACTIVE</span>
+                </div>
+
+                <!-- Current Route Monitor -->
+                <div class="channel-route-preview">
+                  <span class="route-label">Current Route:</span>
+                  <span class="route-current-value text-primary" id="stage-current-route-text">PROMO SHOW</span>
+                </div>
+
+                <!-- Screen Route Selector -->
+                <label class="form-label-xs" style="margin-bottom:6px;"><i class="fa-solid fa-route"></i> Stage Screen Source</label>
+                <div class="channel-route-btns">
+                  <button class="route-btn active stage-route-btn" data-stage-route="promo">
+                    <i class="fa-solid fa-film"></i> Promo
+                  </button>
+                  <button class="route-btn stage-route-btn" data-stage-route="welcome">
+                    <i class="fa-solid fa-door-open"></i> Welcome
+                  </button>
+                  <button class="route-btn stage-route-btn" data-stage-route="quiz">
+                    <i class="fa-solid fa-bolt"></i> Live Quiz
+                  </button>
+                </div>
+
+                <!-- Stage-Specific Controls & Tooling -->
+                <div class="channel-tools-group">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="card-hint" style="font-size:11px; font-weight:700;"><i class="fa-solid fa-window-maximize"></i> Presenter Dock:</span>
+                    <div style="display:flex; gap:4px;">
+                      <button id="stage-dock-autohide-btn" class="btn btn-xs btn-outline active" title="Dock auto-hides after 4.5s idle">Auto-Hide</button>
+                      <button id="stage-dock-always-btn" class="btn btn-xs btn-outline" title="Keep dock permanently visible">Visible</button>
+                      <button id="stage-dock-hide-btn" class="btn btn-xs btn-outline" title="Hide dock completely">Hidden</button>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:6px; margin-top:4px;">
+                    <button id="stage-blackout-toggle-btn" class="btn btn-sm btn-outline danger flex-1">
+                      <i class="fa-solid fa-moon"></i> Stage Blackout
+                    </button>
+                    <button id="stage-fanfare-blast-btn" class="btn btn-sm btn-warning" title="Play Fanfare Sound on Stage">
+                      <i class="fa-solid fa-volume-high"></i> Fanfare
+                    </button>
+                  </div>
+
+                  <div style="margin-top:4px;">
+                    <button id="stage-open-window-btn" class="btn btn-sm btn-outline full-width">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Stage Display (<code>/</code>)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SYNC & ROUTING BRIDGE (CENTER COLUMN) -->
+              <div class="matrix-bridge-column">
+                <div class="sync-mode-toggle-box">
+                  <span class="sync-mode-badge badge badge-info" id="sync-mode-status-badge">LINKED MIRROR</span>
+                  <button id="toggle-cast-sync-mode-btn" class="sync-mode-btn mirror-active">
+                    <i class="fa-solid fa-link"></i> <span id="sync-mode-btn-text">Linked (Cast Follows Stage)</span>
+                  </button>
+                  <p class="card-description" id="sync-mode-hint" style="font-size:11px; margin:0; line-height:1.2;">
+                    Cast mirrors stage automatically.
+                  </p>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; width:100%;">
+                  <button id="matrix-clone-stage-to-cast-btn" class="btn btn-xs btn-outline full-width" title="Set Cast Screen to match Stage Screen">
+                    <i class="fa-solid fa-copy"></i> Clone to Cast
+                  </button>
+                  <button id="matrix-swap-screens-btn" class="btn btn-xs btn-ghost full-width" title="Swap active screens between Stage and Cast">
+                    <i class="fa-solid fa-right-left"></i> Swap Screens
+                  </button>
+                </div>
+              </div>
+
+              <!-- SCREEN 2: AUDIENCE & CAST DISPLAY (/cast) -->
+              <div class="matrix-channel-card matrix-channel-card--cast">
+                <div class="channel-card-header">
+                  <div class="channel-title-wrap">
+                    <h3><i class="fa-solid fa-tv text-gold"></i> Screen 2: Cast Display</h3>
+                    <p>Audience TV / Projector / Secondary Feed (<code>/cast</code>)</p>
+                  </div>
+                  <span id="matrix-cast-badge" class="badge badge-warning">MIRRORED</span>
+                </div>
+
+                <!-- Current Route Monitor -->
+                <div class="channel-route-preview">
+                  <span class="route-label">Current Route:</span>
+                  <span class="route-current-value text-gold" id="cast-current-route-text">PROMO REEL (MIRROR)</span>
+                </div>
+
+                <!-- Screen Route Selector -->
+                <label class="form-label-xs" style="margin-bottom:6px;"><i class="fa-solid fa-route"></i> Cast Screen Source</label>
+                <div class="channel-route-btns">
+                  <button class="route-btn active cast-route-btn" data-cast-route="promo">
+                    <i class="fa-solid fa-film"></i> Promo
+                  </button>
+                  <button class="route-btn cast-route-btn" data-cast-route="welcome">
+                    <i class="fa-solid fa-door-open"></i> Welcome
+                  </button>
+                  <button class="route-btn cast-route-btn" data-cast-route="quiz">
+                    <i class="fa-solid fa-bolt"></i> Live Quiz
+                  </button>
+                </div>
+
+                <!-- Cast-Specific Controls & Tooling -->
+                <div class="channel-tools-group">
+                  <!-- Broadcast Lower-Third News Ticker -->
+                  <div>
+                    <label class="form-label-xs"><i class="fa-solid fa-bullhorn"></i> Lower-Third Announcement Ticker</label>
+                    <div style="display:flex; gap:6px; margin-top:2px;">
+                      <input type="text" id="cast-ticker-input" class="form-control form-control-sm" placeholder="Message on cast screen..." value="SRDB presents Udan Panam 3.0 • Grand Episode • From Producer DC" style="flex:1;" />
+                      <button id="cast-ticker-send-btn" class="btn btn-sm btn-primary" title="Broadcast Ticker on Cast Display">
+                        <i class="fa-solid fa-paper-plane"></i>
+                      </button>
+                      <button id="cast-ticker-clear-btn" class="btn btn-sm btn-ghost" title="Clear/Hide Ticker">
+                        <i class="fa-solid fa-eye-slash"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Toggles for Bug, Sound, Blackout -->
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                    <button id="cast-watermark-toggle-btn" class="btn btn-xs btn-outline flex-1" title="Toggle On-Air Logo Bug on Cast">
+                      <i class="fa-solid fa-shield"></i> On-Air Bug
+                    </button>
+                    <button id="cast-audio-toggle-btn" class="btn btn-xs btn-outline flex-1" title="Toggle Audio on Cast (Default Muted to prevent echo)">
+                      <i class="fa-solid fa-volume-xmark"></i> Muted
+                    </button>
+                    <button id="cast-blackout-toggle-btn" class="btn btn-xs btn-outline danger flex-1" title="Independently blank the cast screen">
+                      <i class="fa-solid fa-moon"></i> Blackout
+                    </button>
+                  </div>
+
+                  <!-- Quick Actions for Cast Displays -->
+                  <div style="display:flex; gap:6px; margin-top:4px;">
+                    <button id="cast-open-window-btn" class="btn btn-sm btn-primary flex-1">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Cast Feed
+                    </button>
+                    <button id="cast-copy-url-btn" class="btn btn-sm btn-outline" title="Copy Casting URL">
+                      <i class="fa-solid fa-copy"></i> Copy Link
+                    </button>
+                    <button id="cast-remote-fullscreen-btn" class="btn btn-sm btn-outline" title="Trigger Fullscreen on all Cast Displays">
+                      <i class="fa-solid fa-expand"></i>
+                    </button>
+                    <button id="cast-remote-reload-btn" class="btn btn-sm btn-outline danger" title="Reload all Cast Displays">
+                      <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
-            <div class="preview-iframe-container margin-top">
-              <iframe id="preview-iframe" src="/"></iframe>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════ -->
+          <!-- SUB-VIEW 2: 3D PROMO SCENE DIRECTOR & REEL    -->
+          <!-- ═══════════════════════════════════════════════ -->
+          <div id="subview-scenes" class="promo-subview-panel margin-top">
+            <div class="card">
+              <div class="card-header-clean">
+                <div>
+                  <h3 class="card-title"><i class="fa-solid fa-clapperboard text-warning"></i> Cinematic 3D Scene Director</h3>
+                  <p class="card-description">Trigger specific storyboard chapters or run the autonomous auto-pilot reel with animated timeline progress.</p>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button id="admin-reel-toggle-btn" class="btn btn-sm btn-success">
+                    <i class="fa-solid fa-play"></i> <span id="admin-reel-btn-label">Play Cinematic Reel</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Interactive 5-Scene Director Cards -->
+              <div class="scene-director-cards-grid margin-top">
+                <div class="scene-card active" data-director-scene="all">
+                  <div class="scene-card-badge">SCENE 0</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-table-cells-large"></i></div>
+                  <h4 class="scene-card-title">Full Overview</h4>
+                  <p class="scene-card-desc">All broadcast cards in balanced studio harmony</p>
+                </div>
+
+                <div class="scene-card" data-director-scene="1">
+                  <div class="scene-card-badge">SCENE 1</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-crown"></i></div>
+                  <h4 class="scene-card-title">Identity & Logo Reveal</h4>
+                  <p class="scene-card-desc">Spotlight on 3D Udan Panam 3.0 centerpiece</p>
+                </div>
+
+                <div class="scene-card" data-director-scene="2">
+                  <div class="scene-card-badge">SCENE 2</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                  <h4 class="scene-card-title">Eligibility & Rules</h4>
+                  <p class="scene-card-desc">Classes 1 to 10 & 1 participant per class</p>
+                </div>
+
+                <div class="scene-card" data-director-scene="3">
+                  <div class="scene-card-badge">SCENE 3</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-user-tie"></i></div>
+                  <h4 class="scene-card-title">Stage Leadership</h4>
+                  <p class="scene-card-desc">Chairman Adhil S & Convenor Musthaqeem</p>
+                </div>
+
+                <div class="scene-card" data-director-scene="4">
+                  <div class="scene-card-badge">SCENE 4</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-trophy"></i></div>
+                  <h4 class="scene-card-title">Mega Rewards Climax</h4>
+                  <p class="scene-card-desc">Valuable prizes announcement with gold aura</p>
+                </div>
+              </div>
+
+              <!-- Reel Speed & Navigation Bar -->
+              <div class="director-toolbar margin-top-md" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="card-hint"><i class="fa-solid fa-gauge-high"></i> Reel Dwell Time:</span>
+                  <select id="admin-reel-speed-select" class="form-control form-control-sm" style="width:140px;">
+                    <option value="3500">3.5 Seconds</option>
+                    <option value="4500">4.5 Seconds</option>
+                    <option value="5500" selected>5.5 Seconds (Default)</option>
+                    <option value="7000">7.0 Seconds</option>
+                    <option value="9000">9.0 Seconds</option>
+                  </select>
+                </div>
+
+                <div style="display:flex; gap:6px;">
+                  <button id="admin-reel-prev-btn" class="btn btn-xs btn-outline" title="Previous Scene">
+                    <i class="fa-solid fa-backward-step"></i> Prev
+                  </button>
+                  <button id="admin-reel-next-btn" class="btn btn-xs btn-outline" title="Next Scene">
+                    Next <i class="fa-solid fa-forward-step"></i>
+                  </button>
+                  <button id="admin-reel-restart-btn" class="btn btn-xs btn-ghost" title="Restart from Scene 1">
+                    <i class="fa-solid fa-rotate-left"></i> Restart
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════ -->
+          <!-- SUB-VIEW 3: PROMO CONTENT & BRANDING STUDIO   -->
+          <!-- ═══════════════════════════════════════════════ -->
+          <div id="subview-content" class="promo-subview-panel margin-top">
+            <div class="card">
+              <div class="card-header-clean">
+                <div>
+                  <h3 class="card-title"><i class="fa-solid fa-pen-to-square text-primary"></i> Dynamic Promo Branding & Content Studio</h3>
+                  <p class="card-description">Classified brand content cards. Changes save to the database and broadcast instantly to all displays.</p>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button id="admin-save-promo-content-btn" class="btn btn-sm btn-success">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Save & Broadcast to All Displays
+                  </button>
+                </div>
+              </div>
+
+              <!-- Classified 4-Card Form Grid -->
+              <form id="promo-content-form" class="margin-top">
+                <div class="classified-content-grid">
+                  
+                  <!-- Cluster A: Identity & Credits -->
+                  <div class="content-cluster-card">
+                    <div class="content-cluster-header text-primary">
+                      <i class="fa-solid fa-crown"></i>
+                      <span>Card A: Brand Identity & Show Credits</span>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Eyebrow Badge</label>
+                      <input type="text" id="pedit-eyebrow" class="form-control form-control-sm" value="SRDB PRESENTS" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Producer Credit</label>
+                      <input type="text" id="pedit-producer" class="form-control form-control-sm" value="FROM THE PRODUCER DC" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Broadcast Tagline</label>
+                      <input type="text" id="pedit-tagline" class="form-control form-control-sm" value="THE ULTIMATE BATTLE OF MINDS • GRAND TELECAST" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Show Hashtag</label>
+                      <input type="text" id="pedit-hashtag" class="form-control form-control-sm" value="# udan panam" />
+                    </div>
+                  </div>
+
+                  <!-- Cluster B: Eligibility & Participants -->
+                  <div class="content-cluster-card">
+                    <div class="content-cluster-header text-info">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      <span>Card B: Contestant Eligibility & Structure</span>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Card 1 Tag / Headline</label>
+                      <input type="text" id="pedit-card1-tag" class="form-control form-control-sm" value="ELIGIBILITY" style="margin-bottom:4px;" />
+                      <input type="text" id="pedit-card1-title" class="form-control form-control-sm" value="FOR CLASSES 1 TO 10" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Card 1 Malayalam Text</label>
+                      <textarea id="pedit-card1-desc" class="form-control form-control-sm" rows="2">1 മുതൽ 10 വരെയുള്ള ക്ലാസ്സുകളിലെ മിടുക്കന്മാർക്കായി</textarea>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Card 2 Tag / Headline</label>
+                      <input type="text" id="pedit-card2-tag" class="form-control form-control-sm" value="CONTESTANT RULE" style="margin-bottom:4px;" />
+                      <input type="text" id="pedit-card2-title" class="form-control form-control-sm" value="ONE PARTICIPANT PER CLASS" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Card 2 Malayalam Text</label>
+                      <textarea id="pedit-card2-desc" class="form-control form-control-sm" rows="2">ഓരോ ക്ലാസ്സിൽ നിന്നും തിരഞ്ഞെടുക്കപ്പെടുന്ന ഒരു പ്രതിഭ വീതം!</textarea>
+                    </div>
+                  </div>
+
+                  <!-- Cluster C: Stage Leadership -->
+                  <div class="content-cluster-card">
+                    <div class="content-cluster-header text-warning">
+                      <i class="fa-solid fa-user-tie"></i>
+                      <span>Card C: Stage Leadership & Direction</span>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Section Tag</label>
+                      <input type="text" id="pedit-card3-tag" class="form-control form-control-sm" value="STAGE CONDUCTORS" />
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                      <div class="form-group">
+                        <label class="form-label-xs">Chairman Name</label>
+                        <input type="text" id="pedit-card3-chairman" class="form-control form-control-sm" value="ADHIL S" />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label-xs">Convenor Name</label>
+                        <input type="text" id="pedit-card3-convenor" class="form-control form-control-sm" value="MUSTHAQEEM MUHAMMED" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Malayalam Description</label>
+                      <textarea id="pedit-card3-desc" class="form-control form-control-sm" rows="2">നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് &amp; കൺവീനർ മുസ്തഖീം മുഹമ്മദ്</textarea>
+                    </div>
+                  </div>
+
+                  <!-- Cluster D: Rewards & Climax -->
+                  <div class="content-cluster-card">
+                    <div class="content-cluster-header text-gold">
+                      <i class="fa-solid fa-trophy"></i>
+                      <span>Card D: Mega Rewards & Prizes</span>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Section Tag</label>
+                      <input type="text" id="pedit-card4-tag" class="form-control form-control-sm" value="MEGA REWARDS" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Prize Headline</label>
+                      <input type="text" id="pedit-card4-title" class="form-control form-control-sm" value="PARTICIPATE &amp; WIN VALUABLE PRIZES!" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label-xs">Malayalam Text</label>
+                      <textarea id="pedit-card4-desc" class="form-control form-control-sm" rows="2">പങ്കെടുക്കൂ, ആകർഷകവും അമൂല്യവുമായ സമ്മാനങ്ങൾ നേടൂ!</textarea>
+                    </div>
+                  </div>
+
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════ -->
+          <!-- SUB-VIEW 4: CONNECTED DISPLAYS INVENTORY      -->
+          <!-- ═══════════════════════════════════════════════ -->
+          <div id="subview-displays" class="promo-subview-panel margin-top">
+            <div class="card">
+              <div class="card-header-clean">
+                <div>
+                  <h3 class="card-title"><i class="fa-solid fa-network-wired text-info"></i> Connected Display Screens & Cast Telemetry</h3>
+                  <p class="card-description">Live inventory of projector feeds, external TVs, and second screens currently paired with the broadcast server.</p>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button id="admin-refresh-displays-btn" class="btn btn-xs btn-outline">
+                    <i class="fa-solid fa-rotate"></i> Refresh List
+                  </button>
+                  <button id="admin-broadcast-fullscreen-btn" class="btn btn-xs btn-primary">
+                    <i class="fa-solid fa-expand"></i> Force All Fullscreen
+                  </button>
+                  <button id="admin-broadcast-reload-btn" class="btn btn-xs btn-outline danger">
+                    <i class="fa-solid fa-rotate-right"></i> Reload All Casts
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive margin-top-xs">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th width="40">#</th>
+                      <th>Screen / Display Name</th>
+                      <th width="120">Type</th>
+                      <th width="140">Resolution</th>
+                      <th width="160">Client IP</th>
+                      <th width="120">Status</th>
+                      <th width="200">Remote Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="connected-displays-table-body">
+                    <tr>
+                      <td colspan="7" class="text-center text-muted" style="padding:1.5rem;">Scanning connected casting displays...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 👁 TAB 8: LIVE STAGE PREVIEW SIMULATOR       -->
+        <!-- ═══════════════════════════════════════════ -->
+        <section id="tab-preview" class="tab-section">
+          <div class="card">
+            <div class="card-header-clean">
+              <div>
+                <h3 class="card-title"><i class="fa-solid fa-desktop"></i> Live Stage Broadcast Simulator</h3>
+                <p class="card-description">Live mirrored feedback of the audience projection screen.</p>
+              </div>
+              <button id="preview-refresh-btn" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-rotate"></i> Refresh Feed
+              </button>
+            </div>
+            <div class="preview-iframe-wrapper margin-top">
+              <iframe id="preview-iframe" src="/" title="Live Stage Display"></iframe>
             </div>
           </div>
         </section>
 
-        <!-- ⚙️ Settings Tab -->
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- ⚙️ TAB 9: SETTINGS & BACKUPS                 -->
+        <!-- ═══════════════════════════════════════════ -->
         <section id="tab-settings" class="tab-section">
-          <div class="grid-layout cols-2">
-            <!-- Password & Defaults -->
-            <div class="card bg-glass">
-              <h3>Dashboard Security</h3>
+          <div class="split-layout">
+            
+            <!-- Security & App Defaults -->
+            <div class="card split-sidebar">
+              <h3 class="card-title"><i class="fa-solid fa-shield-halved"></i> Access Security</h3>
               <form id="change-password-form" class="margin-top">
                 <div class="form-group">
                   <label>Current Password</label>
@@ -608,12 +1539,15 @@
                   <label>Confirm New Password</label>
                   <input type="password" id="confirm-password-input" class="form-control" required />
                 </div>
-                <button type="submit" class="success-btn full-width margin-top">Change Password</button>
+                <button type="submit" class="btn btn-primary full-width margin-top">
+                  Change Password
+                </button>
               </form>
 
               <hr class="divider" />
-              <h3>App Defaults</h3>
-              <form id="admin-settings-form">
+
+              <h3 class="card-title"><i class="fa-solid fa-sliders"></i> Default Game Rules</h3>
+              <form id="admin-settings-form" class="margin-top">
                 <div class="form-group">
                   <label>Default Timer Duration (seconds)</label>
                   <input type="number" id="default-timer-input" value="30" class="form-control" />
@@ -621,191 +1555,321 @@
                 <div class="form-group">
                   <label>Default Scoring Mode</label>
                   <select id="default-scoring-select" class="form-control">
-                    <option value="fixed">Fixed</option>
+                    <option value="fixed">Fixed Points (10 pts)</option>
                     <option value="speed_bonus">Speed Bonus</option>
-                    <option value="streak">Streak</option>
+                    <option value="streak">Streak Multiplier</option>
                   </select>
                 </div>
-                <button type="submit" class="success-btn full-width margin-top">Save Defaults</button>
+                <button type="submit" class="btn btn-outline full-width margin-top">
+                  Save Defaults
+                </button>
               </form>
             </div>
 
-            <!-- Backup & Keyboard -->
-            <div class="card bg-glass">
-              <h3>Data Management</h3>
-              <div class="margin-top">
-                <p class="description">Download a comprehensive JSON archive containing all questions, contestants, sessions, answer logs, sound effects, and configurations.</p>
-                <button id="backup-download-btn" class="primary-btn full-width margin-top"><i class="fa-solid fa-download"></i> Download DB Backup</button>
-              </div>
-              <div class="margin-top">
-                <p class="description">Restore database states or import bulk settings from a valid Udan Panam v2.0 JSON backup file.</p>
-                <div class="file-upload-group margin-top">
-                  <input type="file" id="backup-upload-input" accept=".json" style="display: none;" />
-                  <button id="backup-upload-btn" class="ghost-btn full-width"><i class="fa-solid fa-upload"></i> Upload DB Backup</button>
+            <!-- Backup & Keyboard Shortcuts -->
+            <div class="split-content">
+              <div class="card">
+                <h3 class="card-title"><i class="fa-solid fa-database"></i> Database Snapshot & Backups</h3>
+                <p class="card-description">Export or restore a complete snapshot of all questions, contestants, sessions, logs, and settings.</p>
+
+                <div class="backup-actions-grid margin-top">
+                  <button id="backup-download-btn" class="btn btn-primary">
+                    <i class="fa-solid fa-download"></i> Download Full Database Backup (JSON)
+                  </button>
+
+                  <div class="file-upload-wrapper">
+                    <input type="file" id="backup-upload-input" accept=".json" style="display: none;" />
+                    <button id="backup-upload-btn" class="btn btn-outline full-width">
+                      <i class="fa-solid fa-upload"></i> Restore / Upload Backup (JSON)
+                    </button>
+                  </div>
                 </div>
-              </div>
-              
-              <hr class="divider" />
-              <h3>Keyboard Shortcuts Reference</h3>
-              <div class="table-wrapper margin-top">
-                <table class="shortcuts-table">
-                  <thead>
-                    <tr>
-                      <th>Key</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td><kbd>Space</kbd></td><td>Next Question / Dispatch Question</td></tr>
-                    <tr><td><kbd>R</kbd></td><td>Reveal Correct Answer</td></tr>
-                    <tr><td><kbd>T</kbd></td><td>Toggle Timer Start / Pause</td></tr>
-                    <tr><td><kbd>O</kbd></td><td>Toggle Options Visibility</td></tr>
-                    <tr><td><kbd>Q</kbd></td><td>Toggle Question Visibility</td></tr>
-                    <tr><td><kbd>E</kbd></td><td>Toggle Explanation Visibility</td></tr>
-                    <tr><td><kbd>Escape</kbd></td><td>Force Switch to Welcome Screen</td></tr>
-                  </tbody>
-                </table>
+
+                <hr class="divider" />
+
+                <h3 class="card-title"><i class="fa-solid fa-keyboard"></i> Operator Keyboard Shortcuts</h3>
+                <p class="card-description">Control the live broadcast rapidly without touching your mouse:</p>
+
+                <div class="table-responsive margin-top">
+                  <table class="data-table shortcuts-table">
+                    <thead>
+                      <tr>
+                        <th width="140">Key</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td><kbd>Space</kbd></td><td>Next Question / Dispatch Active Question</td></tr>
+                      <tr><td><kbd>T</kbd></td><td>Toggle Timer Start / Pause</td></tr>
+                      <tr><td><kbd>R</kbd></td><td>Reveal Correct Answer</td></tr>
+                      <tr><td><kbd>O</kbd></td><td>Toggle Options Visibility</td></tr>
+                      <tr><td><kbd>Q</kbd></td><td>Toggle Question Text Visibility</td></tr>
+                      <tr><td><kbd>E</kbd></td><td>Toggle Explanation Visibility</td></tr>
+                      <tr><td><kbd>Escape</kbd></td><td>Emergency Reset / Switch to Welcome Screen</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
               </div>
             </div>
+
           </div>
         </section>
 
       </div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- 🔒 PERSISTED & FREEZED SCREEN CONTROL DOCK -->
+      <!-- ═══════════════════════════════════════════ -->
+      <footer id="admin-screen-control-dock" class="admin-screen-control-dock" aria-label="Persisted Screen Control Deck">
+        <div class="dock-inner">
+          
+          <!-- Left: Active Question Meta & Preview -->
+          <div class="dock-meta-col">
+            <div class="dock-meta-badge" id="dock-active-q-badge">
+              <span class="dock-q-num" id="dock-q-num">Q1</span>
+              <span class="dock-q-round" id="dock-q-round">Round 1</span>
+            </div>
+            <div class="dock-q-preview" id="dock-q-preview" title="Active Question on Stage">
+              Select a question from the list to start.
+            </div>
+          </div>
+
+          <!-- Center: 5-Step Broadcast Action Bar -->
+          <div class="dock-flow-col">
+            <div class="flow-actions-grid flow-actions-5">
+              <button id="toggle-question-btn" class="btn-flow active" title="Push/Hide question on stage (Q)">
+                <span class="flow-num">1</span>
+                <i class="fa-solid fa-eye"></i>
+                <span>Show Question</span>
+              </button>
+              <button id="toggle-options-btn" class="btn-flow" title="Show/Hide options (O)">
+                <span class="flow-num">2</span>
+                <i class="fa-solid fa-list-check"></i>
+                <span>Show Options</span>
+              </button>
+              <button id="flow-timer-toggle-btn" class="btn-flow btn-flow-timer" title="Turn ON / Pause Timer on stage (T)">
+                <span class="flow-num">3</span>
+                <i class="fa-solid fa-play" id="flow-timer-icon"></i>
+                <span id="flow-timer-btn-text">Turn On Timer</span>
+              </button>
+              <button id="reveal-answer-btn" class="btn-flow btn-flow-reveal" title="Reveal correct answer (R)">
+                <span class="flow-num">4</span>
+                <i class="fa-solid fa-key"></i>
+                <span>Reveal Answer</span>
+              </button>
+              <button id="toggle-explanation-btn" class="btn-flow" title="Show/Hide explanation (E)">
+                <span class="flow-num">5</span>
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Explanation</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Quick Timer Duration Adjuster & Live Badge -->
+          <div class="dock-timer-col">
+            <div class="dock-timer-badge-wrap">
+              <div class="control-bar-timer-badge" id="flow-timer-status-badge">
+                <span class="timer-dot"></span>
+                <span id="flow-timer-display">30s</span>
+              </div>
+            </div>
+
+            <!-- Quick Duration Presets & Nudges -->
+            <div class="dock-timer-tools">
+              <div class="preset-duration-chips" id="flow-timer-presets">
+                <button type="button" class="preset-chip" data-seconds="15">15s</button>
+                <button type="button" class="preset-chip active" data-seconds="30">30s</button>
+                <button type="button" class="preset-chip" data-seconds="45">45s</button>
+                <button type="button" class="preset-chip" data-seconds="60">60s</button>
+              </div>
+
+              <div class="stepper-adjust-chips">
+                <button type="button" id="flow-timer-minus-5" class="adjust-chip danger" title="Decrease 5s">-5s</button>
+                <button type="button" id="flow-timer-plus-5" class="adjust-chip success" title="Increase 5s">+5s</button>
+              </div>
+
+              <div class="direct-duration-setter">
+                <input type="number" id="flow-timer-duration-input" value="30" min="5" max="300" class="flow-timer-input" title="Custom duration (seconds)" />
+                <button type="button" id="flow-timer-set-btn" class="btn-chip-set" title="Set Duration">Set</button>
+                <button type="button" id="flow-timer-reset-btn" class="btn-chip-reset" title="Reset / Stop Timer"><i class="fa-solid fa-rotate-left"></i></button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </footer>
     </main>
+
   </div>
 
-  <!-- ─── Add/Edit Question Modal ─── -->
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 📝 MODAL: ADD / EDIT QUESTION               -->
+  <!-- ═══════════════════════════════════════════ -->
   <div id="question-modal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" id="close-question-modal">&times;</span>
-      <h2 id="modal-title">Add New Question</h2>
-      <form id="question-form" class="margin-top">
-        <input type="hidden" id="form-question-id" />
-        <div class="grid-layout cols-2">
-          <div>
-            <div class="form-group">
-              <label>Level</label>
-              <select id="form-level" class="form-control">
-                <option value="1">Level 1 (Text only)</option>
-                <option value="2">Level 2 (Image questions)</option>
-                <option value="3">Level 3 (Audio/Video questions)</option>
-              </select>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="modal-title">Add New Question</h2>
+        <button class="modal-close-btn" id="close-question-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="question-form">
+          <input type="hidden" id="form-question-id" />
+          
+          <div class="modal-form-grid">
+            <!-- Left Side: Question Details -->
+            <div class="form-column">
+              <div class="form-group">
+                <label>Round / Level</label>
+                <select id="form-level" class="form-control">
+                  <option value="1">Level 1 (Text only)</option>
+                  <option value="2">Level 2 (Image questions)</option>
+                  <option value="3">Level 3 (Audio/Video questions)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Question Text (Malayalam / English)</label>
+                <textarea id="form-question-text" class="form-control" rows="3" placeholder="Enter question..." required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Category (Topic)</label>
+                <input type="text" id="form-category" placeholder="General Knowledge" class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label>Image URL (Optional)</label>
+                <input type="text" id="form-image-url" placeholder="https://..." class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label>Audio URL (Optional)</label>
+                <input type="text" id="form-audio-url" placeholder="https://..." class="form-control" />
+              </div>
+
+              <div class="form-group">
+                <label>Video URL (Optional)</label>
+                <input type="text" id="form-video-url" placeholder="https://..." class="form-control" />
+              </div>
             </div>
-            <div class="form-group">
-              <label>Question Text (Malayalam/English)</label>
-              <textarea id="form-question-text" class="form-control" rows="3" required></textarea>
-            </div>
-            <div class="form-group">
-              <label>Audio URL (Optional)</label>
-              <input type="text" id="form-audio-url" placeholder="https://..." class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Image URL (Optional)</label>
-              <input type="text" id="form-image-url" placeholder="https://..." class="form-control" />
-            </div>
-            <div class="form-group">
-              <label>Video URL (Optional)</label>
-              <input type="text" id="form-video-url" placeholder="https://..." class="form-control" />
+
+            <!-- Right Side: 4 Options & Correct Answer -->
+            <div class="form-column">
+              <div class="form-group">
+                <label>Option A</label>
+                <input type="text" id="form-option-a" class="form-control" required />
+              </div>
+
+              <div class="form-group">
+                <label>Option B</label>
+                <input type="text" id="form-option-b" class="form-control" required />
+              </div>
+
+              <div class="form-group">
+                <label>Option C</label>
+                <input type="text" id="form-option-c" class="form-control" required />
+              </div>
+
+              <div class="form-group">
+                <label>Option D</label>
+                <input type="text" id="form-option-d" class="form-control" required />
+              </div>
+
+              <div class="form-group">
+                <label>Correct Answer</label>
+                <select id="form-correct-answer" class="form-control form-control-accent">
+                  <option value="A">Option A</option>
+                  <option value="B">Option B</option>
+                  <option value="C">Option C</option>
+                  <option value="D">Option D</option>
+                </select>
+              </div>
+
+              <div class="options-meta-row">
+                <div class="form-group flex-1">
+                  <label>Points</label>
+                  <input type="number" id="form-points" value="10" class="form-control" />
+                </div>
+                <div class="form-group flex-1">
+                  <label>Timer Override</label>
+                  <input type="number" id="form-timer-override" placeholder="Default" class="form-control" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div>
-            <div class="form-group">
-              <label>Option A</label>
-              <input type="text" id="form-option-a" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Option B</label>
-              <input type="text" id="form-option-b" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Option C</label>
-              <input type="text" id="form-option-c" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Option D</label>
-              <input type="text" id="form-option-d" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Correct Answer</label>
-              <select id="form-correct-answer" class="form-control">
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-              </select>
-            </div>
+          <div class="form-group margin-top">
+            <label>Answer Explanation (Shown on reveal)</label>
+            <textarea id="form-explanation" placeholder="Additional trivia or context about the answer..." class="form-control" rows="2"></textarea>
           </div>
-        </div>
 
-        <div class="grid-layout cols-3 margin-top">
-          <div class="form-group">
-            <label>Category (Topic)</label>
-            <input type="text" id="form-category" placeholder="General Knowledge" class="form-control" />
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary full-width">
+              <i class="fa-solid fa-floppy-disk"></i> Save Question
+            </button>
           </div>
-          <div class="form-group">
-            <label>Points Value</label>
-            <input type="number" id="form-points" value="10" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label>Timer Override (seconds)</label>
-            <input type="number" id="form-timer-override" placeholder="Use default" class="form-control" />
-          </div>
-        </div>
-
-        <div class="form-group margin-top">
-          <label>Correct Answer Explanation</label>
-          <textarea id="form-explanation" placeholder="Shown after answer reveal..." class="form-control" rows="2"></textarea>
-        </div>
-
-        <button type="submit" class="success-btn full-width margin-top">Save Question</button>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 
-  <!-- ─── Import Question Modal ─── -->
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- 📥 MODAL: BULK IMPORT QUESTIONS             -->
+  <!-- ═══════════════════════════════════════════ -->
   <div id="import-modal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" id="close-import-modal">&times;</span>
-      <h2>Import Questions</h2>
-      <div class="margin-top">
-        <p class="description">Select a JSON or Excel file (.json, .xlsx, .xls) or paste the JSON array below to import multiple questions at once.</p>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2>Import Questions in Bulk</h2>
+        <button class="modal-close-btn" id="close-import-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="card-description">
+          Upload an Excel spreadsheet (<code>.xlsx</code>, <code>.xls</code>) or a JSON array file to import questions in bulk.
+        </p>
+
         <div class="form-group margin-top">
-          <label>Option 1: Upload JSON or Excel File</label>
+          <label>Method 1: Upload File (.xlsx, .xls, .json)</label>
           <input type="file" id="modal-import-file-input" accept=".json,.xlsx,.xls" class="form-control" />
         </div>
+
         <div class="form-group margin-top">
-          <label>Option 2: Paste JSON Content</label>
-          <textarea id="modal-import-text-input" class="form-control" rows="8" placeholder='[
+          <label>Method 2: Paste Raw JSON Array</label>
+          <textarea id="modal-import-text-input" class="form-control" rows="6" placeholder='[
   {
     "level": 1,
-    "question_text": "Sample Question?",
-    "option_a": "Option A",
-    "option_b": "Option B",
-    "option_c": "Option C",
-    "option_d": "Option D",
+    "question_text": "Sample question text?",
+    "option_a": "First option",
+    "option_b": "Second option",
+    "option_c": "Third option",
+    "option_d": "Fourth option",
     "correct_answer": "A",
     "points": 10
   }
 ]'></textarea>
         </div>
-        <div class="grid-layout cols-2 gap-small margin-top">
-          <button id="modal-import-cancel-btn" class="ghost-btn">Cancel</button>
-          <button id="modal-import-submit-btn" class="success-btn">Import Questions</button>
+
+        <div class="modal-footer">
+          <button id="modal-import-cancel-btn" class="btn btn-ghost">Cancel</button>
+          <button id="modal-import-submit-btn" class="btn btn-primary">
+            <i class="fa-solid fa-file-import"></i> Start Import
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Hidden File Input for JSON Imports -->
+  <!-- Hidden File Input for JSON/Excel Direct Upload -->
   <input type="file" id="import-file-input" accept=".json,.xlsx,.xls" style="display: none;" />
 
-  <!-- ─── Toast Notification Container ─── -->
+  <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- Scripts -->
+  <!-- External Vendor Libraries -->
   <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Application Logic -->
   <script src="admin.js"></script>
 </body>
 </html>
