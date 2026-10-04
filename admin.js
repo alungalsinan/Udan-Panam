@@ -14,7 +14,7 @@ let pollingInterval = null;
 
 // Question Manager Pagination & Filters
 let qPage = 1;
-let qLimit = 20;
+let qLimit = 500;
 let qSearch = '';
 let qLevelFilter = '';
 let qPresentedFilter = '';
@@ -51,6 +51,44 @@ const pageTitle = document.getElementById('page-title');
 const toastContainer = document.getElementById('toast-container');
 const logoutBtn = document.getElementById('logout-btn');
 
+// ─── Web Audio API Synthesizer for Tactile Haptic Audio Feedback ───
+let hapticAudioCtx = null;
+function playClayHapticClick() {
+  const enabled = localStorage.getItem('clay-haptic') !== 'false';
+  if (!enabled) return;
+  try {
+    if (!hapticAudioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) hapticAudioCtx = new AudioCtx();
+    }
+    if (hapticAudioCtx && hapticAudioCtx.state === 'suspended') {
+      hapticAudioCtx.resume();
+    }
+    if (!hapticAudioCtx) return;
+    const osc = hapticAudioCtx.createOscillator();
+    const gain = hapticAudioCtx.createGain();
+    osc.type = 'sine'; // Pure, soothing organic droplet tone
+    osc.frequency.setValueAtTime(200, hapticAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, hapticAudioCtx.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.035, hapticAudioCtx.currentTime); // Soft, non-intrusive
+    gain.gain.exponentialRampToValueAtTime(0.0001, hapticAudioCtx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(hapticAudioCtx.destination);
+    osc.start();
+    osc.stop(hapticAudioCtx.currentTime + 0.04);
+  } catch (e) {
+    // AudioContext suspended or not allowed yet
+  }
+}
+
+// Global click listener for tactile haptic feedback on clay buttons
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('button, .btn, .icon-btn, .chip-btn, .route-btn, .sound-pad-btn, .clay-depth-btn, .flash-preset-btn');
+  if (btn) {
+    playClayHapticClick();
+  }
+});
+
 // Initialize Auth & Theme
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -68,6 +106,13 @@ function initTheme() {
   } else {
     document.body.classList.remove('light-theme');
   }
+
+  const savedDepth = localStorage.getItem('clay-depth') || 'classic';
+  document.body.setAttribute('data-clay-depth', savedDepth);
+
+  const savedAccent = localStorage.getItem('clay-accent') || 'cyan';
+  document.body.setAttribute('data-clay-accent', savedAccent);
+
   updateThemeToggleUI();
 }
 
@@ -237,15 +282,30 @@ function initDashboard() {
   });
 
   socket.on('timer:started', (data) => {
-    updateFlowTimerUI(data?.remaining || 30, true);
+    const rem = data?.remaining || 30;
+    const liveTimer = document.getElementById('live-timer-text');
+    if (liveTimer) liveTimer.textContent = rem;
+    updateFlowTimerUI(rem, true);
   });
 
   socket.on('timer:paused', (data) => {
-    updateFlowTimerUI(data?.remaining, false);
+    const rem = data?.remaining;
+    const liveTimer = document.getElementById('live-timer-text');
+    if (liveTimer && rem !== undefined) liveTimer.textContent = rem;
+    updateFlowTimerUI(rem, false);
   });
 
   socket.on('timer:stopped', () => {
-    const dur = parseInt(document.getElementById('flow-timer-duration-input')?.value) || 30;
+    const activeQ = (currentQuestionIndex >= 0 && currentQuestionIndex < currentQuestions.length)
+      ? currentQuestions[currentQuestionIndex]
+      : null;
+    const dur = activeQ?.timer_override || parseInt(document.getElementById('flow-timer-duration-input')?.value) || parseInt(document.getElementById('timer-duration-input')?.value) || 30;
+    const liveTimer = document.getElementById('live-timer-text');
+    if (liveTimer) liveTimer.textContent = dur;
+    const durInput = document.getElementById('timer-duration-input');
+    if (durInput && document.activeElement !== durInput) durInput.value = dur;
+    const flowInput = document.getElementById('flow-timer-duration-input');
+    if (flowInput && document.activeElement !== flowInput) flowInput.value = dur;
     updateFlowTimerUI(dur, false);
   });
 
@@ -358,6 +418,17 @@ function initDashboard() {
   setupSettingsListeners();
   setupPromoCastListeners();
   setupKeyboardShortcuts();
+
+  // Advanced Claymorphism Studio Suite & Directorial Tools
+  initZenMode();
+  initBroadcastStopwatch();
+  initSocketPingDiagnostics();
+  initFlashAlertDispatcher();
+  initHotkeysModal();
+  initFullscreenToggle();
+  initClayCustomizer();
+  initFloatingSoundboard();
+  initTeleprompterProTools();
 }
 
 // ─── Tab Switcher ───
@@ -802,22 +873,45 @@ function renderLiveQuestionsList() {
   if (!container) return;
   container.innerHTML = '';
 
+  if (!currentQuestions || currentQuestions.length === 0) {
+    container.innerHTML = '<div class="text-center text-muted p-2">No questions loaded for this round.</div>';
+    return;
+  }
+
   currentQuestions.forEach((q, idx) => {
     const item = document.createElement('div');
-    item.className = 'live-question-item';
-    if (idx === currentQuestionIndex) item.classList.add('active');
-    if (q.presented) item.classList.add('presented');
+    item.className = `live-question-card ${idx === currentQuestionIndex ? 'active' : ''} ${q.presented ? 'presented' : ''}`;
+    
+    const ansLetter = (q.correct_answer || 'A').toUpperCase();
+    const ansText = q[`option_${ansLetter.toLowerCase()}`] || '';
 
-    const title = document.createElement('span');
-    title.className = 'q-title';
-    title.textContent = `${idx + 1}. ${q.question_text.length > 50 ? q.question_text.substring(0, 50) + '...' : q.question_text}`;
+    item.innerHTML = `
+      <div class="live-q-card-header">
+        <span class="q-num-badge">#${idx + 1}</span>
+        <span class="badge ${q.presented ? 'badge-warning' : 'badge-success'}">${q.presented ? 'USED' : 'READY'}</span>
+        <button class="btn btn-xs btn-primary push-stage-btn" style="margin-left: auto;">
+          <i class="fa-solid fa-play"></i> Air on Stage
+        </button>
+      </div>
+      <div class="live-q-card-text">${escapeHTML(q.question_text || '')}</div>
+      <div class="live-q-card-opts">
+        <span class="opt-chip ${ansLetter === 'A' ? 'is-correct' : ''}">A: ${escapeHTML(q.option_a || '')}</span>
+        <span class="opt-chip ${ansLetter === 'B' ? 'is-correct' : ''}">B: ${escapeHTML(q.option_b || '')}</span>
+        <span class="opt-chip ${ansLetter === 'C' ? 'is-correct' : ''}">C: ${escapeHTML(q.option_c || '')}</span>
+        <span class="opt-chip ${ansLetter === 'D' ? 'is-correct' : ''}">D: ${escapeHTML(q.option_d || '')}</span>
+      </div>
+      <div class="live-q-card-ans">
+        <i class="fa-solid fa-circle-check"></i> Answer: <strong>${ansLetter}</strong> — ${escapeHTML(ansText)}
+      </div>
+    `;
 
-    const badge = document.createElement('span');
-    badge.className = 'q-badge';
-    badge.textContent = q.presented ? 'USED' : 'UNUSED';
-
-    item.appendChild(title);
-    item.appendChild(badge);
+    const pushBtn = item.querySelector('.push-stage-btn');
+    pushBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentQuestionIndex = idx;
+      dispatchActiveQuestion();
+      renderLiveQuestionsList();
+    });
 
     item.addEventListener('click', () => {
       currentQuestionIndex = idx;
@@ -970,10 +1064,13 @@ function setupLiveControlListeners() {
   });
 
   document.getElementById('next-question-btn').addEventListener('click', () => {
+    if (currentQuestions.length === 0) return;
     if (currentQuestionIndex < currentQuestions.length - 1) {
       currentQuestionIndex++;
       dispatchActiveQuestion();
       renderLiveQuestionsList();
+    } else {
+      showNotification('Already at the last question for this round', 'info');
     }
   });
 
@@ -993,10 +1090,75 @@ function setupLiveControlListeners() {
     liveEditCancelBtn.addEventListener('click', () => toggleLiveQuestionEditor(false));
   }
 
-  // Toggles
-  setupLiveToggle('toggle-question-btn', 'show_question');
+  // Toggle: Show Question (revealing question resets timer & its sound, and resets to show question only)
+  const toggleQBtn = document.getElementById('toggle-question-btn');
+  if (toggleQBtn) {
+    toggleQBtn.addEventListener('click', () => {
+      const willShow = !toggleQBtn.classList.contains('active');
+      if (willShow) {
+        const activeQ = (currentQuestionIndex >= 0 && currentQuestionIndex < currentQuestions.length)
+          ? currentQuestions[currentQuestionIndex]
+          : null;
+        const dur = activeQ?.timer_override || parseInt(document.getElementById('timer-duration-input')?.value) || 30;
+
+        socket.emit('timer:stop');
+        socket.emit('timer:set', { duration: dur });
+
+        socket.emit('state:update', {
+          show_question: true,
+          show_options: false,
+          reveal_answer: false,
+          show_explanation: false,
+          timer_running: false,
+          timer_remaining: dur
+        });
+
+        toggleButtonState('toggle-question-btn', true);
+        toggleButtonState('toggle-options-btn', false);
+        toggleButtonState('reveal-answer-btn', false);
+        toggleButtonState('toggle-explanation-btn', false);
+
+        updateFlowTimerUI(dur, false);
+        const liveTimer = document.getElementById('live-timer-text');
+        if (liveTimer) liveTimer.textContent = dur;
+      } else {
+        socket.emit('timer:stop');
+        socket.emit('state:update', {
+          show_question: false,
+          timer_running: false
+        });
+        toggleButtonState('toggle-question-btn', false);
+        updateFlowTimerUI(undefined, false);
+      }
+    });
+  }
+
+  // Toggle: Show Options
   setupLiveToggle('toggle-options-btn', 'show_options');
-  setupLiveToggle('reveal-answer-btn', 'reveal_answer');
+
+  // Toggle: Reveal Answer (stops running timer and its sound immediately)
+  const revealAnsBtn = document.getElementById('reveal-answer-btn');
+  if (revealAnsBtn) {
+    revealAnsBtn.addEventListener('click', () => {
+      const willReveal = !revealAnsBtn.classList.contains('active');
+      if (willReveal) {
+        socket.emit('timer:stop');
+        socket.emit('state:update', {
+          reveal_answer: true,
+          timer_running: false
+        });
+        toggleButtonState('reveal-answer-btn', true);
+        updateFlowTimerUI(undefined, false);
+      } else {
+        socket.emit('state:update', {
+          reveal_answer: false
+        });
+        toggleButtonState('reveal-answer-btn', false);
+      }
+    });
+  }
+
+  // Toggle: Explanation
   setupLiveToggle('toggle-explanation-btn', 'show_explanation');
 
   // Timer controls
@@ -1188,7 +1350,13 @@ function setupLiveToggle(btnId, stateField) {
 function dispatchActiveQuestion() {
   if (currentQuestionIndex >= 0 && currentQuestionIndex < currentQuestions.length) {
     const q = currentQuestions[currentQuestionIndex];
-    // Reset toggle states on next question dispatch
+    const duration = q.timer_override || parseInt(document.getElementById('timer-duration-input')?.value) || 30;
+
+    // Stop timer and reset
+    socket.emit('timer:stop');
+    socket.emit('timer:set', { duration });
+
+    // Reset toggle states on next question dispatch: SHOW QUESTION ONLY
     socket.emit('state:update', {
       current_question_id: q.id,
       show_question: true,
@@ -1197,13 +1365,35 @@ function dispatchActiveQuestion() {
       show_explanation: false,
       audio_status: 'stopped',
       timer_running: false,
-      timer_remaining: q.timer_override || 30
+      timer_remaining: duration
     });
+
+    // Reset UI button highlights to "Show Question Only"
+    toggleButtonState('toggle-question-btn', true);
+    toggleButtonState('toggle-options-btn', false);
+    toggleButtonState('reveal-answer-btn', false);
+    toggleButtonState('toggle-explanation-btn', false);
+
+    // Reset timer indicators in admin panel
+    updateFlowTimerUI(duration, false);
+    const liveTimer = document.getElementById('live-timer-text');
+    if (liveTimer) liveTimer.textContent = duration;
+    const durInput = document.getElementById('timer-duration-input');
+    if (durInput && document.activeElement !== durInput) durInput.value = duration;
+    const flowInput = document.getElementById('flow-timer-duration-input');
+    if (flowInput && document.activeElement !== flowInput) flowInput.value = duration;
+
     updateLiveQuestionDisplay();
   }
 }
 
 async function dispatchQuestionById(q) {
+  const duration = q.timer_override || 30;
+
+  // Stop timer and reset
+  socket.emit('timer:stop');
+  socket.emit('timer:set', { duration });
+
   socket.emit('state:update', {
     current_question_id: q.id,
     show_question: true,
@@ -1212,9 +1402,23 @@ async function dispatchQuestionById(q) {
     show_explanation: false,
     audio_status: 'stopped',
     timer_running: false,
-    timer_remaining: q.timer_override || 30,
+    timer_remaining: duration,
     active_level: q.level || 1
   });
+
+  // Reset UI button highlights to "Show Question Only"
+  toggleButtonState('toggle-question-btn', true);
+  toggleButtonState('toggle-options-btn', false);
+  toggleButtonState('reveal-answer-btn', false);
+  toggleButtonState('toggle-explanation-btn', false);
+
+  updateFlowTimerUI(duration, false);
+  const liveTimer = document.getElementById('live-timer-text');
+  if (liveTimer) liveTimer.textContent = duration;
+  const durInput = document.getElementById('timer-duration-input');
+  if (durInput && document.activeElement !== durInput) durInput.value = duration;
+  const flowInput = document.getElementById('flow-timer-duration-input');
+  if (flowInput && document.activeElement !== flowInput) flowInput.value = duration;
   
   // Update live controller UI tab to match active level
   if (currentLevel !== q.level) {
@@ -1519,8 +1723,25 @@ async function loadQuestionsTable() {
 
       const tdText = document.createElement('td');
       tdText.className = 'question-text';
-      tdText.textContent = q.question_text.length > 60 ? q.question_text.substring(0, 60) + '...' : q.question_text;
+      tdText.textContent = q.question_text;
       tr.appendChild(tdText);
+
+      const tdOptions = document.createElement('td');
+      tdOptions.className = 'question-options-cell';
+      const ansLetter = (q.correct_answer || 'A').toUpperCase();
+      const ansText = q[`option_${ansLetter.toLowerCase()}`] || '';
+      tdOptions.innerHTML = `
+        <div class="opts-mini-grid">
+          <span class="${ansLetter === 'A' ? 'opt-tag correct' : 'opt-tag'}">A: ${escapeHTML(q.option_a || '')}</span>
+          <span class="${ansLetter === 'B' ? 'opt-tag correct' : 'opt-tag'}">B: ${escapeHTML(q.option_b || '')}</span>
+          <span class="${ansLetter === 'C' ? 'opt-tag correct' : 'opt-tag'}">C: ${escapeHTML(q.option_c || '')}</span>
+          <span class="${ansLetter === 'D' ? 'opt-tag correct' : 'opt-tag'}">D: ${escapeHTML(q.option_d || '')}</span>
+        </div>
+        <div class="ans-badge-row">
+          <span class="badge badge-success" style="background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success); color: #34d399; font-weight:700;"><i class="fa-solid fa-check"></i> Ans: ${ansLetter} (${escapeHTML(ansText)})</span>
+        </div>
+      `;
+      tr.appendChild(tdOptions);
 
       const tdCat = document.createElement('td');
       tdCat.textContent = q.category || 'General';
@@ -2823,29 +3044,492 @@ function setupKeyboardShortcuts() {
 
     const key = e.key.toUpperCase();
 
-    if (e.code === 'Space') {
+    if (e.key === '?') {
+      const modal = document.getElementById('hotkeys-modal');
+      if (modal) modal.classList.toggle('active');
+    } else if (key === 'Z') {
+      document.getElementById('zen-mode-toggle-btn')?.click();
+    } else if (e.code === 'Space' || e.code === 'ArrowRight') {
       e.preventDefault();
-      document.getElementById('next-question-btn').click();
+      document.getElementById('next-question-btn')?.click();
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      document.getElementById('prev-question-btn')?.click();
     } else if (key === 'R') {
-      document.getElementById('reveal-answer-btn').click();
+      document.getElementById('reveal-answer-btn')?.click();
     } else if (key === 'T') {
       const startBtn = document.getElementById('timer-start-btn');
       const pauseBtn = document.getElementById('timer-pause-btn');
-      // If timer text isn't running, start it
       fetch('/api/presentation/state')
         .then(r => r.json())
         .then(state => {
-          if (state.timer_running) pauseBtn.click();
-          else startBtn.click();
+          if (state.timer_running) pauseBtn?.click();
+          else startBtn?.click();
         });
     } else if (key === 'O') {
-      document.getElementById('toggle-options-btn').click();
+      document.getElementById('toggle-options-btn')?.click();
     } else if (key === 'Q') {
-      document.getElementById('toggle-question-btn').click();
+      document.getElementById('toggle-question-btn')?.click();
     } else if (key === 'E') {
-      document.getElementById('toggle-explanation-btn').click();
+      document.getElementById('toggle-explanation-btn')?.click();
+    } else if (key === '5') {
+      document.getElementById('lifeline-fifty-btn')?.click();
+    } else if (key === 'P') {
+      document.getElementById('lifeline-poll-btn')?.click();
+    } else if (key === 'C') {
+      document.getElementById('celebration-start-btn')?.click();
+    } else if (key === 'M') {
+      document.getElementById('sound-stop-all-btn')?.click();
     } else if (e.key === 'Escape') {
-      document.getElementById('screen-welcome-btn').click();
+      const openModal = document.querySelector('.modal.active');
+      if (openModal) {
+        openModal.classList.remove('active');
+      } else {
+        document.getElementById('screen-welcome-btn')?.click();
+      }
+    }
+  });
+}
+
+// ═════════════════════════════════════════════
+// 🌿 Stress-Free Studio: Zen Focus Mode Controller
+// ═════════════════════════════════════════════
+function initZenMode() {
+  const zenToggleBtn = document.getElementById('zen-mode-toggle-btn');
+  const isZen = localStorage.getItem('admin-zen-mode') === 'true';
+
+  function applyZenState(active, notify = false) {
+    if (active) {
+      document.body.classList.add('zen-mode');
+      if (zenToggleBtn) {
+        zenToggleBtn.classList.add('active');
+        zenToggleBtn.setAttribute('title', 'Exit Zen Focus Mode (Z)');
+        zenToggleBtn.innerHTML = '<i class="fa-solid fa-leaf"></i> <span>Zen On</span>';
+      }
+      if (notify) showNotification('🌿 Zen Focus Mode: Distraction-free calm broadcast', 'info');
+    } else {
+      document.body.classList.remove('zen-mode');
+      if (zenToggleBtn) {
+        zenToggleBtn.classList.remove('active');
+        zenToggleBtn.setAttribute('title', 'Toggle Calm Zen Focus Mode (Z)');
+        zenToggleBtn.innerHTML = '<i class="fa-solid fa-leaf"></i> <span>Zen</span>';
+      }
+      if (notify) showNotification('Studio Mode restored', 'info');
+    }
+  }
+
+  // Restore saved state
+  if (isZen) {
+    applyZenState(true, false);
+  }
+
+  zenToggleBtn?.addEventListener('click', () => {
+    const currentlyActive = document.body.classList.contains('zen-mode');
+    const nextActive = !currentlyActive;
+    localStorage.setItem('admin-zen-mode', nextActive ? 'true' : 'false');
+    applyZenState(nextActive, true);
+  });
+}
+
+// ═════════════════════════════════════════════
+// ⏱️ Advanced Feature 1: Broadcast Stopwatch
+// ═════════════════════════════════════════════
+let stopwatchInterval = null;
+let stopwatchSeconds = 0;
+let isStopwatchRunning = false;
+
+function initBroadcastStopwatch() {
+  const display = document.getElementById('stopwatch-display');
+  const toggleBtn = document.getElementById('stopwatch-toggle-btn');
+  const resetBtn = document.getElementById('stopwatch-reset-btn');
+  if (!display || !toggleBtn || !resetBtn) return;
+
+  function formatTime(totalSec) {
+    const hrs = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    isStopwatchRunning = !isStopwatchRunning;
+    if (isStopwatchRunning) {
+      toggleBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+      toggleBtn.title = 'Pause Broadcast Clock';
+      if (!stopwatchInterval) {
+        stopwatchInterval = setInterval(() => {
+          stopwatchSeconds++;
+          display.textContent = formatTime(stopwatchSeconds);
+        }, 1000);
+      }
+    } else {
+      toggleBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+      toggleBtn.title = 'Start Broadcast Clock';
+      if (stopwatchInterval) {
+        clearInterval(stopwatchInterval);
+        stopwatchInterval = null;
+      }
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    isStopwatchRunning = false;
+    toggleBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    toggleBtn.title = 'Start Broadcast Clock';
+    if (stopwatchInterval) {
+      clearInterval(stopwatchInterval);
+      stopwatchInterval = null;
+    }
+    stopwatchSeconds = 0;
+    display.textContent = '00:00:00';
+  });
+}
+
+// ═════════════════════════════════════════════
+// 📡 Advanced Feature 2: Socket Ping Monitor
+// ═════════════════════════════════════════════
+function initSocketPingDiagnostics() {
+  const pingBadge = document.getElementById('ping-status-badge');
+  const pingText = document.getElementById('ping-ms-text');
+  if (!pingBadge || !pingText) return;
+
+  setInterval(() => {
+    if (!socket || !isSocketConnected) {
+      pingText.textContent = '-- ms';
+      pingBadge.className = 'clay-ping-badge red';
+      return;
+    }
+    const start = Date.now();
+    fetch('/api/presentation/state', {
+      headers: { 'x-admin-token': currentToken }
+    })
+    .then(() => {
+      const latency = Date.now() - start;
+      pingText.textContent = `${latency}ms`;
+      if (latency < 60) {
+        pingBadge.className = 'clay-ping-badge green';
+      } else if (latency < 160) {
+        pingBadge.className = 'clay-ping-badge amber';
+      } else {
+        pingBadge.className = 'clay-ping-badge red';
+      }
+    })
+    .catch(() => {
+      pingText.textContent = 'err';
+      pingBadge.className = 'clay-ping-badge red';
+    });
+  }, 4500);
+}
+
+// ═════════════════════════════════════════════
+// 🚨 Advanced Feature 3: Emergency Flash Alert
+// ═════════════════════════════════════════════
+function initFlashAlertDispatcher() {
+  const triggerBtn = document.getElementById('flash-alert-trigger-btn');
+  const modal = document.getElementById('flash-alert-modal');
+  const closeBtn = document.getElementById('close-flash-modal');
+  const customText = document.getElementById('flash-custom-text');
+  const chimeCheck = document.getElementById('flash-sound-chime');
+  const submitBtn = document.getElementById('flash-submit-btn');
+  const clearBtn = document.getElementById('flash-clear-btn');
+  if (!modal) return;
+
+  triggerBtn?.addEventListener('click', () => {
+    modal.classList.add('active');
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('active');
+  });
+
+  document.querySelectorAll('.flash-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (customText) {
+        customText.value = btn.dataset.text || '';
+        customText.focus();
+      }
+    });
+  });
+
+  submitBtn?.addEventListener('click', () => {
+    const text = customText?.value?.trim();
+    if (!text) {
+      showNotification('Please enter announcement text', 'warning');
+      return;
+    }
+    if (socket) {
+      socket.emit('stage:ticker', { show: true, text });
+      if (chimeCheck?.checked) {
+        socket.emit('sound:play', { category: 'transition' });
+      }
+    }
+    showNotification('Flash Alert broadcasted live to all screens!', 'success');
+    modal.classList.remove('active');
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (socket) {
+      socket.emit('stage:ticker', { show: false });
+    }
+    if (customText) customText.value = '';
+    showNotification('Stage ticker cleared', 'info');
+    modal.classList.remove('active');
+  });
+}
+
+// ═════════════════════════════════════════════
+// ⌨️ Advanced Feature 4: Hotkeys Guide Modal
+// ═════════════════════════════════════════════
+function initHotkeysModal() {
+  const modalBtn = document.getElementById('hotkeys-modal-btn');
+  const modal = document.getElementById('hotkeys-modal');
+  const closeBtn = document.getElementById('close-hotkeys-modal');
+  if (!modal) return;
+
+  modalBtn?.addEventListener('click', () => {
+    modal.classList.add('active');
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    modal.classList.remove('active');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('active');
+  });
+}
+
+// ═════════════════════════════════════════════
+// 🖥️ Advanced Feature 5: Fullscreen Director Console
+// ═════════════════════════════════════════════
+function initFullscreenToggle() {
+  const btn = document.getElementById('fullscreen-toggle-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => console.log(err));
+      btn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+      btn.title = 'Exit Fullscreen Control Room';
+    } else {
+      document.exitFullscreen().catch(err => console.log(err));
+      btn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+      btn.title = 'Toggle Fullscreen Control Room';
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      btn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+    }
+  });
+}
+
+// ═════════════════════════════════════════════
+// 🎨 Advanced Feature 6: Claymorphism Studio Suite
+// ═════════════════════════════════════════════
+function initClayCustomizer() {
+  const openBtn = document.getElementById('clay-customizer-btn');
+  const modal = document.getElementById('clay-customizer-modal');
+  const closeBtn = document.getElementById('close-clay-modal');
+  const saveBtn = document.getElementById('clay-save-close-btn');
+  const resetBtn = document.getElementById('clay-reset-defaults-btn');
+  const hapticToggle = document.getElementById('clay-sound-haptic-toggle');
+
+  if (!modal) return;
+
+  openBtn?.addEventListener('click', () => {
+    const currentTheme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+    document.querySelectorAll('.clay-segment-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.theme === currentTheme);
+    });
+
+    const currentDepth = document.body.getAttribute('data-clay-depth') || 'classic';
+    document.querySelectorAll('.clay-depth-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.depth === currentDepth);
+    });
+
+    const currentAccent = document.body.getAttribute('data-clay-accent') || 'cyan';
+    document.querySelectorAll('.clay-accent-swatch').forEach(b => {
+      b.classList.toggle('active', b.dataset.accent === currentAccent);
+    });
+
+    if (hapticToggle) {
+      hapticToggle.checked = localStorage.getItem('clay-haptic') !== 'false';
+    }
+
+    modal.classList.add('active');
+  });
+
+  closeBtn?.addEventListener('click', () => modal.classList.remove('active'));
+  saveBtn?.addEventListener('click', () => {
+    modal.classList.remove('active');
+    showNotification('Claymorphism Studio settings applied!', 'success');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('active');
+  });
+
+  // Theme Segment Toggle
+  document.querySelectorAll('.clay-segment-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.clay-segment-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const theme = b.dataset.theme;
+      if (theme === 'light') {
+        document.body.classList.add('light-theme');
+        localStorage.setItem('admin-theme', 'light');
+      } else {
+        document.body.classList.remove('light-theme');
+        localStorage.setItem('admin-theme', 'dark');
+      }
+      updateThemeToggleUI();
+    });
+  });
+
+  // Depth Picker
+  document.querySelectorAll('.clay-depth-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.clay-depth-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const depth = b.dataset.depth || 'classic';
+      document.body.setAttribute('data-clay-depth', depth);
+      localStorage.setItem('clay-depth', depth);
+    });
+  });
+
+  // Accent Swatches
+  document.querySelectorAll('.clay-accent-swatch').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.clay-accent-swatch').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const accent = b.dataset.accent || 'cyan';
+      document.body.setAttribute('data-clay-accent', accent);
+      localStorage.setItem('clay-accent', accent);
+    });
+  });
+
+  // Haptic feedback toggle
+  hapticToggle?.addEventListener('change', (e) => {
+    localStorage.setItem('clay-haptic', e.target.checked ? 'true' : 'false');
+  });
+
+  // Reset Defaults
+  resetBtn?.addEventListener('click', () => {
+    document.body.classList.remove('light-theme');
+    document.body.setAttribute('data-clay-depth', 'classic');
+    document.body.setAttribute('data-clay-accent', 'cyan');
+    localStorage.setItem('admin-theme', 'dark');
+    localStorage.setItem('clay-depth', 'classic');
+    localStorage.setItem('clay-accent', 'cyan');
+    localStorage.setItem('clay-haptic', 'true');
+    updateThemeToggleUI();
+    modal.classList.remove('active');
+    showNotification('Restored Claymorphism defaults', 'info');
+  });
+}
+
+// ═════════════════════════════════════════════
+// 🔊 Advanced Feature 7: Floating Studio Soundboard
+// ═════════════════════════════════════════════
+function initFloatingSoundboard() {
+  const toggleBtn = document.getElementById('sound-dock-toggle-btn');
+  const dock = document.getElementById('floating-sound-dock');
+  const minBtn = document.getElementById('sound-dock-minimize-btn');
+  if (!dock) return;
+
+  toggleBtn?.addEventListener('click', () => {
+    const isHidden = dock.style.display === 'none';
+    dock.style.display = isHidden ? 'block' : 'none';
+  });
+
+  minBtn?.addEventListener('click', () => {
+    dock.style.display = 'none';
+  });
+
+  // Sound trigger pads
+  document.querySelectorAll('.sound-pad-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const soundType = btn.dataset.sound;
+      if (!socket) return;
+      if (soundType === 'stop-all') {
+        socket.emit('sound:stop');
+        showNotification('Stopped all playing stage audio', 'info');
+      } else if (soundType === 'applause') {
+        socket.emit('sound:play', { category: 'mocking_laughter' });
+        showNotification('Triggered Audience Cheer', 'success');
+      } else if (soundType === 'correct') {
+        socket.emit('sound:play', { category: 'correct' });
+      } else if (soundType === 'wrong') {
+        socket.emit('sound:play', { category: 'wrong' });
+      } else if (soundType === 'drumroll') {
+        socket.emit('sound:play', { category: 'timer' });
+      } else if (soundType === 'heartbeat') {
+        socket.emit('sound:play', { category: 'background' });
+      } else if (soundType === 'tick') {
+        socket.emit('sound:play', { category: 'transition' });
+      } else if (soundType === 'cash') {
+        socket.emit('sound:play', { category: 'atm_cash' });
+        showNotification('Triggered ATM Cash Dispenser 💸', 'success');
+      }
+    });
+  });
+}
+
+// ═════════════════════════════════════════════
+// 📜 Advanced Feature 8: Teleprompter Pro Tools
+// ═════════════════════════════════════════════
+let currentTeleprompterZoom = 100;
+
+function initTeleprompterProTools() {
+  const btnDown = document.getElementById('teleprompter-font-down');
+  const btnReset = document.getElementById('teleprompter-font-reset');
+  const btnUp = document.getElementById('teleprompter-font-up');
+  const btnPeek = document.getElementById('teleprompter-peek-btn');
+  const qText = document.getElementById('live-question-text');
+  const optionsPreview = document.getElementById('live-question-options-preview');
+
+  const zooms = [80, 100, 120, 140, 160];
+
+  function applyZoom(zoom) {
+    currentTeleprompterZoom = zoom;
+    if (qText) {
+      zooms.forEach(z => qText.classList.remove(`zoom-${z}`));
+      qText.classList.add(`zoom-${zoom}`);
+    }
+    if (btnReset) {
+      btnReset.textContent = `${zoom}%`;
+    }
+  }
+
+  btnDown?.addEventListener('click', () => {
+    const idx = zooms.indexOf(currentTeleprompterZoom);
+    if (idx > 0) applyZoom(zooms[idx - 1]);
+  });
+
+  btnUp?.addEventListener('click', () => {
+    const idx = zooms.indexOf(currentTeleprompterZoom);
+    if (idx < zooms.length - 1) applyZoom(zooms[idx + 1]);
+  });
+
+  btnReset?.addEventListener('click', () => {
+    applyZoom(100);
+  });
+
+  btnPeek?.addEventListener('click', () => {
+    if (optionsPreview) {
+      optionsPreview.classList.toggle('peek-active');
+      const isPeeking = optionsPreview.classList.contains('peek-active');
+      btnPeek.classList.toggle('btn-primary', isPeeking);
+      btnPeek.classList.toggle('btn-outline', !isPeeking);
+      btnPeek.innerHTML = isPeeking ? '<i class="fa-solid fa-eye-slash"></i> <span>Hide Ans</span>' : '<i class="fa-solid fa-eye"></i> <span>Peek Ans</span>';
     }
   });
 }
@@ -2883,7 +3567,7 @@ function escapeHTML(str) {
 
 let isPromoReelPlaying = false;
 let currentDirectorScene = 'all';
-const directorScenesOrder = ['1', '2', '3', '4', 'all'];
+const directorScenesOrder = ['1', '2', '3', '4', '5'];
 
 function loadPromoCastTab() {
   fetch('/api/promo')
@@ -2984,16 +3668,20 @@ window.reloadDisplay = function(socketId) {
 };
 
 function setupPromoCastListeners() {
-  // ── 1. Studio Header Sub-Navigation Pills ──
+  // 🎙️ 1. Studio Header Sub-Navigation Pills 🎙️
   document.querySelectorAll('.promo-nav-pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('.promo-nav-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       const targetSub = pill.dataset.promoSub;
-      const el = document.getElementById(`subview-${targetSub}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      
+      document.querySelectorAll('.promo-subview-panel').forEach(panel => {
+        if (panel.id === `subview-${targetSub}`) {
+          panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      });
     });
   });
 

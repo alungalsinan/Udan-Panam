@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="style.css" />
 
   <!-- Canvas Confetti -->
-  <script src="/node_modules/canvas-confetti/dist/confetti.browser.min.js"></script>
+  
 
   <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
@@ -156,105 +156,76 @@
       </div>
     </div>
 
-    <!-- Promo Stage Container -->
+        <!-- Promo Stage Container -->
     <div class="promo-stage-wrapper">
       
-      <!-- Top Eyebrow Badges -->
-      <header class="promo-eyebrow animate-slide-down">
-        <div class="promo-badge-gold">
-          <span class="badge-shine"></span>
-          <i class="fa-solid fa-crown"></i>
-          <span id="promoEyebrowBadge">SRDB PRESENTS</span>
-        </div>
-        <div class="promo-producer-tag">
-          <i class="fa-solid fa-clapperboard"></i>
-          <span id="promoProducerWrapper">FROM THE PRODUCER <strong class="glow-producer" id="promoProducerTag">DC</strong></span>
-        </div>
-        <div class="promo-live-pill" title="Live Broadcast Cast Stream">
-          <span class="promo-live-dot"></span>
-          <span>ON AIR</span>
-        </div>
-      </header>
-
-      <!-- Centerpiece 3D Visual & Logo Artwork -->
-      <div class="promo-hero-centerpiece" id="promoHeroArea">
-        <div class="promo-3d-tilt-box" id="promoTiltBox">
-          <div class="promo-art-glass-plate">
-            <div class="promo-art-glow"></div>
-            <img src="assets/promo-logo-3d.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
-            <div class="promo-specular-sweep"></div>
-          </div>
-        </div>
-
-        <!-- Broadcast Tagline & Hashtag -->
-        <div class="promo-sub-ribbon">
-          <span class="promo-tagline" id="promoTagline">THE ULTIMATE BATTLE OF MINDS • GRAND TELECAST</span>
-          <span class="promo-hashtag-text" id="promoHashtag"># udan panam</span>
-        </div>
-      </div>
-
-      <!-- Feature Cards Grid (Overview Mode & Interactive Reel Mode) -->
-      <div class="promo-cards-grid" id="promoCardsGrid">
+      <div class="promo-slides-container" id="promoCardsGrid">
         
-        <!-- Card 1: Classes 1 to 10 -->
-        <div class="promo-card promo-card--classes" id="promoCard1" data-scene="2">
-          <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-graduation-cap"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard1Tag">ELIGIBILITY</span>
-            <h3 class="promo-card__title" id="promoCard1Title">FOR CLASSES 1 TO 10</h3>
-            <p class="promo-card__malayalam" id="promoCard1Desc">1 മുതൽ 10 വരെയുള്ള ക്ലാസ്സുകളിലെ മിടുക്കന്മാർക്കായി</p>
+        <!-- Slide 1: Intro (Logo & Credits) -->
+        <div class="promo-slide promo-slide--intro" id="promoCard1" data-scene="1">
+          <header class="promo-eyebrow animate-slide-down">
+            <div class="promo-badge-gold">
+              <span class="badge-shine"></span>
+              <i class="fa-solid fa-crown"></i>
+              <span>SRDB PRESENTS</span>
+            </div>
+            <div class="promo-producer-tag">
+              <i class="fa-solid fa-clapperboard"></i>
+              <span>FROM THE PRODUCER <strong class="glow-producer">DC</strong></span>
+            </div>
+          </header>
+
+          <div class="promo-hero-centerpiece" id="promoHeroArea">
+            <div class="promo-3d-tilt-box" id="promoTiltBox">
+              <div class="promo-art-glass-plate">
+                <div class="promo-art-glow"></div>
+                <img src="assets/promo-logo-3d.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Card 2: 1 Participant per class -->
-        <div class="promo-card promo-card--participants" id="promoCard2" data-scene="2">
-          <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-user-astronaut"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard2Tag">CONTESTANT RULE</span>
-            <h3 class="promo-card__title" id="promoCard2Title">ONE PARTICIPANT PER CLASS</h3>
-            <p class="promo-card__malayalam" id="promoCard2Desc">ഓരോ ക്ലാസ്സിൽ നിന്നും തിരഞ്ഞെടുക്കപ്പെടുന്ന ഒരു പ്രതിഭ വീതം!</p>
+        <!-- Slide 2: Eligibility & Rule -->
+        <div class="promo-slide promo-slide--content" id="promoCard2" data-scene="2">
+          <div class="promo-slide__content">
+            <div class="slide-icon-wrap"><i class="fa-solid fa-graduation-cap"></i></div>
+            <span class="promo-slide__tag">ELIGIBILITY</span>
+            <h2 class="promo-slide__title">FOR CLASSES 1 TO 10</h2>
+            <hr class="slide-divider" />
+            <div class="slide-icon-wrap"><i class="fa-solid fa-user-astronaut"></i></div>
+            <span class="promo-slide__tag">CONTESTANT RULE</span>
+            <h2 class="promo-slide__title">ONE PARTICIPANT FROM EVERY CLASS</h2>
           </div>
         </div>
 
-        <!-- Card 3: Conductors & Leadership -->
-        <div class="promo-card promo-card--conductors" id="promoCard3" data-scene="3">
-          <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-crown"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard3Tag">STAGE LEADERSHIP</span>
+        <!-- Slide 3: Conductors -->
+        <div class="promo-slide promo-slide--content" id="promoCard3" data-scene="3">
+          <div class="promo-slide__content">
+            <div class="slide-icon-wrap"><i class="fa-solid fa-crown"></i></div>
+            <span class="promo-slide__tag">STAGE CONDUCTORS</span>
             <div class="conductors-badge-row">
               <div class="conductor-chip conductor-chip--chairman">
                 <span class="conductor-badge-title">CHAIRMAN</span>
-                <strong class="conductor-badge-name" id="promoChairmanName">ADHIL S</strong>
+                <span class="conductor-name">ADHIL S</span>
               </div>
               <div class="conductor-chip conductor-chip--convenor">
                 <span class="conductor-badge-title">CONVENOR</span>
-                <strong class="conductor-badge-name" id="promoConvenorName">MUSTHAQEEM MUHAMMED</strong>
+                <span class="conductor-name">MUSTHAQEEM MUHAMMED</span>
               </div>
             </div>
-            <p class="promo-card__malayalam" id="promoCard3Desc">നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് &amp; കൺവീനർ മുസ്തഖീം മുഹമ്മദ്</p>
           </div>
         </div>
 
-        <!-- Card 4: Prizes & Rewards -->
-        <div class="promo-card promo-card--prizes" id="promoCard4" data-scene="4">
-          <div class="promo-card__icon-wrap prize-glow">
-            <i class="fa-solid fa-trophy"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard4Tag">MEGA REWARDS</span>
-            <h3 class="promo-card__title" id="promoCard4Title">PARTICIPATE &amp; WIN VALUABLE PRIZES!</h3>
-            <p class="promo-card__malayalam" id="promoCard4Desc">പങ്കെടുക്കൂ, ആകർഷകവും അമൂല്യവുമായ സമ്മാനങ്ങൾ നേടൂ!</p>
+        <!-- Slide 4: Rewards -->
+        <div class="promo-slide promo-slide--content" id="promoCard4" data-scene="4">
+          <div class="promo-slide__content">
+            <div class="slide-icon-wrap"><i class="fa-solid fa-trophy"></i></div>
+            <span class="promo-slide__tag">MEGA REWARDS</span>
+            <h2 class="promo-slide__title">PARTICIPATE & WIN VALUABLE PRIZES!</h2>
           </div>
         </div>
 
       </div>
-
     </div>
   </section>
 
@@ -338,7 +309,7 @@
     let currentPromoScene = 'all';
     let promoReelTimer = null;
     let promoReelSpeed = 5500;
-    const promoScenesList = ['1', '2', '3', '4', 'all'];
+    const promoScenesList = ['1', '2', '3', '4', '5'];
     let currentSceneIndex = 4;
 
     // Join room 'cast' and send display telemetry

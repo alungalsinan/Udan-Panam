@@ -24,13 +24,13 @@ const stageBlackout = document.getElementById('stageBlackout');
 // Promo Page Interactive Elements
 const promoTiltBox = document.getElementById('promoTiltBox');
 const promoHeroArea = document.getElementById('promoHeroArea');
-const promoPlayReelBtn = document.getElementById('promoPlayReelBtn');
+const promoPlayReelBtn = document.getElementById('promoPlayReelBtn') || document.getElementById('btnPlayPromoReel');
 const promoPlayReelLabel = document.getElementById('promoPlayReelLabel');
-const promoSoundBtn = document.getElementById('promoSoundBtn');
-const promoConfettiBtn = document.getElementById('promoConfettiBtn');
-const promoStartQuizBtn = document.getElementById('promoStartQuizBtn');
+const promoSoundBtn = document.getElementById('promoSoundBtn') || document.getElementById('btnFanfare');
+const promoConfettiBtn = document.getElementById('promoConfettiBtn') || document.getElementById('btnCelebrate');
+const promoStartQuizBtn = document.getElementById('promoStartQuizBtn') || document.getElementById('btnEnterQuizFromPromo');
 const promoReelTracker = document.getElementById('promoReelTracker');
-const promoCards = document.querySelectorAll('.promo-card');
+const promoCards = document.querySelectorAll('.promo-slide');
 
 const timerContainer = document.getElementById('timerContainer');
 const timerRing = document.getElementById('timerProgress');
@@ -107,6 +107,7 @@ if (questionArea && borderSvg && borderRect) {
 // Local Variables
 let currentScreen = 'welcome';
 let currentQuestionId = null;
+let activeQuestionData = null;
 let isOptionsVisible = false;
 let isAnswerRevealed = false;
 let lastStudioConfig = null;
@@ -203,6 +204,7 @@ function syncState(state) {
 
   // 3. Question & Content loading
   if (state.question) {
+    activeQuestionData = state.question;
     const isNewQuestion = state.question.id !== currentQuestionId;
     if (isNewQuestion) {
       const prevQId = currentQuestionId;
@@ -240,6 +242,9 @@ function syncState(state) {
     if (state.reveal_answer) {
       isAnswerRevealed = true;
       revealCorrectAnswer(state.question.correct_answer);
+      // Answer revealed: ensure timer audio is silenced immediately
+      stopLocalSound('timer');
+      stopLocalSound('timer_tick');
     } else {
       isAnswerRevealed = false;
       resetAnswerReveal();
@@ -253,6 +258,7 @@ function syncState(state) {
       explanationContainer.classList.remove('visible');
     }
   } else {
+    activeQuestionData = null;
     currentQuestionId = null;
     isOptionsVisible = false;
     isAnswerRevealed = false;
@@ -264,6 +270,11 @@ function syncState(state) {
     timerContainer.classList.remove('hidden');
   } else {
     timerContainer.classList.add('hidden');
+  }
+
+  if (!state.timer_running) {
+    stopLocalSound('timer');
+    stopLocalSound('timer_tick');
   }
 
   if (state.timer_remaining !== undefined) {
@@ -412,14 +423,19 @@ socket.on('timer:started', (data) => {
 });
 
 socket.on('timer:paused', (data) => {
-  updateTimerUI(data.remaining);
+  if (data?.remaining !== undefined) {
+    updateTimerUI(data.remaining);
+  }
   stopLocalSound('timer');
+  stopLocalSound('timer_tick');
 });
 
 socket.on('timer:stopped', () => {
-  timerMaxDuration = 30;
-  updateTimerUI(30);
+  const dur = (activeQuestionData && activeQuestionData.timer_override) ? activeQuestionData.timer_override : 30;
+  timerMaxDuration = dur;
+  updateTimerUI(dur);
   stopLocalSound('timer');
+  stopLocalSound('timer_tick');
 });
 
 socket.on('timer:expired', () => {
@@ -682,7 +698,7 @@ function updateTimerUI(sec) {
   if (timerRing) {
     timerRing.classList.remove('warning', 'danger');
   }
-  timerText.classList.remove('danger');
+  timerText.classList.remove('danger', 'warning');
   
   if (sec <= 5) {
     if (timerRing) timerRing.classList.add('danger');
@@ -710,6 +726,9 @@ function resetAnswerReveal() {
   optionCards.forEach(card => {
     card.classList.remove('correct', 'wrong', 'eliminated', 'clicked-correct', 'clicked-wrong');
   });
+  stopLocalSound('reveal');
+  stopLocalSound('suspense');
+  if (udanAudioSynth) udanAudioSynth.toggleSuspenseDrone(false);
 }
 
 function syncAudioStatus(status) {
@@ -1398,7 +1417,7 @@ let isPromoReelRunning = false;
 let promoReelTimer = null;
 let promoProgressTimer = null;
 let promoReelSpeed = 5500;
-const promoScenesList = ['1', '2', '3', '4', 'all'];
+const promoScenesList = ['1', '2', '3', '4', '5'];
 let currentSceneIndex = 4; // starts at 'all'
 
 const promoTimelineFill = document.getElementById('promoTimelineFill');
@@ -1499,63 +1518,66 @@ if (promoTiltBox && promoHeroArea) {
   }
 }
 
-// ── 3. Next-Level Cinematic Scene Trigger Function ──
-function triggerPromoScene(sceneId) {
-  currentPromoScene = sceneId;
+// ── 3. Next-Level Cinematic Slide Presentation Trigger ──
+function triggerPromoScene(sceneId, forcedDirection) {
+  if (sceneId === 'all') sceneId = '1';
+  const targetId = String(sceneId);
+  const prevId = String(currentPromoScene || '1');
 
-  // Update Tracker Buttons
+  // Update dots
   document.querySelectorAll('.reel-dot-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.scene === sceneId);
+    btn.classList.toggle('active', btn.dataset.scene === targetId);
   });
 
-  const cards = document.querySelectorAll('.promo-card');
+  const slides = document.querySelectorAll('.promo-slide');
   const heroArea = document.getElementById('promoHeroArea');
-  const promoGrid = document.getElementById('promoCardsGrid');
 
-  if (sceneId === 'all') {
-    // Show all cards in glorious balanced view
-    cards.forEach(card => {
-      card.classList.remove('scene-active', 'scene-dimmed');
-    });
-    if (heroArea) {
-      heroArea.style.transform = 'scale(1) translateY(0)';
-      heroArea.style.filter = 'none';
-    }
-    if (promoGrid) {
-      promoGrid.style.transform = 'scale(1)';
-    }
-    return;
+  // Determine direction: forward (moving to higher slide) or backward (moving to lower slide)
+  const prevIdx = promoScenesList.indexOf(prevId);
+  const nextIdx = promoScenesList.indexOf(targetId);
+  let direction = forcedDirection;
+  if (!direction) {
+    direction = (nextIdx >= prevIdx || (prevIdx === promoScenesList.length - 1 && nextIdx === 0)) ? 'forward' : 'backward';
   }
 
-  // Handle Specific Scene Highlighting
-  cards.forEach(card => {
-    const cardScene = card.dataset.scene;
-    if (cardScene === sceneId) {
-      card.classList.add('scene-active');
-      card.classList.remove('scene-dimmed');
+  slides.forEach(slide => {
+    const sId = slide.dataset.scene;
+    if (sId === targetId) {
+      // Incoming Slide
+      slide.classList.remove('slide-exit-to-left', 'slide-exit-to-right');
+      if (sId !== prevId) {
+        slide.classList.add(direction === 'forward' ? 'slide-enter-from-right' : 'slide-enter-from-left');
+        // Force reflow
+        void slide.offsetWidth;
+        slide.classList.remove('slide-enter-from-right', 'slide-enter-from-left');
+      }
+      slide.classList.add('slide-active', 'scene-active');
+    } else if (sId === prevId && targetId !== prevId) {
+      // Outgoing Slide
+      slide.classList.remove('slide-active', 'scene-active');
+      slide.classList.add(direction === 'forward' ? 'slide-exit-to-left' : 'slide-exit-to-right');
+      setTimeout(() => {
+        slide.classList.remove('slide-exit-to-left', 'slide-exit-to-right');
+      }, 700);
     } else {
-      card.classList.remove('scene-active');
-      card.classList.add('scene-dimmed');
+      slide.classList.remove('slide-active', 'scene-active', 'slide-exit-to-left', 'slide-exit-to-right');
     }
   });
 
-  // Scene 1: Focus on 3D Title Logo Reveal
-  if (sceneId === '1') {
-    if (heroArea) {
-      heroArea.style.transform = 'scale(1.08) translateY(-6px)';
-      heroArea.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
-    }
-    cards.forEach(card => card.classList.add('scene-dimmed'));
-  } else {
-    if (heroArea) {
-      heroArea.style.transform = 'scale(1) translateY(0)';
-    }
+  currentPromoScene = targetId;
+  currentSceneIndex = Math.max(0, promoScenesList.indexOf(targetId));
+
+  // Scene 1: 3D Centerpiece Polish
+  if (targetId === '1' && heroArea) {
+    heroArea.style.transform = 'scale(1.06) translateY(-4px)';
+  } else if (heroArea) {
+    heroArea.style.transform = 'scale(1) translateY(0)';
   }
 
-  // Scene 4: Climax Prize Celebration
-  if (sceneId === '4') {
-    triggerConfetti(7);
-    playPromoFanfare();
+  // Scene 5: Grand Finale Celebration
+  if (targetId === '5') {
+    if (typeof triggerConfetti === 'function') triggerConfetti(7);
+    if (typeof playPromoFanfare === 'function') playPromoFanfare();
   }
 }
 
@@ -1627,8 +1649,9 @@ function togglePromoReel() {
 }
 
 function updatePromoReelUI(isRunning) {
-  if (promoPlayReelLabel) {
-    promoPlayReelLabel.textContent = isRunning ? 'Pause Reel' : 'Play Reel';
+  const lbl = document.getElementById('promoPlayReelLabel') || document.getElementById('playReelText');
+  if (lbl) {
+    lbl.textContent = isRunning ? 'Pause Reel' : 'Play Reel';
   }
   if (promoPlayReelBtn) {
     const icon = promoPlayReelBtn.querySelector('i');
@@ -1733,8 +1756,62 @@ document.querySelectorAll('.reel-dot-btn').forEach(btn => {
   });
 });
 
+// Promo Dock Next / Prev Buttons
+document.getElementById('btnPromoPrev')?.addEventListener('click', () => {
+  stopPromoReel();
+  let idx = promoScenesList.indexOf(currentPromoScene);
+  idx = (idx - 1 + promoScenesList.length) % promoScenesList.length;
+  triggerPromoScene(promoScenesList[idx], 'backward');
+});
+
+document.getElementById('btnPromoNext')?.addEventListener('click', () => {
+  stopPromoReel();
+  let idx = promoScenesList.indexOf(currentPromoScene);
+  idx = (idx + 1) % promoScenesList.length;
+  triggerPromoScene(promoScenesList[idx], 'forward');
+});
+
+
+
+// ── Promo Navigation Listeners ──
+document.getElementById('btnPromoPrev')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  stopPromoReel();
+  let idx = promoScenesList.indexOf(currentPromoScene || '1');
+  idx = (idx - 1 + promoScenesList.length) % promoScenesList.length;
+  triggerPromoScene(promoScenesList[idx], 'backward');
+});
+
+document.getElementById('btnPromoNext')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  stopPromoReel();
+  let idx = promoScenesList.indexOf(currentPromoScene || '1');
+  idx = (idx + 1) % promoScenesList.length;
+  triggerPromoScene(promoScenesList[idx], 'forward');
+});
+
+// Click anywhere on slide card advances to next slide!
+document.querySelectorAll('.promo-slide').forEach(slide => {
+  slide.addEventListener('click', (e) => {
+    if (e.target.closest('button, a, input, select')) return;
+    stopPromoReel();
+    let idx = promoScenesList.indexOf(currentPromoScene || '1');
+    idx = (idx + 1) % promoScenesList.length;
+    triggerPromoScene(promoScenesList[idx], 'forward');
+  });
+});
+
+// Enter Quiz button
+document.getElementById('promoStartQuizBtn')?.addEventListener('click', () => {
+  stopPromoReel();
+  if (window.socket) window.socket.emit('state:update', { active_screen: 'quiz' });
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screenQuiz')?.classList.add('active');
+  currentScreen = 'quiz';
+});
+
 // Click card to highlight that card's scene
-document.querySelectorAll('.promo-card').forEach(card => {
+document.querySelectorAll('.promo-slide').forEach(card => {
   card.addEventListener('click', () => {
     stopPromoReel();
     const scene = card.dataset.scene;
@@ -1884,7 +1961,7 @@ document.addEventListener('keydown', (e) => {
     }
   }
   // Scene Shortcuts 0, 1, 2, 3, 4
-  else if (currentScreen === 'promo' && ['0', '1', '2', '3', '4'].includes(e.key)) {
+  else if (currentScreen === 'promo' && ['1', '2', '3', '4', '5'].includes(e.key)) {
     const sc = e.key === '0' ? 'all' : e.key;
     stopPromoReel();
     triggerPromoScene(sc);

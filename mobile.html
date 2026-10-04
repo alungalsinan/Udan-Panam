@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#070b19">
+  <title>Udan Panam Mobile Control</title>
+  
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/400.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/600.css" />
+  <link rel="stylesheet" href="/node_modules/@fontsource/inter/700.css" />
+  <link rel="stylesheet" href="/node_modules/@fortawesome/fontawesome-free/css/all.min.css" />
+  
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen active">
+    <div class="login-box">
+      <i class="fa-solid fa-mobile-screen-button logo-icon"></i>
+      <h1>Udan Panam</h1>
+      <p>Mobile Control Panel</p>
+      
+      <input type="password" id="login-pwd" placeholder="Enter Password (1234)">
+      <button id="login-btn" class="btn btn-primary btn-block">Unlock</button>
+      <div id="login-error" class="error-text"></div>
+    </div>
+  </div>
+
+  <!-- Main Control Screen -->
+  <div id="control-screen" class="screen">
+    
+    <header class="app-header">
+      <div class="header-title">
+        <i class="fa-solid fa-tower-broadcast text-red"></i> LIVE
+      </div>
+      <div id="conn-status" class="status-indicator"></div>
+    </header>
+
+    <div class="content-scroll pb-20">
+      
+      <!-- Teleprompter Preview -->
+      <section class="card">
+        <div class="card-header">Current Question & Answer</div>
+        <div id="current-q-text" class="q-text">Waiting for question...</div>
+        <div class="card-footer" style="flex-wrap: wrap;">
+          <span id="q-level" class="badge">--</span>
+          <span id="q-id" class="badge">--</span>
+          <span id="q-answer" class="badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success); color: #34d399; font-weight: 700;">Ans: --</span>
+        </div>
+      </section>
+
+      <!-- Display Control -->
+      <section class="card">
+        <div class="card-header">Screen Elements</div>
+        <div class="btn-group col-2">
+          <button id="btn-show-q" class="btn"><i class="fa-solid fa-clipboard-question"></i> Show Q</button>
+          <button id="btn-show-opt" class="btn"><i class="fa-solid fa-list"></i> Options</button>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-show-timer" class="btn" style="flex: 1;"><i class="fa-solid fa-stopwatch"></i> Timer</button>
+            <button id="btn-pause-timer" class="btn btn-warning" style="padding: 12px 18px;" title="Pause Timer"><i class="fa-solid fa-pause"></i></button>
+          </div>
+          <button id="btn-reveal" class="btn btn-warning"><i class="fa-solid fa-eye"></i> Reveal Ans</button>
+        </div>
+      </section>
+
+      <!-- Question Navigation -->
+      <section class="card">
+        <div class="card-header">Question Navigation</div>
+        <div class="btn-group col-2">
+          <button id="btn-prev" class="btn"><i class="fa-solid fa-chevron-left"></i> Prev Q</button>
+          <button id="btn-next" class="btn btn-primary">Next Q <i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </section>
+
+      <!-- Screen Routing -->
+      <section class="card">
+        <div class="card-header">Stage Screen</div>
+        <div class="btn-group col-3">
+          <button class="btn scene-btn" data-scene="welcome">Welcome</button>
+          <button class="btn scene-btn" data-scene="promo">Promo</button>
+          <button class="btn scene-btn active" data-scene="quiz">Quiz</button>
+        </div>
+      </section>
+
+      <!-- Soundboard -->
+      <section class="card">
+        <div class="card-header">Sound FX</div>
+        <div class="btn-group col-2 mb-2">
+          <button class="btn sfx-btn btn-success" data-sound="correct"><i class="fa-solid fa-check"></i> Correct</button>
+          <button class="btn sfx-btn btn-danger" data-sound="wrong"><i class="fa-solid fa-xmark"></i> Wrong</button>
+        </div>
+        <div class="btn-group col-3 mb-2">
+          <button class="btn sfx-btn btn-outline" data-sound="transition">Trans</button>
+          <button class="btn sfx-btn btn-outline" data-sound="timer">Clock</button>
+          <button class="btn sfx-btn btn-outline" data-sound="mocking_laughter">Cheer</button>
+        </div>
+        <button class="btn sfx-btn btn-block btn-stop-audio" data-sound="stop"><i class="fa-solid fa-volume-xmark"></i> STOP ALL AUDIO</button>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Questions Selection Screen -->
+  <div id="questions-screen" class="screen">
+    <header class="app-header">
+      <div class="header-title">Question Selector</div>
+    </header>
+    <div class="content-scroll pb-20">
+      <div class="card">
+        <input type="text" id="q-search" placeholder="Search questions..." class="w-100 mb-2 p-2">
+        <div id="q-list" class="q-list-container">
+           <div class="text-center text-muted">Loading questions...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-target="control-screen">
+      <i class="fa-solid fa-gamepad"></i>
+      <span>Control</span>
+    </button>
+    <button class="nav-btn" data-target="questions-screen">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Questions</span>
+    </button>
+  </nav>
+
+  <!-- Quick Edit Modal -->
+  <div id="edit-modal" class="screen" style="display: none; position: fixed; top: 0; left: 0; z-index: 200; background: rgba(0,0,0,0.8); padding: 20px; justify-content: center; align-items: center;">
+    <div class="card" style="width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;">
+      <div class="card-header">Edit Question</div>
+      <input type="hidden" id="edit-q-id">
+      
+      <label class="text-muted" style="font-size:0.8rem">Question Text</label>
+      <textarea id="edit-q-text" class="w-100 p-2 mb-2" style="background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 4px;" rows="3"></textarea>
+      
+      <label class="text-muted" style="font-size:0.8rem">Option A</label>
+      <input type="text" id="edit-opt-a" class="w-100 p-2 mb-2" style="background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 4px;">
+      
+      <label class="text-muted" style="font-size:0.8rem">Option B</label>
+      <input type="text" id="edit-opt-b" class="w-100 p-2 mb-2" style="background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 4px;">
+      
+      <label class="text-muted" style="font-size:0.8rem">Option C</label>
+      <input type="text" id="edit-opt-c" class="w-100 p-2 mb-2" style="background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 4px;">
+      
+      <label class="text-muted" style="font-size:0.8rem">Option D</label>
+      <input type="text" id="edit-opt-d" class="w-100 p-2 mb-2" style="background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 4px;">
+      
+      <label class="text-muted" style="font-size:0.8rem">Correct Option (A, B, C, or D)</label>
+      <select id="edit-q-ans" class="w-100 p-2 mb-2" style="background: var(--bg-dark); color: white; border: 1px solid var(--border); border-radius: 4px;">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+      
+      <div class="btn-group col-2 mt-2">
+        <button id="btn-cancel-edit" class="btn btn-outline">Cancel</button>
+        <button id="btn-save-edit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="mobile.js"></script>
+</body>
+</html>

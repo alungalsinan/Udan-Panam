@@ -149,157 +149,174 @@
       </div>
     </div>
 
-    <!-- Promo Stage Container -->
+        <!-- Promo Stage Container -->
     <div class="promo-stage-wrapper">
       
-      <!-- Top Eyebrow Badges -->
-      <header class="promo-eyebrow animate-slide-down">
-        <div class="promo-badge-gold">
-          <span class="badge-shine"></span>
-          <i class="fa-solid fa-crown"></i>
-          <span id="promoEyebrowBadge">SRDB PRESENTS</span>
-        </div>
-        <div class="promo-producer-tag">
-          <i class="fa-solid fa-clapperboard"></i>
-          <span id="promoProducerWrapper">FROM THE PRODUCER <strong class="glow-producer" id="promoProducerTag">DC</strong></span>
-        </div>
-        <div class="promo-live-pill" title="Live Broadcast Feed Active">
-          <span class="promo-live-dot"></span>
-          <span>ON AIR</span>
-        </div>
-      </header>
-
-      <!-- Centerpiece 3D Visual & Logo Artwork -->
-      <div class="promo-hero-centerpiece" id="promoHeroArea">
-        <div class="promo-3d-tilt-box" id="promoTiltBox">
-          <div class="promo-art-glass-plate">
-            <div class="promo-art-glow"></div>
-            <img src="assets/promo-logo-3d.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
-            <div class="promo-specular-sweep"></div>
-          </div>
-        </div>
-
-        <!-- Broadcast Tagline & Hashtag -->
-        <div class="promo-sub-ribbon">
-          <span class="promo-tagline" id="promoTagline">THE ULTIMATE BATTLE OF MINDS • GRAND TELECAST</span>
-          <span class="promo-hashtag-text" id="promoHashtag"># udan panam</span>
-        </div>
-      </div>
-
-      <!-- Feature Cards Grid (Overview Mode & Interactive Reel Mode) -->
-      <div class="promo-cards-grid" id="promoCardsGrid">
+            <div class="promo-slides-container" id="promoCardsGrid">
         
-        <!-- Card 1: Classes 1 to 10 -->
-        <div class="promo-card promo-card--classes" id="promoCard1" data-scene="2">
-          <div class="promo-card__halo"></div>
-          <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-graduation-cap"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard1Tag">ELIGIBILITY</span>
-            <h3 class="promo-card__title" id="promoCard1Title">FOR CLASSES 1 TO 10</h3>
-            <p class="promo-card__malayalam" id="promoCard1Desc">1 മുതൽ 10 വരെയുള്ള ക്ലാസ്സുകളിലെ മിടുക്കന്മാർക്കായി</p>
-          </div>
-          <div class="promo-card__corner-accent"></div>
-        </div>
-
-        <!-- Card 2: 1 Participant per class -->
-        <div class="promo-card promo-card--participants" id="promoCard2" data-scene="2">
-          <div class="promo-card__halo"></div>
-          <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-user-astronaut"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard2Tag">CONTESTANT RULE</span>
-            <h3 class="promo-card__title" id="promoCard2Title">ONE PARTICIPANT PER CLASS</h3>
-            <p class="promo-card__malayalam" id="promoCard2Desc">ഓരോ ക്ലാസ്സിൽ നിന്നും തിരഞ്ഞെടുക്കപ്പെടുന്ന ഒരു പ്രതിഭ വീതം!</p>
-          </div>
-          <div class="promo-card__corner-accent"></div>
-        </div>
-
-        <!-- Card 3: Conductors & Leadership -->
-        <div class="promo-card promo-card--conductors" id="promoCard3" data-scene="3">
-          <div class="promo-card__halo"></div>
-          <div class="promo-card__icon-wrap">
-            <i class="fa-solid fa-crown"></i>
-          </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard3Tag">STAGE LEADERSHIP</span>
-            <div class="conductors-badge-row">
-              <div class="conductor-chip conductor-chip--chairman">
-                <span class="conductor-badge-title">CHAIRMAN</span>
-                <strong class="conductor-badge-name" id="promoChairmanName">ADHIL S</strong>
+        <!-- Slide 1: Intro (SRDB Presents, Udan Panam 3.0, From Producer DC) -->
+        <div class="promo-slide promo-slide--intro slide-active" id="promoSlide1" data-scene="1">
+          <div class="slide-card-glass slide-card-glass--intro">
+            <header class="promo-eyebrow">
+              <div class="promo-badge-gold">
+                <span class="badge-shine"></span>
+                <i class="fa-solid fa-crown"></i>
+                <span>SRDB PRESENTS</span>
               </div>
-              <div class="conductor-chip conductor-chip--convenor">
-                <span class="conductor-badge-title">CONVENOR</span>
-                <strong class="conductor-badge-name" id="promoConvenorName">MUSTHAQEEM MUHAMMED</strong>
+              <div class="promo-producer-tag">
+                <i class="fa-solid fa-clapperboard"></i>
+                <span>FROM THE PRODUCER <strong class="glow-producer">DC</strong></span>
+              </div>
+            </header>
+
+            <div class="promo-hero-centerpiece" id="promoHeroArea">
+              <div class="promo-3d-tilt-box" id="promoTiltBox">
+                <div class="promo-art-glass-plate">
+                  <div class="promo-art-glow"></div>
+                  <img src="assets/promo-logo-3d.png" alt="Udan Panam 3.0 Logo" class="promo-art-img" id="promoArtImg" />
+                </div>
               </div>
             </div>
-            <p class="promo-card__malayalam" id="promoCard3Desc">നേതൃത്വം: ചെയർമാൻ ആദിൽ എസ് &amp; കൺവീനർ മുസ്തഖീം മുഹമ്മദ്</p>
+
+            <div class="slide-tag-footer">
+              <span class="slide-live-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> GRAND STAGE EDITION</span>
+            </div>
           </div>
-          <div class="promo-card__corner-accent"></div>
         </div>
 
-        <!-- Card 4: Prizes & Rewards -->
-        <div class="promo-card promo-card--prizes" id="promoCard4" data-scene="4">
-          <div class="promo-card__halo"></div>
-          <div class="promo-card__icon-wrap prize-glow">
-            <i class="fa-solid fa-trophy"></i>
+        <!-- Slide 2: Eligibility (For classes 1 to 10) -->
+        <div class="promo-slide promo-slide--content" id="promoSlide2" data-scene="2">
+          <div class="slide-card-glass">
+            <div class="slide-badge-category">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <span>ELIGIBILITY CRITERIA</span>
+            </div>
+            <div class="slide-icon-halo">
+              <div class="icon-ring"></div>
+              <i class="fa-solid fa-school"></i>
+            </div>
+            <h2 class="slide-headline slide-headline--gold">
+              FOR CLASSES <span class="highlight-cyan">1 TO 10</span>
+            </h2>
+            <p class="slide-sub-caption">Open to all passionate students across classes 1 to 10</p>
+            <div class="slide-accent-line"></div>
           </div>
-          <div class="promo-card__body">
-            <span class="promo-card__tag" id="promoCard4Tag">MEGA REWARDS</span>
-            <h3 class="promo-card__title" id="promoCard4Title">PARTICIPATE &amp; WIN VALUABLE PRIZES!</h3>
-            <p class="promo-card__malayalam" id="promoCard4Desc">പങ്കെടുക്കൂ, ആകർഷകവും അമൂല്യവുമായ സമ്മാനങ്ങൾ നേടൂ!</p>
+        </div>
+
+        <!-- Slide 3: Contestant Rule (One participant from every class) -->
+        <div class="promo-slide promo-slide--content" id="promoSlide3" data-scene="3">
+          <div class="slide-card-glass">
+            <div class="slide-badge-category">
+              <i class="fa-solid fa-users"></i>
+              <span>CONTESTANT RULE</span>
+            </div>
+            <div class="slide-icon-halo">
+              <div class="icon-ring icon-ring--cyan"></div>
+              <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+            <h2 class="slide-headline slide-headline--cyan">
+              ONE PARTICIPANT<br/>
+              <span class="highlight-yellow">FROM EVERY CLASS</span>
+            </h2>
+            <p class="slide-sub-caption">Each class nominates their premier champion to battle on stage</p>
+            <div class="slide-accent-line"></div>
           </div>
-          <div class="promo-card__corner-accent"></div>
+        </div>
+
+        <!-- Slide 4: Stage Conductors (Chairman Adhil S, Convenor Musthaqeem Muhammed) -->
+        <div class="promo-slide promo-slide--content" id="promoSlide4" data-scene="4">
+          <div class="slide-card-glass slide-card-glass--conductors">
+            <div class="slide-badge-category">
+              <i class="fa-solid fa-microphone-lines"></i>
+              <span>STAGE CONDUCTORS</span>
+            </div>
+            
+            <div class="conductors-stage-grid">
+              <div class="conductor-box conductor-box--chairman">
+                <div class="conductor-icon-badge"><i class="fa-solid fa-crown"></i></div>
+                <div class="conductor-role-title">CHAIRMAN</div>
+                <div class="conductor-person-name">ADHIL S</div>
+                <div class="conductor-sub-badge">Event Leadership</div>
+              </div>
+
+              <div class="conductor-separator-bolt">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+
+              <div class="conductor-box conductor-box--convenor">
+                <div class="conductor-icon-badge"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="conductor-role-title">CONVENOR</div>
+                <div class="conductor-person-name">MUSTHAQEEM MUHAMMED</div>
+                <div class="conductor-sub-badge">Stage Direction</div>
+              </div>
+            </div>
+
+            <p class="slide-sub-caption">Directing the grand stage experience with energy and excellence</p>
+          </div>
+        </div>
+
+        <!-- Slide 5: Rewards Climax (Participate and win valuable prizes) -->
+        <div class="promo-slide promo-slide--content" id="promoSlide5" data-scene="5">
+          <div class="slide-card-glass slide-card-glass--rewards">
+            <div class="slide-badge-category slide-badge-category--gold">
+              <i class="fa-solid fa-star"></i>
+              <span>GRAND FINALE & REWARDS</span>
+            </div>
+            <div class="slide-icon-halo slide-icon-halo--trophy">
+              <div class="icon-ring icon-ring--gold"></div>
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="slide-headline slide-headline--mega">
+              PARTICIPATE AND WIN<br/>
+              <span class="highlight-gold-glow">VALUABLE PRIZES!</span>
+            </h2>
+            <div class="prize-pill-group">
+              <span class="prize-pill"><i class="fa-solid fa-sack-dollar"></i> Instant Cash Rewards</span>
+              <span class="prize-pill"><i class="fa-solid fa-medal"></i> Champions Trophy</span>
+              <span class="prize-pill"><i class="fa-solid fa-gift"></i> Grand Hampers</span>
+            </div>
+          </div>
         </div>
 
       </div>
 
-      <!-- Story Reel Navigation & Status Controls Dock -->
+            <!-- Footer Action Dock -->
       <footer class="promo-controls-footer" id="promoControlsFooter">
-        <!-- Reel Scene Timeline Progress Bar -->
-        <div class="promo-timeline-bar" aria-hidden="true">
-          <div class="promo-timeline-fill" id="promoTimelineFill"></div>
-        </div>
-
-        <div class="promo-dock-inner">
-          <div class="promo-reel-tracker" id="promoReelTracker" title="Cinematic Scene Sequence">
-            <button class="reel-dot-btn active" data-scene="all" title="Full Overview"><i class="fa-solid fa-table-cells-large"></i> All</button>
-            <button class="reel-dot-btn" data-scene="1" title="Scene 1: Title Reveal">1. Title</button>
-            <button class="reel-dot-btn" data-scene="2" title="Scene 2: Classes &amp; Participation">2. Rules</button>
-            <button class="reel-dot-btn" data-scene="3" title="Scene 3: Conductors">3. Conductors</button>
-            <button class="reel-dot-btn" data-scene="4" title="Scene 4: Mega Prizes">4. Prizes</button>
+        <div class="promo-timeline-bar"><div class="promo-timeline-fill" id="promoTimelineFill"></div></div>
+        <div class="promo-controls-row">
+          <div class="promo-track-dots">
+            <button class="reel-dot-btn active" data-scene="1" title="Slide 1: Intro"><i class="fa-solid fa-circle"></i></button>
+            <button class="reel-dot-btn" data-scene="2" title="Slide 2: Classes 1-10"><i class="fa-solid fa-circle"></i></button>
+            <button class="reel-dot-btn" data-scene="3" title="Slide 3: One Participant"><i class="fa-solid fa-circle"></i></button>
+            <button class="reel-dot-btn" data-scene="4" title="Slide 4: Conductors"><i class="fa-solid fa-circle"></i></button>
+            <button class="reel-dot-btn" data-scene="5" title="Slide 5: Rewards"><i class="fa-solid fa-circle"></i></button>
           </div>
-
-          <div class="promo-actions-group">
-            <button id="promoPlayReelBtn" class="promo-action-btn primary" title="Auto-play TV Reel Animation (Spacebar)">
-              <i class="fa-solid fa-play"></i>
-              <span id="promoPlayReelLabel">Play Reel</span>
-            </button>
-            <button id="promoSoundBtn" class="promo-action-btn secondary" title="Play Broadcast Fanfare Sound">
-              <i class="fa-solid fa-volume-high"></i>
-              <span>Fanfare</span>
-            </button>
-            <button id="promoConfettiBtn" class="promo-action-btn gold" title="Celebration Confetti">
-              <i class="fa-solid fa-wand-magic-sparkles"></i>
-              <span>Celebrate</span>
-            </button>
-            <button id="promoStartQuizBtn" class="promo-action-btn accent" title="Switch to Live Quiz">
-              <i class="fa-solid fa-bolt"></i>
-              <span>Enter Quiz</span>
-            </button>
-            <button id="promoDockHideBtn" class="promo-action-btn ghost icon-only" title="Hide Controls for Clean Broadcast View (Press H)">
-              <i class="fa-solid fa-eye-slash"></i>
-            </button>
-          </div>
+          <button class="action-btn-secondary action-btn-nav" id="btnPromoPrev" title="Previous Slide (Left Arrow)"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="action-btn-secondary action-btn-nav" id="btnPromoNext" title="Next Slide (Right Arrow)"><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="action-btn-gold" id="promoPlayReelBtn" title="Toggle Auto-Reel (Space)">
+            <i class="fa-solid fa-play"></i> <span id="promoPlayReelLabel">Play Reel</span>
+          </button>
+          <button class="action-btn-secondary" id="promoSoundBtn" title="Play Fanfare (F)">
+            <i class="fa-solid fa-volume-high"></i> Fanfare
+          </button>
+          <button class="action-btn-accent" id="promoConfettiBtn" title="Celebrate (C)">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Celebrate
+          </button>
+          <button class="action-btn-primary" id="promoStartQuizBtn" title="Enter Quiz (Q)">
+            <i class="fa-solid fa-bolt"></i> Enter Quiz
+          </button>
+          <button class="action-btn-secondary" id="promoDockHideBtn" title="Hide Dock (Press H)">
+            <i class="fa-solid fa-eye-slash"></i>
+          </button>
         </div>
-
-        <div class="promo-dock-hint">
-          <span>Press <strong>H</strong> to hide dock • <strong>F</strong> for Fullscreen • <strong>1-4</strong> for Scenes</span>
+        <div class="promo-hint-row">
+          <span>Press <strong>H</strong> to hide dock</span>
+          <span class="hint-sep">&bull;</span>
+          <span><strong>F</strong> for Fullscreen</span>
+          <span class="hint-sep">&bull;</span>
+          <span><strong>1-5</strong> / <strong>&larr; &rarr;</strong> for Slides</span>
         </div>
       </footer>
-
     </div>
   </section>
 

@@ -92,6 +92,23 @@ function registerQuizSockets(io) {
     // ── Admin: Update State ──
     socket.on('state:update', async (data) => {
       try {
+        // Stop timer and timer sound if:
+        // 1. Timer explicitly turned off (timer_running === false)
+        // 2. New question selected or dispatched (current_question_id !== undefined)
+        // 3. Question is being revealed / shown only (show_question === true && show_options === false)
+        // 4. Answer is being revealed (reveal_answer === true)
+        const shouldStopTimer = (
+          data.timer_running === false ||
+          data.current_question_id !== undefined ||
+          (data.show_question === true && data.show_options === false) ||
+          data.reveal_answer === true
+        );
+
+        if (shouldStopTimer) {
+          stopTimer();
+          data.timer_running = false;
+        }
+
         const allowedFields = [
           'current_question_id', 'active_screen', 'show_question', 'show_options',
           'reveal_answer', 'audio_status', 'active_level', 'timer_running',
@@ -131,6 +148,22 @@ function registerQuizSockets(io) {
           }
         } else {
           state.question = null;
+        }
+
+        if (shouldStopTimer) {
+          const resetVal = data.timer_remaining !== undefined 
+            ? data.timer_remaining 
+            : (state.question?.timer_override || 30);
+          setTimerRemaining(resetVal);
+          state.timer_remaining = resetVal;
+          state.timer_running = false;
+          try {
+            await sql.query('UPDATE presentation_state SET timer_running = FALSE, timer_remaining = $1 WHERE id = 1', [resetVal]);
+          } catch (te) {
+            console.error('Error updating reset timer in state:update:', te);
+          }
+          io.to('presentation').emit('timer:stopped');
+          io.to('admin').emit('timer:stopped');
         }
 
         setPresentationState(state);
@@ -247,12 +280,15 @@ function registerQuizSockets(io) {
     socket.on('timer:stop', async () => {
       stopTimer();
       const pState = getPresentationState();
-      const resetVal = pState?.timer_remaining || 30;
+      const resetVal = pState?.question?.timer_override || 30;
       setTimerRemaining(resetVal);
 
       try {
-        await sql.query('UPDATE presentation_state SET timer_running = FALSE WHERE id = 1');
-        if (pState) pState.timer_running = false;
+        await sql.query('UPDATE presentation_state SET timer_running = FALSE, timer_remaining = $1 WHERE id = 1', [resetVal]);
+        if (pState) {
+          pState.timer_running = false;
+          pState.timer_remaining = resetVal;
+        }
       } catch (e) {
         console.error('Timer stop DB error:', e);
       }

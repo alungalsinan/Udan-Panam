@@ -132,75 +132,89 @@
         </div>
 
         <div class="header-right">
-          <!-- Broadcast Run Time Stopwatch -->
-          <div class="clay-stopwatch-badge" id="broadcast-stopwatch" title="Live Broadcast Elapsed Stopwatch">
-            <i class="fa-solid fa-clock"></i>
-            <span id="stopwatch-display">00:00:00</span>
-            <button id="stopwatch-toggle-btn" class="stopwatch-mini-btn" title="Start/Pause Broadcast Clock"><i class="fa-solid fa-play"></i></button>
-            <button id="stopwatch-reset-btn" class="stopwatch-mini-btn" title="Reset Clock"><i class="fa-solid fa-rotate-right"></i></button>
+          <!-- 🏝️ Island 1: Broadcast Health & Telemetry -->
+          <div class="header-island broadcast-island">
+            <!-- Broadcast Run Time Stopwatch -->
+            <div class="clay-stopwatch-badge" id="broadcast-stopwatch" title="Live Broadcast Elapsed Stopwatch">
+              <i class="fa-solid fa-clock"></i>
+              <span id="stopwatch-display">00:00:00</span>
+              <button id="stopwatch-toggle-btn" class="stopwatch-mini-btn" title="Start/Pause Broadcast Clock"><i class="fa-solid fa-play"></i></button>
+              <button id="stopwatch-reset-btn" class="stopwatch-mini-btn" title="Reset Clock"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+
+            <!-- Live Broadcast Calm Indicator -->
+            <div class="broadcast-badge" title="Live Broadcast Channel Active">
+              <span class="pulse-indicator"></span>
+              <span class="broadcast-label">ON AIR</span>
+            </div>
+
+            <!-- Socket Diagnostics & Ping -->
+            <div id="ping-status-badge" class="clay-ping-badge green" title="WebSocket Latency Health">
+              <span class="ping-bars">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+              </span>
+              <span id="ping-ms-text">12ms</span>
+            </div>
+
+            <div id="connection-status" class="connection-badge green" title="Socket Connection State">
+              <span class="status-dot"></span>
+              <span class="status-text">Connected</span>
+            </div>
           </div>
 
-          <!-- Emergency Stage Flash Alert Trigger -->
-          <button id="flash-alert-trigger-btn" class="btn btn-sm btn-outline clay-btn-flash" title="Dispatch Urgent Stage Flash Alert">
-            <i class="fa-solid fa-bullhorn text-warning"></i>
-            <span>Flash Alert</span>
-          </button>
-
-          <!-- Floating Studio Soundboard Toggle -->
-          <button id="sound-dock-toggle-btn" class="icon-btn" title="Toggle Studio FX Soundboard">
-            <i class="fa-solid fa-music"></i>
-          </button>
-
-          <!-- Direct Links to Displays -->
-          <a href="/" target="_blank" class="stage-link-btn" title="Open Stage Display in new window">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            <span>Stage</span>
-          </a>
-          <a href="/cast" target="_blank" class="stage-link-btn cast-link-btn" title="Open Clean Casting Screen">
-            <i class="fa-solid fa-tv"></i>
-            <span>Cast</span>
-          </a>
-
-          <!-- Live Broadcast Pulse Indicator -->
-          <div class="broadcast-badge">
-            <span class="pulse-indicator"></span>
-            <span class="broadcast-label">ON AIR</span>
+          <!-- 🏝️ Island 2: Screen Routing Capsule -->
+          <div class="header-island routing-island">
+            <a href="/" target="_blank" class="stage-link-btn" title="Open Stage Display in new window">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              <span>Stage</span>
+            </a>
+            <a href="/cast" target="_blank" class="stage-link-btn cast-link-btn" title="Open Clean Casting Screen">
+              <i class="fa-solid fa-tv"></i>
+              <span>Cast</span>
+            </a>
           </div>
 
-          <!-- Socket Diagnostics & Ping -->
-          <div id="ping-status-badge" class="clay-ping-badge green" title="WebSocket Latency Health">
-            <span class="ping-bars">
-              <span class="bar bar-1"></span>
-              <span class="bar bar-2"></span>
-              <span class="bar bar-3"></span>
-            </span>
-            <span id="ping-ms-text">12ms</span>
+          <!-- 🏝️ Island 3: Studio Comfort & Zen Island -->
+          <div class="header-island tools-island">
+            <!-- 🌿 Zen Focus Mode Pill -->
+            <button id="zen-mode-toggle-btn" class="zen-toggle-pill" title="Toggle Calm Zen Focus Mode (Z)">
+              <i class="fa-solid fa-leaf"></i>
+              <span>Zen</span>
+            </button>
+
+            <!-- Floating Studio Soundboard Toggle -->
+            <button id="sound-dock-toggle-btn" class="icon-btn" title="Toggle Studio FX Soundboard">
+              <i class="fa-solid fa-music"></i>
+            </button>
+
+            <!-- Emergency Stage Flash Alert Trigger -->
+            <button id="flash-alert-trigger-btn" class="btn btn-sm btn-outline clay-btn-flash" title="Dispatch Urgent Stage Flash Alert">
+              <i class="fa-solid fa-bullhorn text-warning"></i>
+              <span>Flash</span>
+            </button>
+
+            <!-- Keyboard Shortcuts Cheat Sheet -->
+            <button id="hotkeys-modal-btn" class="icon-btn" title="Studio Keyboard Hotkeys (?)">
+              <i class="fa-solid fa-keyboard"></i>
+            </button>
+
+            <!-- Fullscreen Console Mode -->
+            <button id="fullscreen-toggle-btn" class="icon-btn" title="Toggle Fullscreen Control Room">
+              <i class="fa-solid fa-expand"></i>
+            </button>
+
+            <!-- Claymorphism Studio Customizer -->
+            <button id="clay-customizer-btn" class="icon-btn clay-sparkle-btn" title="Claymorphism Studio & Depth Customizer">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button id="theme-toggle-btn" class="icon-btn" title="Toggle Light/Dark Theme">
+              <i class="fa-solid fa-circle-half-stroke"></i>
+            </button>
           </div>
-
-          <div id="connection-status" class="connection-badge green" title="Socket Connection State">
-            <span class="status-dot"></span>
-            <span class="status-text">Connected</span>
-          </div>
-
-          <!-- Keyboard Shortcuts Cheat Sheet -->
-          <button id="hotkeys-modal-btn" class="icon-btn" title="Studio Keyboard Hotkeys (?)">
-            <i class="fa-solid fa-keyboard"></i>
-          </button>
-
-          <!-- Fullscreen Console Mode -->
-          <button id="fullscreen-toggle-btn" class="icon-btn" title="Toggle Fullscreen Control Room">
-            <i class="fa-solid fa-expand"></i>
-          </button>
-
-          <!-- Claymorphism Studio Customizer -->
-          <button id="clay-customizer-btn" class="icon-btn clay-sparkle-btn" title="Claymorphism Studio & Depth Customizer">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-          </button>
-
-          <!-- Theme Toggle -->
-          <button id="theme-toggle-btn" class="icon-btn" title="Toggle Light/Dark Theme">
-            <i class="fa-solid fa-circle-half-stroke"></i>
-          </button>
         </div>
       </header>
 
@@ -374,11 +388,11 @@
               <!-- Question Quick Selector Grid -->
               <div class="card margin-top">
                 <div class="card-header-clean">
-                  <h3 class="card-title"><i class="fa-solid fa-grip"></i> Round Questions Quick Jump</h3>
-                  <span class="card-hint">Click number to load question</span>
+                  <h3 class="card-title"><i class="fa-solid fa-list-check text-cyan"></i> Round Questions & Answers List</h3>
+                  <span class="card-hint">All questions with options & answers on one page &bull; Click to air on stage</span>
                 </div>
                 <div id="live-questions-list" class="quick-question-grid">
-                  <!-- Dynamically populated numbered buttons in admin.js -->
+                  <!-- Dynamically populated question cards with options & answers in admin.js -->
                 </div>
               </div>
 
@@ -696,13 +710,14 @@
               <table id="questions-table" class="data-table">
                 <thead>
                   <tr>
-                    <th width="60">Sort</th>
-                    <th width="60">ID</th>
-                    <th width="100">Level</th>
-                    <th>Question Text</th>
-                    <th width="140">Category</th>
-                    <th width="80">Points</th>
-                    <th width="100">Status</th>
+                    <th width="40">Sort</th>
+                    <th width="50">ID</th>
+                    <th width="70">Level</th>
+                    <th width="260">Question Text</th>
+                    <th>Options & Answer</th>
+                    <th width="110">Category</th>
+                    <th width="60">Pts</th>
+                    <th width="80">Status</th>
                     <th width="120" class="text-right">Actions</th>
                   </tr>
                 </thead>
@@ -1140,7 +1155,7 @@
           <!-- ═══════════════════════════════════════════════ -->
           <!-- SUB-VIEW 1: DUAL-SCREEN BROADCAST MATRIX      -->
           <!-- ═══════════════════════════════════════════════ -->
-          <div id="subview-matrix" class="promo-subview-panel">
+          <div id="subview-matrix" class="promo-subview-panel active">
             <div class="dual-matrix-container">
               
               <!-- SCREEN 1: PRIMARY STAGE DISPLAY (/) -->
@@ -1320,41 +1335,41 @@
                 </div>
               </div>
 
-              <!-- Interactive 5-Scene Director Cards -->
+                                          <!-- Interactive 5-Slide Director Cards -->
               <div class="scene-director-cards-grid margin-top">
-                <div class="scene-card active" data-director-scene="all">
-                  <div class="scene-card-badge">SCENE 0</div>
-                  <div class="scene-card-icon"><i class="fa-solid fa-table-cells-large"></i></div>
-                  <h4 class="scene-card-title">Full Overview</h4>
-                  <p class="scene-card-desc">All broadcast cards in balanced studio harmony</p>
-                </div>
-
-                <div class="scene-card" data-director-scene="1">
-                  <div class="scene-card-badge">SCENE 1</div>
+                <div class="scene-card active" data-director-scene="1">
+                  <div class="scene-card-badge">SLIDE 1</div>
                   <div class="scene-card-icon"><i class="fa-solid fa-crown"></i></div>
-                  <h4 class="scene-card-title">Identity & Logo Reveal</h4>
-                  <p class="scene-card-desc">Spotlight on 3D Udan Panam 3.0 centerpiece</p>
+                  <h4 class="scene-card-title">Identity & Title</h4>
+                  <p class="scene-card-desc">SRDB Presents, 3D Logo & DC Tag</p>
                 </div>
 
                 <div class="scene-card" data-director-scene="2">
-                  <div class="scene-card-badge">SCENE 2</div>
-                  <div class="scene-card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-                  <h4 class="scene-card-title">Eligibility & Rules</h4>
-                  <p class="scene-card-desc">Classes 1 to 10 & 1 participant per class</p>
+                  <div class="scene-card-badge">SLIDE 2</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-school"></i></div>
+                  <h4 class="scene-card-title">Student Eligibility</h4>
+                  <p class="scene-card-desc">For classes 1 to 10 criteria</p>
                 </div>
 
                 <div class="scene-card" data-director-scene="3">
-                  <div class="scene-card-badge">SCENE 3</div>
-                  <div class="scene-card-icon"><i class="fa-solid fa-user-tie"></i></div>
-                  <h4 class="scene-card-title">Stage Leadership</h4>
-                  <p class="scene-card-desc">Chairman Adhil S & Convenor Musthaqeem</p>
+                  <div class="scene-card-badge">SLIDE 3</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+                  <h4 class="scene-card-title">Contestant Rule</h4>
+                  <p class="scene-card-desc">One participant from every class</p>
                 </div>
 
                 <div class="scene-card" data-director-scene="4">
-                  <div class="scene-card-badge">SCENE 4</div>
+                  <div class="scene-card-badge">SLIDE 4</div>
+                  <div class="scene-card-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                  <h4 class="scene-card-title">Stage Conductors</h4>
+                  <p class="scene-card-desc">Chairman Adhil S & Convenor Musthaqeem</p>
+                </div>
+
+                <div class="scene-card" data-director-scene="5">
+                  <div class="scene-card-badge">SLIDE 5</div>
                   <div class="scene-card-icon"><i class="fa-solid fa-trophy"></i></div>
                   <h4 class="scene-card-title">Mega Rewards Climax</h4>
-                  <p class="scene-card-desc">Valuable prizes announcement with gold aura</p>
+                  <p class="scene-card-desc">Participate & win valuable prizes!</p>
                 </div>
               </div>
 
@@ -1725,34 +1740,20 @@
             </div>
           </div>
 
-          <!-- Right: Quick Timer Duration Adjuster & Live Badge -->
+          <!-- Right: Simplified Single Claymorphic Timer Unit -->
           <div class="dock-timer-col">
-            <div class="dock-timer-badge-wrap">
-              <div class="control-bar-timer-badge" id="flow-timer-status-badge">
-                <span class="timer-dot"></span>
-                <span id="flow-timer-display">30s</span>
-              </div>
+            <div class="control-bar-timer-badge" id="flow-timer-status-badge" title="Live Stage Timer Countdown">
+              <span class="timer-dot"></span>
+              <span id="flow-timer-display">30s</span>
             </div>
 
-            <!-- Quick Duration Presets & Nudges -->
-            <div class="dock-timer-tools">
-              <div class="preset-duration-chips" id="flow-timer-presets">
-                <button type="button" class="preset-chip" data-seconds="15">15s</button>
-                <button type="button" class="preset-chip active" data-seconds="30">30s</button>
-                <button type="button" class="preset-chip" data-seconds="45">45s</button>
-                <button type="button" class="preset-chip" data-seconds="60">60s</button>
-              </div>
-
-              <div class="stepper-adjust-chips">
-                <button type="button" id="flow-timer-minus-5" class="adjust-chip danger" title="Decrease 5s">-5s</button>
-                <button type="button" id="flow-timer-plus-5" class="adjust-chip success" title="Increase 5s">+5s</button>
-              </div>
-
-              <div class="direct-duration-setter">
-                <input type="number" id="flow-timer-duration-input" value="30" min="5" max="300" class="flow-timer-input" title="Custom duration (seconds)" />
-                <button type="button" id="flow-timer-set-btn" class="btn-chip-set" title="Set Duration">Set</button>
-                <button type="button" id="flow-timer-reset-btn" class="btn-chip-reset" title="Reset / Stop Timer"><i class="fa-solid fa-rotate-left"></i></button>
-              </div>
+            <!-- Single Claymorphic Duration Control -->
+            <div class="clay-timer-single-control">
+              <span class="clay-timer-label"><i class="fa-solid fa-clock"></i> Set:</span>
+              <input type="number" id="flow-timer-duration-input" value="30" min="5" max="300" class="flow-timer-input" title="Enter duration in seconds" />
+              <span class="clay-timer-unit">s</span>
+              <button type="button" id="flow-timer-set-btn" class="clay-btn clay-btn-set" title="Set Duration">Set</button>
+              <button type="button" id="flow-timer-reset-btn" class="clay-btn clay-btn-reset" title="Reset / Stop Timer"><i class="fa-solid fa-rotate-left"></i></button>
             </div>
           </div>
 
@@ -1982,6 +1983,13 @@
           Execute rapid live broadcast operations with precision director hotkeys.
         </p>
         <div class="hotkeys-grid margin-top">
+          <div class="hotkey-card">
+            <kbd class="clay-kbd">Z</kbd>
+            <div class="hotkey-info">
+              <span class="hotkey-title">Zen Focus Mode</span>
+              <span class="hotkey-desc">Toggle calm, stress-free distractionless director view</span>
+            </div>
+          </div>
           <div class="hotkey-card">
             <kbd class="clay-kbd">Space</kbd>
             <div class="hotkey-info">

@@ -54,7 +54,9 @@ app.use(cors());
 app.use(compression());
 app.use(helmet({
   contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  originAgentCluster: false
 }));
 app.use(express.json({ limit: '5mb' }));
 
@@ -63,7 +65,7 @@ app.use('/api/', apiLimiter);
 
 // Protect sensitive files from static inspection
 app.use(protectStaticFiles);
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { maxAge: '1d', etag: true }));
 
 // ─── API Routes ───
 app.use('/api/auth', authRoutes);
@@ -87,6 +89,9 @@ app.get('/admin', (req, res) => {
 app.get('/cast', (req, res) => {
   res.sendFile(path.join(__dirname, 'cast.html'));
 });
+app.get('/mobile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'mobile.html'));
+});
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -98,7 +103,7 @@ registerQuizSockets(io);
 async function bootstrap() {
   await initCache(sql, ensureInitialized);
 
-  server.listen(port, () => {
+  server.listen(port, '0.0.0.0', () => {
     console.log(`\n======================================================`);
     console.log(`  🚀 UDAN PANAM v2.0 — LIVE BROADCAST PLATFORM`);
     console.log(`======================================================`);
@@ -109,6 +114,15 @@ async function bootstrap() {
     console.log(`======================================================\n`);
   });
 }
+
+function gracefulShutdown() {
+  server.close(() => {
+    process.exit(0);
+  });
+}
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
 
 bootstrap();
 

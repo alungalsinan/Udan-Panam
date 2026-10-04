@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node --liftoff-only server.js",
-    "dev": "node --liftoff-only --watch server.js",
+    "dev": "node --liftoff-only --watch --watch-path=server.js --watch-path=server --watch-path=db.js server.js",
     "init-db": "node --liftoff-only init-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

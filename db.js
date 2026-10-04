@@ -60,7 +60,25 @@ async function getClient() {
       fs.mkdirSync(path.dirname(dbDir), { recursive: true });
     }
 
-    const pglite = await PGlite.create(dbDir, { relaxedDurability: true });
+    let pglite;
+    try {
+      const pidPath = path.join(dbDir, 'postmaster.pid');
+      if (fs.existsSync(pidPath)) {
+        try { fs.unlinkSync(pidPath); } catch (_) {}
+      }
+      pglite = await PGlite.create(dbDir, { relaxedDurability: true });
+    } catch (createErr) {
+      console.warn('⚠️ PGlite failed to resume from existing database. Attempting recovery...', createErr.message);
+      const corruptBackup = `${dbDir}_corrupt_${Date.now()}`;
+      try {
+        fs.cpSync(dbDir, corruptBackup, { recursive: true });
+        fs.rmSync(dbDir, { recursive: true, force: true });
+      } catch (cpErr) {
+        console.error('Error archiving corrupt db directory:', cpErr);
+      }
+      pglite = await PGlite.create(dbDir, { relaxedDurability: true });
+      console.log('✅ Fresh local persistent database created. Previous copy archived at:', corruptBackup);
+    }
     clientType = 'pglite';
     clientInstance = {
       raw: pglite,
